@@ -87,7 +87,9 @@
 
         function checkFoerderung() {
             const jetzt = new Date();
-            const aktuelleZeit = `${jetzt.getHours().toString().padStart(2, "0")}:${jetzt.getMinutes().toString().padStart(2, "0")}`;
+            const aktuelleStunde = jetzt.getHours();
+            const aktuelleMinute = jetzt.getMinutes();
+            const aktuelleZeit = `${aktuelleStunde.toString().padStart(2, "0")}:${aktuelleMinute.toString().padStart(2, "0")}`;
             const aktuellerTag = jetzt.getDay(); // Montag = 1, Sonntag = 0
             const statusDiv = document.getElementById("status");
 
@@ -100,15 +102,18 @@
                 if (aktuellerTag === zeit.day && aktuelleZeit >= zeit.start && aktuelleZeit <= zeit.end) {
                     foerderungAktiv = true;
                     aktuelleFaecher.push(zeit.fach);
-                } else if (naechsteFoerderung === null && (aktuellerTag < zeit.day || (aktuellerTag === zeit.day && aktuelleZeit < zeit.start))) {
-                    naechsteFoerderung = zeit;
+                } else if (!naechsteFoerderung || aktuellerTag < zeit.day || (aktuellerTag === zeit.day && aktuelleZeit < zeit.start)) {
+                    // Nächste Förderung ermitteln
+                    if (!naechsteFoerderung || zeit.day < naechsteFoerderung.day || (zeit.day === naechsteFoerderung.day && zeit.start < naechsteFoerderung.start)) {
+                        naechsteFoerderung = zeit;
+                    }
                 }
             });
 
             // Anzeige der nächsten Förderung
             const nextSessionDiv = document.getElementById("next-session");
             if (naechsteFoerderung) {
-                nextSessionDiv.innerHTML = `<strong>Nächste Anschlussförderung:</strong> ${naechsteFoerderung.fach} am ${["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"][naechsteFoerderung.day]} um ${naechsteFoerderung.start} Uhr`;
+                nextSessionDiv.innerHTML = `<strong>Nächste Anschlussförderung:</strong> ${naechsteFoerderung.fach} am ${["Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"][naechsteFoerderung.day]} um ${naechsteFoerderung.start} Uhr`;
             } else {
                 nextSessionDiv.innerHTML = "Diese Woche keine weitere Förderung.";
             }
@@ -136,7 +141,7 @@
             updateUhrzeit();
         }
 
-        // Aktualisierung alle 60 Sekunden
+        // Aktualisierung alle 60 Sekunden für Förderung & jede Sekunde für Uhrzeit
         setInterval(checkFoerderung, 60000);
         setInterval(updateUhrzeit, 1000);
         checkFoerderung();
