@@ -3,7 +3,6 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="robots" content="noindex, nofollow">
     <title>Anschlussförderung</title>
     <style>
         body {
@@ -45,22 +44,15 @@
     </div>
 
     <script>
-        // Förderzeiten und Schüler*innen
         const foerderzeiten = [
-            { fach: "Deutsch", day: 1, start: "07:40", end: "09:30", klassen: ["1A", "1B"] },
-            { fach: "Deutsch", day: 2, start: "09:30", end: "11:20", klassen: ["1A", "1C"] },
-            { fach: "Deutsch", day: 4, start: "09:30", end: "11:20", klassen: ["2B"] },
-            { fach: "Deutsch", day: 5, start: "11:20", end: "13:10", klassen: ["1A", "2C"] },
-            { fach: "Mathe", day: 2, start: "11:20", end: "13:10", klassen: ["1B"] },
-            { fach: "Englisch", day: 3, start: "09:30", end: "11:20", klassen: ["1A"] },
-            { fach: "Deutsch", day: 3, start: "18:30", end: "20:00", klassen: ["1A", "1B", "1C"] } // Hinzugefügt Deutsch am Mittwoch
+            { fach: "Deutsch", day: 1, start: "07:40", end: "09:30", klassen: ["1A", "1B"] }, // Montag
+            { fach: "Deutsch", day: 2, start: "09:30", end: "11:20", klassen: ["1A", "1C"] }, // Dienstag
+            { fach: "Deutsch", day: 4, start: "09:30", end: "11:20", klassen: ["2B"] }, // Donnerstag
+            { fach: "Deutsch", day: 5, start: "11:20", end: "13:10", klassen: ["1A", "2C"] }, // Freitag
+            { fach: "Mathe", day: 2, start: "11:20", end: "13:10", klassen: ["1B"] }, // Dienstag
+            { fach: "Englisch", day: 3, start: "09:30", end: "11:20", klassen: ["1A"] }, // Mittwoch
+            { fach: "Deutsch", day: 3, start: "18:30", end: "20:00", klassen: ["1A", "1B", "1C"] } // Mittwoch Abend
         ];
-
-        function updateUhrzeit() {
-            const jetzt = new Date();
-            const uhrzeitString = jetzt.toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
-            return uhrzeitString;
-        }
 
         function calculateCountdown(targetDate) {
             const jetzt = new Date();
@@ -76,51 +68,58 @@
 
         function checkFoerderung() {
             const jetzt = new Date();
-            const aktuelleZeit = `${jetzt.getHours().toString().padStart(2, "0")}:${jetzt.getMinutes().toString().padStart(2, "0")}`;
-            const aktuellerTag = jetzt.getDay(); // Montag = 1, Sonntag = 0
+            const aktuelleZeitString = `${jetzt.getHours().toString().padStart(2, "0")}:${jetzt.getMinutes().toString().padStart(2, "0")}`;
+            const aktuellerTag = jetzt.getDay(); // 0 = Sonntag, 1 = Montag ...
             const statusDiv = document.getElementById("status");
-
             let foerderungAktiv = false;
-            let aktuelleFaecher = [];
-            let aktuelleKlassen = [];
             let naechsteFoerderung = null;
 
-            // Zeit und Tag überprüfen
             foerderzeiten.forEach(zeit => {
-                const stundenBezeichnung = `${Math.floor((zeit.day * 2 + 1) / 2)}./${Math.ceil(zeit.day * 2 / 2)}. Stunde (${zeit.start} - ${zeit.end} Uhr)`;
+                const startZeit = zeit.start.split(":").map(Number);
+                const endZeit = zeit.end.split(":").map(Number);
+                const foerderTag = zeit.day;
 
-                if (aktuellerTag === zeit.day && aktuelleZeit >= zeit.start && aktuelleZeit <= zeit.end) {
+                const foerderStart = new Date(jetzt);
+                foerderStart.setHours(startZeit[0], startZeit[1], 0, 0);
+
+                const foerderEnd = new Date(jetzt);
+                foerderEnd.setHours(endZeit[0], endZeit[1], 0, 0);
+
+                if (aktuellerTag === foerderTag && aktuelleZeitString >= zeit.start && aktuelleZeitString <= zeit.end) {
                     foerderungAktiv = true;
-                    aktuelleFaecher.push(zeit.fach);
-                    aktuelleKlassen.push(...zeit.klassen);
-                } else if (!naechsteFoerderung || (aktuellerTag < zeit.day || 
-                           (aktuellerTag === zeit.day && aktuelleZeit < zeit.start) && 
-                           (naechsteFoerderung.date === null || zeit.start < naechsteFoerderung.date.start))) {
+                    statusDiv.innerHTML = `
+                        <h1>Anschlussförderung aktiv</h1>
+                        <p><strong>Fach:</strong> ${zeit.fach}</p>
+                        <p><strong>Klassen:</strong> ${zeit.klassen.join(", ")}</p>
+                    `;
+                    document.body.style.backgroundColor = "#dc3545"; // Rot
+                } else if (!naechsteFoerderung || (foerderStart > jetzt && foerderStart < naechsteFoerderung.date)) {
                     // Nächste Förderung ermitteln
                     const naechsteZeit = new Date(jetzt);
-                    naechsteZeit.setDate(jetzt.getDate() + (zeit.day - aktuellerTag + 7) % 7);
-                    naechsteZeit.setHours(zeit.start.split(":")[0], zeit.start.split(":")[1], 0, 0);
+                    naechsteZeit.setDate(jetzt.getDate() + (foerderTag + (7 - aktuellerTag)) % 7);
+                    naechsteZeit.setHours(startZeit[0], startZeit[1], 0, 0);
 
-                    if (!naechsteFoerderung || naechsteZeit < naechsteFoerderung.date) {
-                        naechsteFoerderung = { ...zeit, date: naechsteZeit, stundenBezeichnung: stundenBezeichnung };
-                    }
+                    naechsteFoerderung = { ...zeit, date: naechsteZeit };
                 }
             });
 
-            // Seite entsprechend färben
-            if (foerderungAktiv) {
-                document.body.style.backgroundColor = "#dc3545"; // Rot
+            if (!foerderungAktiv && naechsteFoerderung) {
+                const countdown = calculateCountdown(naechsteFoerderung.date);
                 statusDiv.innerHTML = `
-                    <h1>Anschlussförderung aktiv</h1>
-                    <p><strong>Fächer:</strong> ${aktuelleFaecher.join(", ")}</p>
-                    <p><strong>Klassen:</strong> ${aktuelleKlassen.join(", ")}</p>
+                    <h1>Keine Anschlussförderung</h1>
+                    <p><strong>Nächste Förderung:</strong> ${naechsteFoerderung.fach} am ${naechsteFoerderung.date.toLocaleDateString("de-DE")} von ${naechsteFoerderung.start} bis ${naechsteFoerderung.end}</p>
+                    <p id="countdown">Countdown: ${countdown}</p>
                 `;
-            } else {
                 document.body.style.backgroundColor = "#28a745"; // Grün
-                const countdownElement = document.getElementById("countdown");
-                if (naechsteFoerderung) {
-                    const countdown = calculateCountdown(naechsteFoerderung.date);
-                    statusDiv.innerHTML = `
-                        <h1>Keine Anschlussförderung</h1>
-                        <p><strong>Nächste Förderung:</strong> ${naechsteFoerderung.fach} ${naechsteFoerderung.stundenBezeichnung} am ${naechsteFoerderung.date.toLocaleDateString("de-DE")}</p>
-                        <p id="countdown">Countdown: ${countdown}</p
+            } else if (!foerderungAktiv) {
+                statusDiv.innerHTML = "<h1>Keine Anschlussförderung diese Woche</h1>";
+                document.body.style.backgroundColor = "#ffc107"; // Gelb
+            }
+        }
+
+        // Überprüfung alle 1 Sekunde
+        setInterval(checkFoerderung, 1000);
+        checkFoerderung();
+    </script>
+</body>
+</html>
