@@ -151,7 +151,7 @@
             }
 
             const nextSessionHTML = naechsteFoerderung
-                ? `${naechsteFoerderung.fach} am ${(naechsteFoerderung.day === aktuellerTag ? "heute" : wochentage[naechsteFoerderung.day])} (${naechsteFoerderung.stunde})`
+                ? `${naechsteFoerderung.fach} ${(naechsteFoerderung.day === aktuellerTag ? "heute" : "am " + wochentage[naechsteFoerderung.day])} (${naechsteFoerderung.stunde})`
                 : "Keine";
 
             container.innerHTML = `
