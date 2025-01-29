@@ -81,7 +81,7 @@
         <h1>Überprüfung läuft...</h1>
         <p id="next-session"></p>
         <p id="countdown"></p>
-        <button id="toggle-students">Schüler*innen anzeigen</button>
+        <button id="toggle-students">📃 Schüler*innen anzeigen</button>
         <div id="students-list" class="students-list"></div>
     </div>
 
@@ -113,10 +113,10 @@
 
                 studentsList.innerHTML = listHTML;
                 studentsList.style.display = "block";
-                button.textContent = "Schüler*innen ausblenden";
+                button.textContent = "📃 Schüler*innen ausblenden";
             } else {
                 studentsList.style.display = "none";
-                button.textContent = "Schüler*innen anzeigen";
+                button.textContent = "📃 Schüler*innen anzeigen";
             }
         }
 
@@ -161,7 +161,7 @@
                 <h1>${foerderungAktiv ? "Anschlussförderung aktiv" : "Keine Anschlussförderung"}</h1>
                 <p><strong>Nächste Förderung:</strong> ${nextSessionHTML}</p>
                 <p id="countdown">Countdown: ${naechsteFoerderung ? calculateCountdown(naechsteFoerderung.date) : "-"}</p>
-                <button id="toggle-students">Schüler*innen anzeigen</button>
+                <button id="toggle-students">📃 Schüler*innen anzeigen</button>
                 <div id="students-list" class="students-list"></div>
             `;
             document.getElementById("toggle-students").addEventListener("click", toggleStudentsList);
