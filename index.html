@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
     <title>Anschlussförderung</title>
     <style>
         body {
@@ -13,36 +14,65 @@
             justify-content: center;
             align-items: center;
             height: 100vh;
-            background-color: #f5f5f5;
+            text-align: center;
+            transition: background-color 0.5s ease;
         }
         .status-container {
-            text-align: center;
             padding: 20px;
             border-radius: 10px;
+            background: white;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            width: 90%;
             max-width: 400px;
+            transition: all 0.3s ease-in-out;
         }
-        .green {
-            background-color: #28a745;
-            color: white;
+        h1, p {
+            margin: 0;
+            color: black;
         }
-        .red {
-            background-color: #dc3545;
-            color: white;
+        #countdown {
+            margin-top: 10px;
+            font-size: 1.2em;
+            color: #555;
         }
     </style>
 </head>
 <body>
     <div id="status" class="status-container">
         <h1>Überprüfung läuft...</h1>
+        <p id="next-session"></p>
+        <p id="countdown"></p>
     </div>
 
     <script>
-        // Förderzeiten und betroffene Schüler*innen
+        // Förderzeiten und Schüler*innen
         const foerderzeiten = [
-            { day: 1, start: "08:00", end: "09:30", schueler: ["Anastasia 5a", "Alina 5.1", "Marin 7.1", "Mohammed 7.1", "Ilias 7.2"] },
-            { day: 5, start: "11:40", end: "13:10", schueler: ["Anastasia 5a", "Alina 5.1", "Marin 7.1", "Mohammed 7.1", "Ilias 7.2"] }
+            { fach: "Deutsch", day: 1, start: "07:40", end: "09:30" },
+            { fach: "Deutsch", day: 2, start: "09:30", end: "11:20" },
+            { fach: "Deutsch", day: 4, start: "09:30", end: "11:20" },
+            { fach: "Deutsch", day: 5, start: "11:20", end: "13:10" },
+            { fach: "Mathe", day: 2, start: "11:20", end: "13:10" },
+            { fach: "Englisch", day: 3, start: "09:30", end: "11:20" }
         ];
+
+        function updateUhrzeit() {
+            const jetzt = new Date();
+            const uhrzeitString = jetzt.toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+            return uhrzeitString;
+        }
+
+        function calculateCountdown(targetDate) {
+            const jetzt = new Date();
+            const diff = targetDate - jetzt;
+
+            if (diff <= 0) return null;
+
+            const hours = Math.floor(diff / (1000 * 60 * 60));
+            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+            return `${hours}h ${minutes}m ${seconds}s`;
+        }
 
         function checkFoerderung() {
             const jetzt = new Date();
@@ -51,33 +81,51 @@
             const statusDiv = document.getElementById("status");
 
             let foerderungAktiv = false;
-            let aktuelleSchueler = [];
+            let aktuelleFaecher = [];
+            let naechsteFoerderung = null;
 
             // Zeit und Tag überprüfen
             foerderzeiten.forEach(zeit => {
                 if (aktuellerTag === zeit.day && aktuelleZeit >= zeit.start && aktuelleZeit <= zeit.end) {
                     foerderungAktiv = true;
-                    aktuelleSchueler = zeit.schueler;
+                    aktuelleFaecher.push(zeit.fach);
+                } else if (!naechsteFoerderung || aktuellerTag < zeit.day || (aktuellerTag === zeit.day && aktuelleZeit < zeit.start)) {
+                    // Nächste Förderung ermitteln
+                    const naechsteZeit = new Date(jetzt);
+                    naechsteZeit.setDate(jetzt.getDate() + (zeit.day - aktuellerTag + 7) % 7);
+                    naechsteZeit.setHours(zeit.start.split(":")[0], zeit.start.split(":")[1], 0, 0);
+
+                    if (!naechsteFoerderung || naechsteZeit < naechsteFoerderung.date) {
+                        naechsteFoerderung = { ...zeit, date: naechsteZeit };
+                    }
                 }
             });
 
-            // Farbliche Anzeige je nach Status
+            // Seite entsprechend färben
             if (foerderungAktiv) {
+                document.body.style.backgroundColor = "#dc3545"; // Rot
                 statusDiv.innerHTML = `
                     <h1>Anschlussförderung aktiv</h1>
-                    <p>Betroffene Schüler*innen:</p>
-                    <ul>
-                        ${aktuelleSchueler.map(schueler => `<li>${schueler}</li>`).join("")}
-                    </ul>`;
-                statusDiv.className = "status-container red";
+                    <p><strong>Fächer:</strong> ${aktuelleFaecher.join(", ")}</p>
+                `;
             } else {
-                statusDiv.innerHTML = "<h1>Keine Anschlussförderung</h1>";
-                statusDiv.className = "status-container green";
+                document.body.style.backgroundColor = "#28a745"; // Grün
+                const countdownElement = document.getElementById("countdown");
+                if (naechsteFoerderung) {
+                    const countdown = calculateCountdown(naechsteFoerderung.date);
+                    statusDiv.innerHTML = `
+                        <h1>Keine Anschlussförderung</h1>
+                        <p><strong>Nächste Förderung:</strong> ${naechsteFoerderung.fach} am ${naechsteFoerderung.date.toLocaleDateString("de-DE")} um ${naechsteFoerderung.start} Uhr</p>
+                        <p id="countdown">Countdown: ${countdown}</p>
+                    `;
+                } else {
+                    statusDiv.innerHTML = "<h1>Keine Anschlussförderung diese Woche</h1>";
+                }
             }
         }
 
-        // Überprüfung bei Seitenaufruf und alle 60 Sekunden
-        setInterval(checkFoerderung, 60000);
+        // Aktualisierung alle 1 Sekunde
+        setInterval(checkFoerderung, 1000);
         checkFoerderung();
     </script>
 </body>
