@@ -35,50 +35,29 @@
 <body>
     <div id="status" class="status-container">
         <h1>Überprüfung läuft...</h1>
-        <p id="naechsteFoerderung"></p>
     </div>
 
     <script>
-        // Förderzeiten und Schüler*innen nach Fach
+        // Förderzeiten und betroffene Schüler*innen
         const foerderzeiten = [
-            { fach: "Deutsch", day: 1, start: "07:40", end: "09:30" },
-            { fach: "Deutsch", day: 2, start: "09:30", end: "11:20" },
-            { fach: "Deutsch", day: 4, start: "09:30", end: "11:20" },
-            { fach: "Deutsch", day: 5, start: "11:20", end: "13:10" },
-            { fach: "Mathe", day: 2, start: "11:20", end: "13:10" },
-            { fach: "Englisch", day: 3, start: "09:30", end: "11:20" },
-            { fach: "Deutsch", day: 3, start: "18:30", end: "20:30" } // Mittwoch Abend
+            { day: 1, start: "08:00", end: "09:30", schueler: ["Anastasia 5a", "Alina 5.1", "Marin 7.1", "Mohammed 7.1", "Ilias 7.2"] },
+            { day: 5, start: "11:40", end: "13:10", schueler: ["Anastasia 5a", "Alina 5.1", "Marin 7.1", "Mohammed 7.1", "Ilias 7.2"] }
         ];
-
-        // Betroffene Schüler*innen (mit Klassen)
-        const schuelerListe = {
-            "Deutsch": ["Anastasia 5a", "Alina 5.1", "Vojdan 5.1", "Daniil 6.1", "Mohammed H. 7.1"],
-            "Mathe": ["Ili 7.2", "Ilyas 7.2", "Beyar 7.2"], 
-            "Englisch": ["Emma 7.2", "Artur 7.2"]
-        };
 
         function checkFoerderung() {
             const jetzt = new Date();
             const aktuelleZeit = `${jetzt.getHours().toString().padStart(2, "0")}:${jetzt.getMinutes().toString().padStart(2, "0")}`;
             const aktuellerTag = jetzt.getDay(); // Montag = 1, Sonntag = 0
             const statusDiv = document.getElementById("status");
-            const naechsteFoerderungDiv = document.getElementById("naechsteFoerderung");
 
             let foerderungAktiv = false;
-            let aktuelleFaecher = [];
-            let naechsteFoerderung = null;
+            let aktuelleSchueler = [];
 
-            // Überprüfung der Förderzeiten
+            // Zeit und Tag überprüfen
             foerderzeiten.forEach(zeit => {
                 if (aktuellerTag === zeit.day && aktuelleZeit >= zeit.start && aktuelleZeit <= zeit.end) {
                     foerderungAktiv = true;
-                    aktuelleFaecher.push(zeit.fach);
-                }
-
-                // Nächste Förderung ermitteln
-                const foerderStarts = new Date(jetzt.getFullYear(), jetzt.getMonth(), jetzt.getDate(), ...zeit.start.split(":").map(Number));
-                if (foerderStarts > jetzt && (!naechsteFoerderung || foerderStarts < naechsteFoerderung.date)) {
-                    naechsteFoerderung = { fach: zeit.fach, date: foerderStarts, end: zeit.end };
+                    aktuelleSchueler = zeit.schueler;
                 }
             });
 
@@ -86,23 +65,14 @@
             if (foerderungAktiv) {
                 statusDiv.innerHTML = `
                     <h1>Anschlussförderung aktiv</h1>
-                    <p><strong>Fächer:</strong> ${aktuelleFaecher.join(", ")}</p>
-                    <p><strong>Betroffene Schüler*innen:</strong></p>
+                    <p>Betroffene Schüler*innen:</p>
                     <ul>
-                        ${aktuelleFaecher.map(fach => schuelerListe[fach].map(schueler => `<li>${schueler}</li>`).join("")).join("")}
+                        ${aktuelleSchueler.map(schueler => `<li>${schueler}</li>`).join("")}
                     </ul>`;
                 statusDiv.className = "status-container red";
             } else {
                 statusDiv.innerHTML = "<h1>Keine Anschlussförderung</h1>";
                 statusDiv.className = "status-container green";
-            }
-            
-            // Nächste Förderung anzeigen
-            if (naechsteFoerderung) {
-                naechsteFoerderungDiv.innerHTML = `
-                    Nächste Anschlussförderung: ${naechsteFoerderung.fach} am ${naechsteFoerderung.date.toLocaleString('de-DE', { weekday: 'long', year: 'numeric', month: 'numeric', day: 'numeric' })} von ${naechsteFoerderung.date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})} bis ${naechsteFoerderung.end}`;
-            } else {
-                naechsteFoerderungDiv.innerHTML = "Keine weiteren Anschlussförderungen in dieser Woche.";
             }
         }
 
