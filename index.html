@@ -139,7 +139,7 @@
 
             container.innerHTML = `
                 <h1>${foerderungAktiv ? "Anschlussförderung aktiv" : "Keine Anschlussförderung"}</h1>
-                <p><strong>Fächer:</strong> ${aktuelleFaecher.join(", ")}</p>
+                
                 ${schuelerHTML}
                 <p class="next-session"><strong>Nächste Förderung:</strong> ${nextSessionHTML}</p>
                 <p id="countdown">Countdown: ${naechsteFoerderung ? calculateCountdown(naechsteFoerderung.date) : "-"}</p>
