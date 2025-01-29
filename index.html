@@ -5,9 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noindex, nofollow">
     <title>Anschlussförderung</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
     <style>
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Roboto', sans-serif;
             margin: 0;
             padding: 0;
             display: flex;
@@ -15,7 +16,33 @@
             align-items: center;
             height: 100vh;
             text-align: center;
+            animation: pulse 3s infinite;
             transition: background-color 0.5s ease;
+        }
+        @keyframes pulse {
+            0% {
+                background-color: #28a745;
+            }
+            50% {
+                background-color: #32cd32;
+            }
+            100% {
+                background-color: #28a745;
+            }
+        }
+        .active {
+            animation: pulse-red 3s infinite;
+        }
+        @keyframes pulse-red {
+            0% {
+                background-color: #dc3545;
+            }
+            50% {
+                background-color: #ff4d4d;
+            }
+            100% {
+                background-color: #dc3545;
+            }
         }
         .status-container {
             padding: 2em;
@@ -36,24 +63,15 @@
             font-size: 1.2em;
             color: black;
         }
-        #countdown {
-            margin-top: 1em;
-            font-size: 1.2em;
-            color: #555;
+        .icon {
+            font-size: 3em;
+            margin-bottom: 0.5em;
         }
-        .active {
-            animation: pulse 2s infinite;
+        .icon.green {
+            color: #28a745;
         }
-        @keyframes pulse {
-            0% {
-                box-shadow: 0 0 20px rgba(220, 53, 69, 0.5);
-            }
-            50% {
-                box-shadow: 0 0 40px rgba(220, 53, 69, 0.7);
-            }
-            100% {
-                box-shadow: 0 0 20px rgba(220, 53, 69, 0.5);
-            }
+        .icon.red {
+            color: #dc3545;
         }
         @media (max-width: 600px) {
             .status-container {
@@ -66,14 +84,12 @@
             p {
                 font-size: 1em;
             }
-            #countdown {
-                font-size: 1em;
-            }
         }
     </style>
 </head>
 <body>
     <div id="status" class="status-container">
+        <div id="status-icon" class="icon">🔄</div>
         <h1>Überprüfung läuft...</h1>
         <p id="next-session"></p>
         <p id="countdown"></p>
@@ -118,13 +134,11 @@
             });
 
             const container = document.getElementById("status");
+            const icon = document.getElementById("status-icon");
 
-            document.body.style.backgroundColor = foerderungAktiv ? "#dc3545" : "#28a745";
-            if (foerderungAktiv) {
-                container.classList.add("active");
-            } else {
-                container.classList.remove("active");
-            }
+            document.body.className = foerderungAktiv ? "active" : "";
+            icon.textContent = foerderungAktiv ? "⚠️" : "✅";
+            icon.className = `icon ${foerderungAktiv ? "red" : "green"}`;
 
             let schuelerHTML = "";
             if (foerderungAktiv) {
@@ -138,10 +152,9 @@
                 : "Keine";
 
             container.innerHTML = `
+                <div id="status-icon" class="icon">${icon.textContent}</div>
                 <h1>${foerderungAktiv ? "Anschlussförderung aktiv" : "Keine Anschlussförderung"}</h1>
-                
-                ${schuelerHTML}
-                <p class="next-session"><strong>Nächste Förderung:</strong> ${nextSessionHTML}</p>
+                <p><strong>Nächste Förderung:</strong> ${nextSessionHTML}</p>
                 <p id="countdown">Countdown: ${naechsteFoerderung ? calculateCountdown(naechsteFoerderung.date) : "-"}</p>
             `;
         }
