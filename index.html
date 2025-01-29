@@ -99,13 +99,21 @@
         const wochentage = ["Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"];
 
         const foerderzeiten = [
-            { fach: "Deutsch", day: 1, stunde: "1./2. Stunde", start: "07:40", end: "09:30", schueler: { "5a": ["Anastasia"] } },
-            { fach: "Deutsch", day: 2, stunde: "3./4. Stunde", start: "09:30", end: "11:20", schueler: { "5.1": ["Alina", "Vojdan"] } },
-            { fach: "Deutsch", day: 4, stunde: "3./4. Stunde", start: "09:30", end: "11:20", schueler: { "6.1": ["Daniil"] } },
-            { fach: "Deutsch", day: 5, stunde: "5./6. Stunde", start: "11:20", end: "13:10", schueler: { "7.1": ["Mohammed H.", "Mohammed L.", "Marin", "Evelina"] } },
-            { fach: "Mathe", day: 2, stunde: "5./6. Stunde", start: "11:20", end: "13:10", schueler: { "7.2": ["Ili", "Ilyas", "Beyar", "Emma", "Artur"] } },
-            { fach: "Englisch", day: 3, stunde: "3./4. Stunde", start: "09:30", end: "11:20", schueler: { "7.2": ["Ili", "Ilyas", "Beyar", "Emma", "Artur"] } }
+            { fach: "Deutsch", day: 1, stunde: "1./2. Stunde", start: "07:40", end: "09:30" },
+            { fach: "Deutsch", day: 2, stunde: "3./4. Stunde", start: "09:30", end: "11:20" },
+            { fach: "Deutsch", day: 4, stunde: "3./4. Stunde", start: "09:30", end: "11:20" },
+            { fach: "Deutsch", day: 5, stunde: "5./6. Stunde", start: "11:20", end: "13:10" },
+            { fach: "Mathe", day: 2, stunde: "5./6. Stunde", start: "11:20", end: "13:10" },
+            { fach: "Englisch", day: 3, stunde: "3./4. Stunde", start: "09:30", end: "11:20" }
         ];
+
+        const schueler = {
+            "5a": ["Anastasia"],
+            "5.1": ["Alina", "Vojdan"],
+            "6.1": ["Daniil"],
+            "7.1": ["Mohammed H.", "Mohammed L.", "Marin", "Evelina"],
+            "7.2": ["Ili", "Ilyas", "Beyar", "Emma", "Artur"]
+        };
 
         function checkFoerderung() {
             const jetzt = new Date();
@@ -113,16 +121,13 @@
             const aktuellerTag = jetzt.getDay();
             let foerderungAktiv = false;
             let aktuelleFaecher = [];
-            let aktuelleSchueler = {};
             let naechsteFoerderung = null;
 
             foerderzeiten.forEach(zeit => {
                 if (aktuellerTag === zeit.day && aktuelleZeit >= zeit.start && aktuelleZeit <= zeit.end) {
                     foerderungAktiv = true;
                     aktuelleFaecher.push(`${zeit.fach} (${zeit.stunde})`);
-                    aktuelleSchueler = zeit.schueler;
                 } else if (!naechsteFoerderung || aktuellerTag < zeit.day || (aktuellerTag === zeit.day && aktuelleZeit < zeit.start)) {
-                    // Nächste Förderung ermitteln
                     const naechsteZeit = new Date(jetzt);
                     naechsteZeit.setDate(jetzt.getDate() + (zeit.day - aktuellerTag + 7) % 7);
                     naechsteZeit.setHours(zeit.start.split(":")[0], zeit.start.split(":")[1], 0, 0);
@@ -141,10 +146,8 @@
             icon.className = `icon ${foerderungAktiv ? "red" : "green"}`;
 
             let schuelerHTML = "";
-            if (foerderungAktiv) {
-                for (const [klasse, schueler] of Object.entries(aktuelleSchueler)) {
-                    schuelerHTML += `<div class='class-header'>${klasse}</div><ul class='student-list'>${schueler.map(s => `<li>- ${s}</li>`).join("")}</ul>`;
-                }
+            for (const [klasse, schuelerNamen] of Object.entries(schueler)) {
+                schuelerHTML += `<div class='class-header'>${klasse}</div><ul class='student-list'>${schuelerNamen.map(s => `<li>- ${s}</li>`).join("")}</ul>`;
             }
 
             const nextSessionHTML = naechsteFoerderung
@@ -154,6 +157,7 @@
             container.innerHTML = `
                 <div id="status-icon" class="icon">${icon.textContent}</div>
                 <h1>${foerderungAktiv ? "Anschlussförderung aktiv" : "Keine Anschlussförderung"}</h1>
+                ${foerderungAktiv ? schuelerHTML : ""}
                 <p><strong>Nächste Förderung:</strong> ${nextSessionHTML}</p>
                 <p id="countdown">Countdown: ${naechsteFoerderung ? calculateCountdown(naechsteFoerderung.date) : "-"}</p>
             `;
