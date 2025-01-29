@@ -20,17 +20,29 @@
             transition: background-color 0.5s ease;
         }
         @keyframes pulse {
-            0% { background-color: #28a745; }
-            50% { background-color: #32cd32; }
-            100% { background-color: #28a745; }
+            0% {
+                background-color: #28a745;
+            }
+            50% {
+                background-color: #32cd32;
+            }
+            100% {
+                background-color: #28a745;
+            }
         }
         .active {
             animation: pulse-red 3s infinite;
         }
         @keyframes pulse-red {
-            0% { background-color: #dc3545; }
-            50% { background-color: #ff4d4d; }
-            100% { background-color: #dc3545; }
+            0% {
+                background-color: #dc3545;
+            }
+            50% {
+                background-color: #ff4d4d;
+            }
+            100% {
+                background-color: #dc3545;
+            }
         }
         .status-container {
             padding: 2em;
@@ -41,80 +53,76 @@
             max-width: 400px;
             transition: all 0.3s ease-in-out;
         }
-        h1 { margin: 0; font-size: 2em; color: black; }
-        p { margin: 0.5em 0; font-size: 1.2em; color: black; }
-        .icon { font-size: 3em; margin-bottom: 0.5em; }
-        .icon.green { color: #28a745; }
-        .icon.red { color: #dc3545; }
-        #toggle-students {
-            margin-top: 1em;
-            padding: 0.5em 1em;
-            font-size: 1em;
-            background-color: #007bff;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: background-color 0.3s;
+        h1 {
+            margin: 0;
+            font-size: 2em;
+            color: black;
         }
-        #toggle-students:hover { background-color: #0056b3; }
-        .students-list {
-            margin-top: 1em;
-            text-align: left;
-            display: none;
+        p {
+            margin: 0.5em 0;
+            font-size: 1.2em;
+            color: black;
+        }
+        .icon {
+            font-size: 3em;
+            margin-bottom: 0.5em;
+        }
+        .icon.green {
+            color: #28a745;
+        }
+        .icon.red {
+            color: #dc3545;
         }
         @media (max-width: 600px) {
             .status-container {
                 width: 95%;
                 padding: 1.5em;
             }
-            h1 { font-size: 1.8em; }
-            p { font-size: 1em; }
+            h1 {
+                font-size: 1.8em;
+            }
+            p {
+                font-size: 1em;
+            }
         }
     </style>
 </head>
 <body>
     <div id="status" class="status-container">
         <div id="status-icon" class="icon">🔄</div>
-        <h1 id="status-message">Überprüfung läuft...</h1>
+        <h1>Überprüfung läuft...</h1>
         <p id="next-session"></p>
         <p id="countdown"></p>
-        <button id="toggle-students">📃 Schüler*innen anzeigen</button>
-        <div id="students-list" class="students-list"></div>
     </div>
 
     <script>
-        const foerderzeiten = [
-            { fach: "Deutsch", day: 1, start: "07:40", end: "09:30" },
-            { fach: "Deutsch", day: 2, start: "09:30", end: "11:20" },
-            { fach: "Mathe", day: 2, start: "11:20", end: "13:10" },
-            { fach: "Englisch", day: 3, start: "09:30", end: "11:20" }
-        ];
-
         const wochentage = ["Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"];
-        let studentsListVisible = false;
 
-        function toggleStudentsList() {
-            const studentsList = document.getElementById("students-list");
-            const button = document.getElementById("toggle-students");
-
-            studentsListVisible = !studentsListVisible;
-            studentsList.style.display = studentsListVisible ? "block" : "none";
-            button.textContent = studentsListVisible ? "📃 Schüler*innen ausblenden" : "📃 Schüler*innen anzeigen";
-        }
+        const foerderzeiten = [
+            { fach: "Deutsch", day: 1, stunde: "1./2. Stunde", start: "07:40", end: "09:30", schueler: { "5a": ["Anastasia"] } },
+            { fach: "Deutsch", day: 2, stunde: "3./4. Stunde", start: "09:30", end: "11:20", schueler: { "5.1": ["Alina", "Vojdan"] } },
+            { fach: "Deutsch", day: 4, stunde: "3./4. Stunde", start: "09:30", end: "11:20", schueler: { "6.1": ["Daniil"] } },
+            { fach: "Deutsch", day: 5, stunde: "5./6. Stunde", start: "11:20", end: "13:10", schueler: { "7.1": ["Mohammed H.", "Mohammed L.", "Marin", "Evelina"] } },
+            { fach: "Mathe", day: 2, stunde: "5./6. Stunde", start: "11:20", end: "13:10", schueler: { "7.2": ["Ili", "Ilyas", "Beyar", "Emma", "Artur"] } },
+            { fach: "Englisch", day: 3, stunde: "3./4. Stunde", start: "09:30", end: "11:20", schueler: { "7.2": ["Ili", "Ilyas", "Beyar", "Emma", "Artur"] } }
+        ];
 
         function checkFoerderung() {
             const jetzt = new Date();
             const aktuelleZeit = `${jetzt.getHours().toString().padStart(2, "0")}:${jetzt.getMinutes().toString().padStart(2, "0")}`;
             const aktuellerTag = jetzt.getDay();
-
             let foerderungAktiv = false;
+            let aktuelleFaecher = [];
+            let aktuelleSchueler = {};
             let naechsteFoerderung = null;
 
             foerderzeiten.forEach(zeit => {
                 if (aktuellerTag === zeit.day && aktuelleZeit >= zeit.start && aktuelleZeit <= zeit.end) {
                     foerderungAktiv = true;
+                    aktuelleFaecher.push(`${zeit.fach} (${zeit.stunde})`);
+                    aktuelleSchueler = zeit.schueler;
                 } else if (!naechsteFoerderung || aktuellerTag < zeit.day || (aktuellerTag === zeit.day && aktuelleZeit < zeit.start)) {
+                    // Nächste Förderung ermitteln
                     const naechsteZeit = new Date(jetzt);
                     naechsteZeit.setDate(jetzt.getDate() + (zeit.day - aktuellerTag + 7) % 7);
                     naechsteZeit.setHours(zeit.start.split(":")[0], zeit.start.split(":")[1], 0, 0);
@@ -125,29 +133,46 @@
                 }
             });
 
-            const statusMessage = document.getElementById("status-message");
-            const statusIcon = document.getElementById("status-icon");
-            const nextSession = document.getElementById("next-session");
+            const container = document.getElementById("status");
+            const icon = document.getElementById("status-icon");
 
+            document.body.className = foerderungAktiv ? "active" : "";
+            icon.textContent = foerderungAktiv ? "⚠️" : "✅";
+            icon.className = `icon ${foerderungAktiv ? "red" : "green"}`;
+
+            let schuelerHTML = "";
             if (foerderungAktiv) {
-                document.body.className = "active";
-                statusMessage.textContent = "Anschlussförderung aktiv";
-                statusIcon.textContent = "⚠️";
-            } else {
-                document.body.className = "";
-                statusMessage.textContent = "Keine Anschlussförderung";
-                statusIcon.textContent = "✅";
-
-                if (naechsteFoerderung) {
-                    nextSession.textContent = `Nächste Förderung: ${naechsteFoerderung.fach} am ${wochentage[naechsteFoerderung.day]} um ${naechsteFoerderung.start} Uhr`;
-                } else {
-                    nextSession.textContent = "Keine Förderung geplant.";
+                for (const [klasse, schueler] of Object.entries(aktuelleSchueler)) {
+                    schuelerHTML += `<div class='class-header'>${klasse}</div><ul class='student-list'>${schueler.map(s => `<li>- ${s}</li>`).join("")}</ul>`;
                 }
             }
+
+            const nextSessionHTML = naechsteFoerderung
+                ? `${naechsteFoerderung.fach} am ${(naechsteFoerderung.day === aktuellerTag ? "heute" : wochentage[naechsteFoerderung.day])} (${naechsteFoerderung.stunde})`
+                : "Keine";
+
+            container.innerHTML = `
+                <div id="status-icon" class="icon">${icon.textContent}</div>
+                <h1>${foerderungAktiv ? "Anschlussförderung aktiv" : "Keine Anschlussförderung"}</h1>
+                <p><strong>Nächste Förderung:</strong> ${nextSessionHTML}</p>
+                <p id="countdown">Countdown: ${naechsteFoerderung ? calculateCountdown(naechsteFoerderung.date) : "-"}</p>
+            `;
+        }
+
+        function calculateCountdown(targetDate) {
+            const jetzt = new Date();
+            const diff = targetDate - jetzt;
+            if (diff <= 0) return null;
+
+            const hours = Math.floor(diff / (1000 * 60 * 60));
+            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+            return `${hours}h ${minutes}m ${seconds}s`;
         }
 
         setInterval(checkFoerderung, 1000);
-        document.getElementById("toggle-students").addEventListener("click", toggleStudentsList);
+        checkFoerderung();
     </script>
 </body>
 </html>
