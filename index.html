@@ -63,8 +63,6 @@
             text-align: left;
             display: none;
         }
-        .students-list ul { padding-left: 20px; }
-        .students-list li { list-style-type: none; }
         @media (max-width: 600px) {
             .status-container {
                 width: 95%;
@@ -78,7 +76,7 @@
 <body>
     <div id="status" class="status-container">
         <div id="status-icon" class="icon">🔄</div>
-        <h1>Überprüfung läuft...</h1>
+        <h1 id="status-message">Überprüfung läuft...</h1>
         <p id="next-session"></p>
         <p id="countdown"></p>
         <button id="toggle-students">📃 Schüler*innen anzeigen</button>
@@ -86,20 +84,65 @@
     </div>
 
     <script>
+        const foerderzeiten = [
+            { fach: "Deutsch", day: 1, start: "07:40", end: "09:30" },
+            { fach: "Deutsch", day: 2, start: "09:30", end: "11:20" },
+            { fach: "Mathe", day: 2, start: "11:20", end: "13:10" },
+            { fach: "Englisch", day: 3, start: "09:30", end: "11:20" }
+        ];
+
+        const wochentage = ["Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"];
         let studentsListVisible = false;
 
         function toggleStudentsList() {
             const studentsList = document.getElementById("students-list");
             const button = document.getElementById("toggle-students");
-            
+
             studentsListVisible = !studentsListVisible;
             studentsList.style.display = studentsListVisible ? "block" : "none";
             button.textContent = studentsListVisible ? "📃 Schüler*innen ausblenden" : "📃 Schüler*innen anzeigen";
         }
 
         function checkFoerderung() {
-            if (studentsListVisible) {
-                document.getElementById("students-list").style.display = "block";
+            const jetzt = new Date();
+            const aktuelleZeit = `${jetzt.getHours().toString().padStart(2, "0")}:${jetzt.getMinutes().toString().padStart(2, "0")}`;
+            const aktuellerTag = jetzt.getDay();
+
+            let foerderungAktiv = false;
+            let naechsteFoerderung = null;
+
+            foerderzeiten.forEach(zeit => {
+                if (aktuellerTag === zeit.day && aktuelleZeit >= zeit.start && aktuelleZeit <= zeit.end) {
+                    foerderungAktiv = true;
+                } else if (!naechsteFoerderung || aktuellerTag < zeit.day || (aktuellerTag === zeit.day && aktuelleZeit < zeit.start)) {
+                    const naechsteZeit = new Date(jetzt);
+                    naechsteZeit.setDate(jetzt.getDate() + (zeit.day - aktuellerTag + 7) % 7);
+                    naechsteZeit.setHours(zeit.start.split(":")[0], zeit.start.split(":")[1], 0, 0);
+
+                    if (!naechsteFoerderung || naechsteZeit < naechsteFoerderung.date) {
+                        naechsteFoerderung = { ...zeit, date: naechsteZeit };
+                    }
+                }
+            });
+
+            const statusMessage = document.getElementById("status-message");
+            const statusIcon = document.getElementById("status-icon");
+            const nextSession = document.getElementById("next-session");
+
+            if (foerderungAktiv) {
+                document.body.className = "active";
+                statusMessage.textContent = "Anschlussförderung aktiv";
+                statusIcon.textContent = "⚠️";
+            } else {
+                document.body.className = "";
+                statusMessage.textContent = "Keine Anschlussförderung";
+                statusIcon.textContent = "✅";
+
+                if (naechsteFoerderung) {
+                    nextSession.textContent = `Nächste Förderung: ${naechsteFoerderung.fach} am ${wochentage[naechsteFoerderung.day]} um ${naechsteFoerderung.start} Uhr`;
+                } else {
+                    nextSession.textContent = "Keine Förderung geplant.";
+                }
             }
         }
 
