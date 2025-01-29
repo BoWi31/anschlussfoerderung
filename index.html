@@ -86,101 +86,25 @@
     </div>
 
     <script>
-        const wochentage = ["Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"];
-
-        const foerderzeiten = [
-            { fach: "Deutsch", day: 1, stunde: "1./2. Stunde", start: "07:40", end: "09:30", schueler: { "5a": ["Anastasia"] } },
-            { fach: "Deutsch", day: 2, stunde: "3./4. Stunde", start: "09:30", end: "11:20", schueler: { "5.1": ["Alina", "Vojdan"] } },
-            { fach: "Deutsch", day: 4, stunde: "3./4. Stunde", start: "09:30", end: "11:20", schueler: { "6.1": ["Daniil"] } },
-            { fach: "Deutsch", day: 5, stunde: "5./6. Stunde", start: "11:20", end: "13:10", schueler: { "7.1": ["Mohammed H.", "Mohammed L.", "Marin", "Evelina"] } },
-            { fach: "Mathe", day: 2, stunde: "5./6. Stunde", start: "11:20", end: "13:10", schueler: { "7.2": ["Ili", "Ilyas", "Beyar", "Emma", "Artur"] } },
-            { fach: "Englisch", day: 3, stunde: "3./4. Stunde", start: "09:30", end: "11:20", schueler: { "7.2": ["Ili", "Ilyas", "Beyar", "Emma", "Artur"] } }
-        ];
+        let studentsListVisible = false;
 
         function toggleStudentsList() {
             const studentsList = document.getElementById("students-list");
             const button = document.getElementById("toggle-students");
-
-            if (studentsList.style.display === "none" || !studentsList.style.display) {
-                const listHTML = foerderzeiten
-                    .map(zeit => {
-                        const schuelerHTML = Object.entries(zeit.schueler)
-                            .map(([klasse, schueler]) => `<div><strong>${klasse}</strong>: ${schueler.join(", ")}</div>`)
-                            .join("");
-                        return `<div><strong>${zeit.fach} (${zeit.stunde})</strong>:<br>${schuelerHTML}</div>`;
-                    })
-                    .join("<hr>");
-
-                studentsList.innerHTML = listHTML;
-                studentsList.style.display = "block";
-                button.textContent = "📃 Schüler*innen ausblenden";
-            } else {
-                studentsList.style.display = "none";
-                button.textContent = "📃 Schüler*innen anzeigen";
-            }
+            
+            studentsListVisible = !studentsListVisible;
+            studentsList.style.display = studentsListVisible ? "block" : "none";
+            button.textContent = studentsListVisible ? "📃 Schüler*innen ausblenden" : "📃 Schüler*innen anzeigen";
         }
 
         function checkFoerderung() {
-            const jetzt = new Date();
-            const aktuelleZeit = `${jetzt.getHours().toString().padStart(2, "0")}:${jetzt.getMinutes().toString().padStart(2, "0")}`;
-            const aktuellerTag = jetzt.getDay();
-            let foerderungAktiv = false;
-            let aktuelleFaecher = [];
-            let aktuelleSchueler = {};
-            let naechsteFoerderung = null;
-
-            foerderzeiten.forEach(zeit => {
-                if (aktuellerTag === zeit.day && aktuelleZeit >= zeit.start && aktuelleZeit <= zeit.end) {
-                    foerderungAktiv = true;
-                    aktuelleFaecher.push(`${zeit.fach} (${zeit.stunde})`);
-                    aktuelleSchueler = zeit.schueler;
-                } else if (!naechsteFoerderung || aktuellerTag < zeit.day || (aktuellerTag === zeit.day && aktuelleZeit < zeit.start)) {
-                    const naechsteZeit = new Date(jetzt);
-                    naechsteZeit.setDate(jetzt.getDate() + (zeit.day - aktuellerTag + 7) % 7);
-                    naechsteZeit.setHours(zeit.start.split(":")[0], zeit.start.split(":")[1], 0, 0);
-
-                    if (!naechsteFoerderung || naechsteZeit < naechsteFoerderung.date) {
-                        naechsteFoerderung = { ...zeit, date: naechsteZeit };
-                    }
-                }
-            });
-
-            const container = document.getElementById("status");
-            const icon = document.getElementById("status-icon");
-
-            document.body.className = foerderungAktiv ? "active" : "";
-            icon.textContent = foerderungAktiv ? "⚠️" : "✅";
-            icon.className = `icon ${foerderungAktiv ? "red" : "green"}`;
-
-            const nextSessionHTML = naechsteFoerderung
-                ? `${naechsteFoerderung.fach} am ${(naechsteFoerderung.day === aktuellerTag ? "heute" : wochentage[naechsteFoerderung.day])} (${naechsteFoerderung.stunde})`
-                : "Keine";
-
-            container.innerHTML = `
-                <div id="status-icon" class="icon">${icon.textContent}</div>
-                <h1>${foerderungAktiv ? "Anschlussförderung aktiv" : "Keine Anschlussförderung"}</h1>
-                <p><strong>Nächste Förderung:</strong> ${nextSessionHTML}</p>
-                <p id="countdown">Countdown: ${naechsteFoerderung ? calculateCountdown(naechsteFoerderung.date) : "-"}</p>
-                <button id="toggle-students">📃 Schüler*innen anzeigen</button>
-                <div id="students-list" class="students-list"></div>
-            `;
-            document.getElementById("toggle-students").addEventListener("click", toggleStudentsList);
-        }
-
-        function calculateCountdown(targetDate) {
-            const jetzt = new Date();
-            const diff = targetDate - jetzt;
-            if (diff <= 0) return null;
-
-            const hours = Math.floor(diff / (1000 * 60 * 60));
-            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-            const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-
-            return `${hours}h ${minutes}m ${seconds}s`;
+            if (studentsListVisible) {
+                document.getElementById("students-list").style.display = "block";
+            }
         }
 
         setInterval(checkFoerderung, 1000);
-        checkFoerderung();
+        document.getElementById("toggle-students").addEventListener("click", toggleStudentsList);
     </script>
 </body>
 </html>
