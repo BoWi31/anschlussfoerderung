@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Anschlussförderung</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f5f5f5;
+        }
+        .status-container {
+            text-align: center;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            max-width: 90%;
+            width: 400px;
+            transition: all 0.3s ease-in-out;
+        }
+        .green {
+            background-color: #28a745;
+            color: white;
+        }
+        .red {
+            background-color: #dc3545;
+            color: white;
+        }
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        li {
+            font-size: 1.1em;
+        }
+        
+        /* Mobile-Optimierung */
+        @media screen and (max-width: 600px) {
+            .status-container {
+                width: 90%;
+                padding: 15px;
+            }
+            h1 {
+                font-size: 1.5em;
+            }
+            li {
+                font-size: 1em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="status" class="status-container">
+        <h1>Überprüfung läuft...</h1>
+    </div>
+
+    <script>
+        // Förderzeiten und Schüler*innen nach Fach
+        const foerderzeiten = [
+            { fach: "Deutsch", day: 1, start: "07:40", end: "09:30" },
+            { fach: "Deutsch", day: 2, start: "09:30", end: "11:20" },
+            { fach: "Deutsch", day: 4, start: "09:30", end: "11:20" },
+            { fach: "Deutsch", day: 5, start: "11:20", end: "13:10" },
+            { fach: "Mathe", day: 2, start: "11:20", end: "13:10" },
+            { fach: "Englisch", day: 3, start: "09:30", end: "11:20" }
+        ];
+
+        // Betroffene Schüler*innen
+        const schuelerListe = [
+            "Anastasia 5a", "Alina 5.1", "Vojdan 5.1", "Daniil 6.1", 
+            "Mohammed H. 7.1", "Mohammed L. 7.1", "Marin 7.1", "Evelina 7.1",
+            "Ili 7.2", "Ilyas 7.2", "Beyar 7.2", "Emma 7.2", "Artur 7.2"
+        ];
+
+        function checkFoerderung() {
+            const jetzt = new Date();
+            const aktuelleZeit = `${jetzt.getHours().toString().padStart(2, "0")}:${jetzt.getMinutes().toString().padStart(2, "0")}`;
+            const aktuellerTag = jetzt.getDay(); // Montag = 1, Sonntag = 0
+            const statusDiv = document.getElementById("status");
+
+            let foerderungAktiv = false;
+            let aktuelleFaecher = [];
+
+            // Überprüfung der Förderzeiten
+            foerderzeiten.forEach(zeit => {
+                if (aktuellerTag === zeit.day && aktuelleZeit >= zeit.start && aktuelleZeit <= zeit.end) {
+                    foerderungAktiv = true;
+                    aktuelleFaecher.push(zeit.fach);
+                }
+            });
+
+            // Farbliche Anzeige je nach Status
+            if (foerderungAktiv) {
+                statusDiv.innerHTML = `
+                    <h1>Anschlussförderung aktiv</h1>
+                    <p><strong>Fächer:</strong> ${aktuelleFaecher.join(", ")}</p>
+                    <p><strong>Betroffene Schüler*innen:</strong></p>
+                    <ul>
+                        ${schuelerListe.map(schueler => `<li>${schueler}</li>`).join("")}
+                    </ul>`;
+                statusDiv.className = "status-container red";
+            } else {
+                statusDiv.innerHTML = "<h1>Keine Anschlussförderung</h1>";
+                statusDiv.className = "status-container green";
+            }
+        }
+
+        // Überprüfung bei Seitenaufruf und alle 60 Sekunden
+        setInterval(checkFoerderung, 60000);
+        checkFoerderung();
+    </script>
+</body>
+</html>
