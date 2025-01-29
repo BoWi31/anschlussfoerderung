@@ -18,22 +18,57 @@
             transition: background-color 0.5s ease;
         }
         .status-container {
-            padding: 20px;
-            border-radius: 10px;
+            padding: 2em;
+            border-radius: 20px;
             background: white;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
             width: 90%;
             max-width: 400px;
             transition: all 0.3s ease-in-out;
         }
-        h1, p {
+        h1 {
             margin: 0;
+            font-size: 2em;
+            color: black;
+        }
+        p {
+            margin: 0.5em 0;
+            font-size: 1.2em;
             color: black;
         }
         #countdown {
-            margin-top: 10px;
+            margin-top: 1em;
             font-size: 1.2em;
             color: #555;
+        }
+        .active {
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 20px rgba(220, 53, 69, 0.5);
+            }
+            50% {
+                box-shadow: 0 0 40px rgba(220, 53, 69, 0.7);
+            }
+            100% {
+                box-shadow: 0 0 20px rgba(220, 53, 69, 0.5);
+            }
+        }
+        @media (max-width: 600px) {
+            .status-container {
+                width: 95%;
+                padding: 1.5em;
+            }
+            h1 {
+                font-size: 1.8em;
+            }
+            p {
+                font-size: 1em;
+            }
+            #countdown {
+                font-size: 1em;
+            }
         }
     </style>
 </head>
@@ -45,50 +80,31 @@
     </div>
 
     <script>
-        // Förderzeiten und Schüler*innen
+        const wochentage = ["Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"];
+
         const foerderzeiten = [
-            { fach: "Deutsch", day: 1, start: "07:40", end: "09:30" },
-            { fach: "Deutsch", day: 2, start: "09:30", end: "11:20" },
-            { fach: "Deutsch", day: 4, start: "09:30", end: "11:20" },
-            { fach: "Deutsch", day: 5, start: "11:20", end: "13:10" },
-            { fach: "Mathe", day: 2, start: "11:20", end: "13:10" },
-            { fach: "Englisch", day: 3, start: "09:30", end: "11:20" }
+            { fach: "Deutsch", day: 1, stunde: "1./2. Stunde", start: "07:40", end: "09:30", schueler: { "5a": ["Anastasia"] } },
+            { fach: "Deutsch", day: 2, stunde: "3./4. Stunde", start: "09:30", end: "11:20", schueler: { "5.1": ["Alina", "Vojdan"] } },
+            { fach: "Deutsch", day: 4, stunde: "3./4. Stunde", start: "09:30", end: "11:20", schueler: { "6.1": ["Daniil"] } },
+            { fach: "Deutsch", day: 5, stunde: "5./6. Stunde", start: "11:20", end: "13:10", schueler: { "7.1": ["Mohammed H.", "Mohammed L.", "Marin", "Evelina"] } },
+            { fach: "Mathe", day: 2, stunde: "5./6. Stunde", start: "11:20", end: "13:10", schueler: { "7.2": ["Ili", "Ilyas", "Beyar", "Emma", "Artur"] } },
+            { fach: "Englisch", day: 3, stunde: "3./4. Stunde", start: "09:30", end: "11:20", schueler: { "7.2": ["Ili", "Ilyas", "Beyar", "Emma", "Artur"] } }
         ];
-
-        function updateUhrzeit() {
-            const jetzt = new Date();
-            const uhrzeitString = jetzt.toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
-            return uhrzeitString;
-        }
-
-        function calculateCountdown(targetDate) {
-            const jetzt = new Date();
-            const diff = targetDate - jetzt;
-
-            if (diff <= 0) return null;
-
-            const hours = Math.floor(diff / (1000 * 60 * 60));
-            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-            const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-
-            return `${hours}h ${minutes}m ${seconds}s`;
-        }
 
         function checkFoerderung() {
             const jetzt = new Date();
             const aktuelleZeit = `${jetzt.getHours().toString().padStart(2, "0")}:${jetzt.getMinutes().toString().padStart(2, "0")}`;
-            const aktuellerTag = jetzt.getDay(); // Montag = 1, Sonntag = 0
-            const statusDiv = document.getElementById("status");
-
+            const aktuellerTag = jetzt.getDay();
             let foerderungAktiv = false;
             let aktuelleFaecher = [];
+            let aktuelleSchueler = {};
             let naechsteFoerderung = null;
 
-            // Zeit und Tag überprüfen
             foerderzeiten.forEach(zeit => {
                 if (aktuellerTag === zeit.day && aktuelleZeit >= zeit.start && aktuelleZeit <= zeit.end) {
                     foerderungAktiv = true;
-                    aktuelleFaecher.push(zeit.fach);
+                    aktuelleFaecher.push(`${zeit.fach} (${zeit.stunde})`);
+                    aktuelleSchueler = zeit.schueler;
                 } else if (!naechsteFoerderung || aktuellerTag < zeit.day || (aktuellerTag === zeit.day && aktuelleZeit < zeit.start)) {
                     // Nächste Förderung ermitteln
                     const naechsteZeit = new Date(jetzt);
@@ -101,30 +117,47 @@
                 }
             });
 
-            // Seite entsprechend färben
+            const container = document.getElementById("status");
+
+            document.body.style.backgroundColor = foerderungAktiv ? "#dc3545" : "#28a745";
             if (foerderungAktiv) {
-                document.body.style.backgroundColor = "#dc3545"; // Rot
-                statusDiv.innerHTML = `
-                    <h1>Anschlussförderung aktiv</h1>
-                    <p><strong>Fächer:</strong> ${aktuelleFaecher.join(", ")}</p>
-                `;
+                container.classList.add("active");
             } else {
-                document.body.style.backgroundColor = "#28a745"; // Grün
-                const countdownElement = document.getElementById("countdown");
-                if (naechsteFoerderung) {
-                    const countdown = calculateCountdown(naechsteFoerderung.date);
-                    statusDiv.innerHTML = `
-                        <h1>Keine Anschlussförderung</h1>
-                        <p><strong>Nächste Förderung:</strong> ${naechsteFoerderung.fach} am ${naechsteFoerderung.date.toLocaleDateString("de-DE")} um ${naechsteFoerderung.start} Uhr</p>
-                        <p id="countdown">Countdown: ${countdown}</p>
-                    `;
-                } else {
-                    statusDiv.innerHTML = "<h1>Keine Anschlussförderung diese Woche</h1>";
+                container.classList.remove("active");
+            }
+
+            let schuelerHTML = "";
+            if (foerderungAktiv) {
+                for (const [klasse, schueler] of Object.entries(aktuelleSchueler)) {
+                    schuelerHTML += `<div class='class-header'>${klasse}</div><ul class='student-list'>${schueler.map(s => `<li>- ${s}</li>`).join("")}</ul>`;
                 }
             }
+
+            const nextSessionHTML = naechsteFoerderung
+                ? `${naechsteFoerderung.fach} am ${(naechsteFoerderung.day === aktuellerTag ? "heute" : wochentage[naechsteFoerderung.day])} (${naechsteFoerderung.stunde})`
+                : "Keine";
+
+            container.innerHTML = `
+                <h1>${foerderungAktiv ? "Anschlussförderung aktiv" : "Keine Anschlussförderung"}</h1>
+                <p><strong>Fächer:</strong> ${aktuelleFaecher.join(", ")}</p>
+                ${schuelerHTML}
+                <p class="next-session"><strong>Nächste Förderung:</strong> ${nextSessionHTML}</p>
+                <p id="countdown">Countdown: ${naechsteFoerderung ? calculateCountdown(naechsteFoerderung.date) : "-"}</p>
+            `;
         }
 
-        // Aktualisierung alle 1 Sekunde
+        function calculateCountdown(targetDate) {
+            const jetzt = new Date();
+            const diff = targetDate - jetzt;
+            if (diff <= 0) return null;
+
+            const hours = Math.floor(diff / (1000 * 60 * 60));
+            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+            return `${hours}h ${minutes}m ${seconds}s`;
+        }
+
         setInterval(checkFoerderung, 1000);
         checkFoerderung();
     </script>
