@@ -16,14 +16,8 @@
             align-items: center;
             flex-direction: column;
             min-height: 100vh;
-            color: #212529;
-            background-color: #f8f9fa; /* Standard: Hell */
+            background-color: #f8f9fa;
             transition: background-color 0.5s ease, color 0.5s ease;
-        }
-
-        .dark-mode {
-            background-color: #212529; /* Dunkel */
-            color: #f8f9fa;
         }
 
         .status-container {
@@ -35,15 +29,35 @@
             max-width: 800px;
             width: 90%;
             text-align: center;
+            transition: all 0.3s ease;
         }
 
-        .dark-mode .status-container {
-            background: #343a40;
-            color: #f8f9fa;
-        }
-
-        .next-session {
+        .student-list {
+            text-align: left;
             margin-top: 1em;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background: #f8f9fa;
+            max-width: 600px;
+        }
+
+        .highlight {
+            color: #ffffff;
+            padding: 5px 10px;
+            border-radius: 5px;
+        }
+
+        .highlight-deutsch {
+            background-color: #f9c74f;
+        }
+
+        .highlight-englisch {
+            background-color: #f94144;
+        }
+
+        .highlight-mathe {
+            background-color: #277da1;
         }
 
         button {
@@ -59,57 +73,19 @@
         button:hover {
             background-color: #0056b3;
         }
-
-        .dark-mode button {
-            background-color: #0056b3;
-        }
-
-        .dark-mode button:hover {
-            background-color: #003f7f;
-        }
-
-        .student-list {
-            text-align: left;
-            margin-top: 1em;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            background: #f8f9fa;
-            max-width: 600px;
-        }
-
-        .dark-mode .student-list {
-            background: #495057;
-            color: #f8f9fa;
-            border-color: #343a40;
-        }
-
-        .highlight-deutsch {
-            background-color: #f9c74f;
-        }
-
-        .highlight-englisch {
-            background-color: #f94144;
-        }
-
-        .highlight-mathe {
-            background-color: #277da1;
-        }
     </style>
 </head>
 <body>
-    <button class="toggle-dark-mode" onclick="toggleDarkMode()">🌙 Dark Mode</button>
     <div class="status-container">
         <h1 id="status-title">Keine Anschlussförderung</h1>
-        <div class="next-session" id="next-session">
+        <div id="next-session">
             <strong>Nächste Förderung:</strong> Wird geladen...
-            <div id="countdown"></div>
         </div>
         <div id="student-list" class="student-list" style="display: none;">
             <h3>Schülerliste:</h3>
             <ul id="student-list-content"></ul>
         </div>
-        <button onclick="simulateMode()">🔘 Simulieren</button>
+        <button id="simulate-btn" onclick="simulateMode()">🔘 Simulieren</button>
     </div>
 
     <script>
@@ -130,84 +106,37 @@
         const wochentage = ["Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"];
         let isSimulationMode = false;
 
-        function toggleDarkMode() {
-            document.body.classList.toggle('dark-mode');
-        }
-
-        function updateNextSession() {
-            if (isSimulationMode) return;
-
-            const now = new Date();
-            const currentDay = now.getDay();
-            const currentTime = `${now.getHours().toString().padStart(2, "0")}:${now.getMinutes().toString().padStart(2, "0")}`;
-            let nextSession = null;
-
-            foerderzeiten.forEach(zeit => {
-                const sessionDayDiff = (zeit.day - currentDay + 7) % 7;
-                const isSameDay = sessionDayDiff === 0 && currentTime < zeit.start;
-
-                if (!nextSession || sessionDayDiff < ((nextSession.day - currentDay + 7) % 7) || isSameDay) {
-                    nextSession = zeit;
-                }
-            });
-
-            const nextSessionDiv = document.getElementById("next-session");
-            const countdownDiv = document.getElementById("countdown");
-
-            if (nextSession) {
-                const nextDate = new Date();
-                nextDate.setDate(nextDate.getDate() + ((nextSession.day - currentDay + 7) % 7));
-                nextDate.setHours(nextSession.start.split(":")[0]);
-                nextDate.setMinutes(nextSession.start.split(":")[1]);
-
-                const countdown = calculateCountdown(nextDate);
-                nextSessionDiv.innerHTML = `<strong>Nächste Förderung:</strong> ${nextSession.fach} am ${wochentage[nextSession.day]} (${nextSession.stunde})`;
-                countdownDiv.textContent = `Countdown: ${countdown}`;
-            } else {
-                nextSessionDiv.innerHTML = `<strong>Nächste Förderung:</strong> Keine weiteren Termine geplant.`;
-                countdownDiv.textContent = "";
-            }
-        }
-
         function simulateMode() {
             const statusTitle = document.getElementById("status-title");
+            const nextSessionDiv = document.getElementById("next-session");
             const studentList = document.getElementById("student-list");
             const studentListContent = document.getElementById("student-list-content");
 
             isSimulationMode = !isSimulationMode;
 
             if (isSimulationMode) {
-                document.body.style.backgroundColor = "#dc3545";
+                document.body.style.backgroundColor = "#dc3545"; // Rot für aktive Förderung
                 statusTitle.textContent = "⚠️ Anschlussförderung aktiv";
+
+                // Nächste Förderung anzeigen
+                const nextSession = foerderzeiten[0]; // Simulation basiert auf dem ersten Termin
+                nextSessionDiv.innerHTML = `
+                    <strong>Fach:</strong> <span class="highlight highlight-${nextSession.fach.toLowerCase()}">${nextSession.fach}</span><br>
+                    <strong>Zeitraum:</strong> ${nextSession.stunde}`;
+
+                // Schülerliste anzeigen
                 studentList.style.display = "block";
                 studentListContent.innerHTML = "";
-
                 for (const klasse in schueler) {
                     studentListContent.innerHTML += `<li><strong>${klasse}:</strong> ${schueler[klasse].join(", ")}</li>`;
                 }
             } else {
-                document.body.style.backgroundColor = "#28a745";
+                document.body.style.backgroundColor = "#28a745"; // Grün für keine Förderung
                 statusTitle.textContent = "Keine Anschlussförderung";
+                nextSessionDiv.innerHTML = "<strong>Nächste Förderung:</strong> Wird geladen...";
                 studentList.style.display = "none";
-                updateNextSession();
             }
         }
-
-        function calculateCountdown(targetDate) {
-            const now = new Date();
-            const diff = targetDate - now;
-            if (diff <= 0) return null;
-
-            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-            const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-            const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-
-            return `${days}d ${hours}h ${minutes}m ${seconds}s`;
-        }
-
-        setInterval(updateNextSession, 1000);
-        updateNextSession();
     </script>
 </body>
 </html>
