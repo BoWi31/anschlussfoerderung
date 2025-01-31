@@ -16,20 +16,17 @@
             align-items: center;
             flex-direction: column;
             min-height: 100vh;
-            background-color: #f8f9fa;
+            background-color: #28a745;
             color: #212529;
-            animation: fadeInBackground 3s infinite;
+            animation: pulseBackground 3s infinite;
         }
 
-        @keyframes fadeInBackground {
-            0% {
-                background-color: #f8f9fa;
+        @keyframes pulseBackground {
+            0%, 100% {
+                background-color: #28a745;
             }
             50% {
-                background-color: #e9ecef;
-            }
-            100% {
-                background-color: #f8f9fa;
+                background-color: #32cd32;
             }
         }
 
@@ -42,51 +39,11 @@
             max-width: 600px;
             width: 90%;
             text-align: center;
-            position: relative;
-            animation: fadeIn 1s;
         }
 
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-            }
-            to {
-                opacity: 1;
-            }
-        }
-
-        .icon {
-            font-size: 3em;
-            margin-bottom: 10px;
-        }
-
-        .active-session {
-            background: #fff3cd;
-            padding: 1em;
-            border: 1px solid #ffeeba;
-            border-radius: 10px;
+        h1 {
+            font-size: 2em;
             margin-bottom: 1em;
-        }
-
-        .class-list {
-            margin-top: 1em;
-            text-align: left;
-        }
-
-        .class-title {
-            font-size: 1.2em;
-            font-weight: bold;
-            margin: 1em 0 0.5em;
-            color: #495057;
-        }
-
-        ul {
-            list-style: none;
-            padding-left: 1em;
-        }
-
-        ul li {
-            margin: 0.2em 0;
         }
 
         .next-session {
@@ -97,22 +54,21 @@
             font-size: 1em;
         }
 
-        .check-student {
-            margin-top: 2em;
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1em;
         }
 
-        .progress-container {
-            background: #e9ecef;
-            border-radius: 10px;
-            height: 20px;
-            margin-top: 10px;
-            overflow: hidden;
+        table th, table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
         }
 
-        .progress-bar {
-            background: #28a745;
-            height: 100%;
-            transition: width 0.5s ease;
+        table th {
+            background-color: #f4f4f4;
+            font-weight: bold;
         }
 
         @media (max-width: 600px) {
@@ -120,30 +76,28 @@
                 font-size: 1.8em;
             }
 
-            .class-title {
-                font-size: 1em;
-            }
-
-            ul {
-                padding-left: 0.5em;
+            table th, table td {
+                font-size: 0.9em;
             }
         }
     </style>
 </head>
 <body>
     <div class="status-container">
-        <div class="icon green" id="status-icon">✅</div>
         <h1 id="status-title">Keine Anschlussförderung</h1>
-        <div id="active-session" class="active-session" style="display: none;"></div>
-        <div class="class-list" id="class-list"></div>
         <div class="next-session" id="next-session">
             <strong>Nächste Förderung:</strong> Wird geladen...
+            <div id="countdown"></div>
         </div>
-        <div class="check-student">
-            <input type="text" id="student-name" placeholder="Schülername eingeben">
-            <button onclick="checkStudent()">Prüfen</button>
-            <div id="student-result"></div>
-        </div>
+        <table id="participant-table" style="display: none;">
+            <thead>
+                <tr>
+                    <th>Klasse</th>
+                    <th>Teilnehmer</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
     </div>
 
     <script>
@@ -156,39 +110,24 @@
         const schueler = {
             "5a": ["Anastasia"],
             "5.1": ["Alina", "Vojdan"],
-            "6.1": ["Daniil"],
-            "7.1": ["Mohammed H.", "Mohammed L.", "Marin", "Evelina"],
+            "6.1": ["Daniil", "Mohammed L."],
+            "7.1": ["Mohammed H.", "Marin", "Evelina"],
             "7.2": ["Ili", "Ilyas", "Beyar", "Emma", "Artur"]
         };
+
+        const wochentage = ["Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"];
 
         function calculateCountdown(targetDate) {
             const now = new Date();
             const diff = targetDate - now;
             if (diff <= 0) return null;
 
-            const hours = Math.floor(diff / (1000 * 60 * 60));
+            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
             const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
             const seconds = Math.floor((diff % (1000 * 60)) / 1000);
 
-            return `${hours}h ${minutes}m ${seconds}s`;
-        }
-
-        function checkStudent() {
-            const studentName = document.getElementById("student-name").value.toLowerCase();
-            const resultDiv = document.getElementById("student-result");
-
-            let found = false;
-            for (const klasse in schueler) {
-                if (schueler[klasse].some(name => name.toLowerCase() === studentName)) {
-                    found = true;
-                    resultDiv.innerHTML = `<p>${studentName} ist in der Klasse ${klasse} und für die Förderung eingeplant.</p>`;
-                    break;
-                }
-            }
-
-            if (!found) {
-                resultDiv.innerHTML = `<p>${studentName} ist nicht in der Förderung eingeplant.</p>`;
-            }
+            return `${days}d ${hours}h ${minutes}m ${seconds}s`;
         }
 
         function updateStatus() {
@@ -206,25 +145,39 @@
                 }
             });
 
-            const statusIcon = document.getElementById("status-icon");
             const statusTitle = document.getElementById("status-title");
-            const activeSessionDiv = document.getElementById("active-session");
             const nextSessionDiv = document.getElementById("next-session");
-            const classListDiv = document.getElementById("class-list");
+            const countdownDiv = document.getElementById("countdown");
+            const participantTable = document.getElementById("participant-table");
+            const tableBody = participantTable.querySelector("tbody");
 
             if (activeSessions.length > 0) {
-                statusIcon.textContent = "⚠️";
                 statusTitle.textContent = "Anschlussförderung aktiv";
-                activeSessionDiv.style.display = "block";
-                activeSessionDiv.innerHTML = activeSessions.map(session => `<p style="color:${session.color};">${session.fach} (${session.stunde})</p>`).join("");
+                participantTable.style.display = "table";
+
+                tableBody.innerHTML = "";
+                for (const klasse in schueler) {
+                    const row = document.createElement("tr");
+                    row.innerHTML = `<td>${klasse}</td><td>${schueler[klasse].join(", ")}</td>`;
+                    tableBody.appendChild(row);
+                }
             } else {
-                statusIcon.textContent = "✅";
                 statusTitle.textContent = "Keine Anschlussförderung";
-                activeSessionDiv.style.display = "none";
+                participantTable.style.display = "none";
             }
 
             if (nextSession) {
-                nextSessionDiv.innerHTML = `<strong>Nächste Förderung:</strong> ${nextSession.fach} (${nextSession.stunde})`;
+                const nextDate = new Date();
+                nextDate.setDate(nextDate.getDate() + ((nextSession.day - currentDay + 7) % 7));
+                nextDate.setHours(nextSession.start.split(":")[0]);
+                nextDate.setMinutes(nextSession.start.split(":")[1]);
+
+                const countdown = calculateCountdown(nextDate);
+                nextSessionDiv.innerHTML = `<strong>Nächste Förderung:</strong> ${nextSession.fach} am ${wochentage[nextSession.day]} (${nextSession.stunde})`;
+                countdownDiv.textContent = `Countdown: ${countdown}`;
+            } else {
+                nextSessionDiv.innerHTML = "<strong>Nächste Förderung:</strong> Keine weiteren Förderungen geplant.";
+                countdownDiv.textContent = "";
             }
         }
 
