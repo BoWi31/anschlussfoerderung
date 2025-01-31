@@ -6,7 +6,6 @@
     <meta name="robots" content="noindex, nofollow">
     <title>Anschlussförderung</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
-    <link rel="manifest" href="./manifest.json">
 
     <style>
         body {
@@ -19,17 +18,8 @@
             flex-direction: column;
             min-height: 100vh;
             color: #212529;
-            animation: pulseBackgroundGreen 3s infinite;
+            background-color: #28a745; /* Standard: Grün */
             transition: background-color 0.5s ease;
-        }
-
-        @keyframes pulseBackgroundGreen {
-            0%, 100% {
-                background-color: #28a745;
-            }
-            50% {
-                background-color: #32cd32;
-            }
         }
 
         @keyframes pulseBackgroundRed {
@@ -56,20 +46,6 @@
         h1 {
             font-size: 2.5em;
             margin-bottom: 1em;
-        }
-
-        .next-session {
-            margin-top: 1.5em;
-            padding: 1em;
-            background: #e9ecef;
-            border-radius: 10px;
-            font-size: 1.2em;
-        }
-
-        .active-mode {
-            color: white;
-            font-size: 2em;
-            text-align: center;
         }
 
         button {
@@ -100,9 +76,11 @@
             <div id="countdown"></div>
         </div>
     </div>
-    <button onclick="simulateFoerderung()">🔘 Simulieren</button>
+    <button id="toggle-button" onclick="toggleMode()">🔘 Simulieren</button>
 
     <script>
+        let isSimulationMode = false;
+
         const foerderzeiten = [
             { fach: "Deutsch", day: 1, stunde: "1./2. Stunde", start: "07:40", end: "09:30" },
             { fach: "Mathe", day: 2, stunde: "3./4. Stunde", start: "09:30", end: "11:20" },
@@ -125,6 +103,8 @@
         }
 
         function updateStatus() {
+            if (isSimulationMode) return; // Im Simulationsmodus wird nichts aktualisiert
+
             const now = new Date();
             const currentDay = now.getDay();
             const currentTime = `${now.getHours().toString().padStart(2, "0")}:${now.getMinutes().toString().padStart(2, "0")}`;
@@ -157,15 +137,35 @@
             }
         }
 
-        function simulateFoerderung() {
-            document.body.style.animation = "pulseBackgroundRed 3s infinite";
+        function toggleMode() {
             const statusContainer = document.getElementById("status-container");
-            statusContainer.innerHTML = `
-                <div class="active-mode">⚠️ Anschlussförderung aktiv</div>
-                <h1>Aktive Förderung!</h1>
-                <p><strong>Fach:</strong> Deutsch</p>
-                <p><strong>Zeitraum:</strong> 1./2. Stunde</p>
-            `;
+            const toggleButton = document.getElementById("toggle-button");
+
+            isSimulationMode = !isSimulationMode;
+
+            if (isSimulationMode) {
+                document.body.style.backgroundColor = "#dc3545"; // Hintergrund auf Rot
+                document.body.style.animation = "pulseBackgroundRed 3s infinite";
+                statusContainer.innerHTML = `
+                    <h1>⚠️ Anschlussförderung aktiv</h1>
+                    <p><strong>Fach:</strong> Deutsch</p>
+                    <p><strong>Zeitraum:</strong> 1./2. Stunde</p>
+                `;
+                toggleButton.textContent = "🔘 Real-Modus";
+            } else {
+                document.body.style.backgroundColor = "#28a745"; // Hintergrund zurück auf Grün
+                document.body.style.animation = "none";
+                statusContainer.innerHTML = `
+                    <div id="status-icon" class="status-icon">✅</div>
+                    <h1 id="status-title">Keine Anschlussförderung</h1>
+                    <div class="next-session" id="next-session">
+                        <strong>Nächste Förderung:</strong> Wird geladen...
+                        <div id="countdown"></div>
+                    </div>
+                `;
+                toggleButton.textContent = "🔘 Simulieren";
+                updateStatus(); // Echtzeitstatus erneut laden
+            }
         }
 
         setInterval(updateStatus, 1000);
