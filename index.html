@@ -18,19 +18,26 @@
             align-items: center;
             flex-direction: column;
             min-height: 100vh;
-            background-color: #28a745;
             color: #212529;
-            animation: pulseBackground 3s infinite;
-            position: relative;
+            animation: pulseBackgroundGreen 3s infinite;
             transition: background-color 0.5s ease;
         }
 
-        @keyframes pulseBackground {
+        @keyframes pulseBackgroundGreen {
             0%, 100% {
                 background-color: #28a745;
             }
             50% {
                 background-color: #32cd32;
+            }
+        }
+
+        @keyframes pulseBackgroundRed {
+            0%, 100% {
+                background-color: #dc3545;
+            }
+            50% {
+                background-color: #ff4d4d;
             }
         }
 
@@ -47,7 +54,7 @@
         }
 
         h1 {
-            font-size: 2em;
+            font-size: 2.5em;
             margin-bottom: 1em;
         }
 
@@ -56,7 +63,13 @@
             padding: 1em;
             background: #e9ecef;
             border-radius: 10px;
-            font-size: 1em;
+            font-size: 1.2em;
+        }
+
+        .active-mode {
+            color: white;
+            font-size: 2em;
+            text-align: center;
         }
 
         button {
@@ -145,27 +158,14 @@
         }
 
         function simulateFoerderung() {
-            const now = new Date();
-            const currentDay = now.getDay();
-            let nextSession = null;
-
-            foerderzeiten.forEach(zeit => {
-                const sessionDayDiff = (zeit.day - currentDay + 7) % 7;
-                if (!nextSession || sessionDayDiff < ((nextSession.day - currentDay + 7) % 7)) {
-                    nextSession = zeit;
-                }
-            });
-
-            if (nextSession) {
-                document.body.style.backgroundColor = "#dc3545"; // Rot für aktive Förderung
-                const statusContainer = document.getElementById("status-container");
-                statusContainer.innerHTML = `
-                    <div class="status-icon">⚠️</div>
-                    <h1>Anschlussförderung aktiv</h1>
-                    <p><strong>Fach:</strong> ${nextSession.fach}</p>
-                    <p><strong>Zeitraum:</strong> ${nextSession.stunde}</p>
-                `;
-            }
+            document.body.style.animation = "pulseBackgroundRed 3s infinite";
+            const statusContainer = document.getElementById("status-container");
+            statusContainer.innerHTML = `
+                <div class="active-mode">⚠️ Anschlussförderung aktiv</div>
+                <h1>Aktive Förderung!</h1>
+                <p><strong>Fach:</strong> Deutsch</p>
+                <p><strong>Zeitraum:</strong> 1./2. Stunde</p>
+            `;
         }
 
         setInterval(updateStatus, 1000);
