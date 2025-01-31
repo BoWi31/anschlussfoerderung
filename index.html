@@ -69,7 +69,7 @@
         <div id="next-session">
             <strong>Nächste Förderung:</strong> Wird geladen...
         </div>
-        <div id="students-list"></div>
+        <div id="students-list" style="display: none;"></div>
         <div id="countdown"></div>
         <button id="simulate-btn" onclick="simulateMode()">Nächste Anschlussförderung?</button>
     </div>
@@ -128,6 +128,7 @@
                 document.body.style.backgroundColor = "#dc3545"; // Rot für aktive Förderung
                 statusTitle.textContent = "⚠️ Anschlussförderung aktiv";
                 nextSessionDiv.innerHTML = `<strong>Fach:</strong> ${nextSession.fach} (${nextSession.stunde})`;
+                studentsListDiv.style.display = "block";
                 studentsListDiv.innerHTML = generateStudentsHTML(nextSession.schueler);
                 countdownDiv.textContent = "Aktive Förderung läuft!";
                 simulateBtn.textContent = "Aktueller Status?";
@@ -135,14 +136,14 @@
                 document.body.style.backgroundColor = "#28a745"; // Grün für keine Förderung
                 statusTitle.textContent = "Keine Anschlussförderung";
                 nextSessionDiv.innerHTML = `<strong>Nächste Förderung:</strong> ${nextSession.fach} am ${["Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"][nextSession.day]} (${nextSession.stunde})`;
-                studentsListDiv.innerHTML = generateStudentsHTML(nextSession.schueler);
+                studentsListDiv.style.display = "none";
                 countdownDiv.textContent = `Countdown: ${updateCountdown(nextSession.date)}`;
                 simulateBtn.textContent = "Nächste Anschlussförderung?";
             } else {
                 document.body.style.backgroundColor = "#28a745";
                 statusTitle.textContent = "Keine Anschlussförderung";
                 nextSessionDiv.innerHTML = "<strong>Nächste Förderung:</strong> Keine weiteren Termine!";
-                studentsListDiv.innerHTML = "";
+                studentsListDiv.style.display = "none";
                 countdownDiv.textContent = "";
                 simulateBtn.textContent = "Nächste Anschlussförderung?";
             }
