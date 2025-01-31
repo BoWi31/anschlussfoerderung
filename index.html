@@ -21,11 +21,6 @@
             transition: background-color 0.5s ease, color 0.5s ease;
         }
 
-        .dark-mode {
-            background-color: #212529; /* Dunkel */
-            color: #f8f9fa;
-        }
-
         .status-container {
             background: white;
             color: #212529;
@@ -35,160 +30,111 @@
             max-width: 800px;
             width: 90%;
             text-align: center;
-            transition: all 0.3s ease;
         }
 
-        .dark-mode .status-container {
-            background: #343a40;
-            color: #f8f9fa;
-        }
-
-        h1 {
-            font-size: 2em;
-            margin-bottom: 1em;
-        }
-
-        h2 {
-            font-size: 1.5em;
-            margin-bottom: 0.5em;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 1em 0;
-        }
-
-        table th, table td {
-            border: 1px solid #ddd;
-            padding: 10px;
-            text-align: center;
-        }
-
-        table th {
-            background-color: #007bff;
-            color: white;
-        }
-
-        .dark-mode table th {
-            background-color: #0056b3;
+        .next-session {
+            margin-top: 1em;
         }
 
         button {
             background-color: #007bff;
             color: white;
             border: none;
-            padding: 10px 20px;
+            padding: 10px 15px;
             border-radius: 5px;
             cursor: pointer;
-            font-size: 0.9em;
-            margin: 5px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-top: 1em;
         }
 
         button:hover {
             background-color: #0056b3;
         }
-
-        .dark-mode button {
-            background-color: #0056b3;
-        }
-
-        .dark-mode button:hover {
-            background-color: #003f7f;
-        }
-
-        .toggle-dark-mode {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-        }
-
-        input[type="text"] {
-            padding: 10px;
-            margin: 10px 0;
-            width: 100%;
-            max-width: 400px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-        }
-
-        input[type="text"]:focus {
-            outline: none;
-            border-color: #007bff;
-            box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
-        }
     </style>
 </head>
 <body>
-    <button class="toggle-dark-mode" onclick="toggleDarkMode()">🌙 Dark Mode</button>
     <div class="status-container">
         <h1 id="status-title">Keine Anschlussförderung</h1>
         <div class="next-session" id="next-session">
             <strong>Nächste Förderung:</strong> Wird geladen...
             <div id="countdown"></div>
         </div>
-        <input type="text" id="search-bar" placeholder="Schülername eingeben..." oninput="searchStudent()">
-        <div id="search-result"></div>
+        <button onclick="simulateMode()">🔘 Simulieren</button>
     </div>
 
-    <button onclick="toggleMode()">🔘 Simulieren</button>
-
-    <table id="schedule-table">
-        <thead>
-            <tr>
-                <th>Tag</th>
-                <th>Fach</th>
-                <th>Stunde</th>
-                <th>Schüler</th>
-            </tr>
-        </thead>
-        <tbody id="schedule-body"></tbody>
-    </table>
-
     <script>
-        let isSimulationMode = false;
-        let isDarkMode = false;
-
         const foerderzeiten = [
             { fach: "Deutsch", day: 1, stunde: "1./2. Stunde", start: "07:40", end: "09:30" },
             { fach: "Mathe", day: 2, stunde: "3./4. Stunde", start: "09:30", end: "11:20" },
             { fach: "Englisch", day: 3, stunde: "5./6. Stunde", start: "11:20", end: "13:10" }
         ];
 
-        const schueler = {
-            "5a": ["Anastasia"],
-            "5.1": ["Alina", "Vojdan"],
-            "6.1": ["Daniil", "Mohammed L."],
-            "7.1": ["Mohammed H.", "Marin", "Evelina"],
-            "7.2": ["Ili", "Ilyas", "Beyar", "Emma", "Artur"]
-        };
-
         const wochentage = ["Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"];
+        let isSimulationMode = false;
 
-        function toggleDarkMode() {
-            isDarkMode = !isDarkMode;
-            document.body.classList.toggle('dark-mode', isDarkMode);
+        function calculateCountdown(targetDate) {
+            const now = new Date();
+            const diff = targetDate - now;
+            if (diff <= 0) return null;
+
+            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+            return `${days}d ${hours}h ${minutes}m ${seconds}s`;
         }
 
-        function toggleMode() {
-            isSimulationMode = !isSimulationMode;
-            document.getElementById("status-title").textContent = isSimulationMode ? "⚠️ Anschlussförderung aktiv" : "Keine Anschlussförderung";
-        }
+        function updateNextSession() {
+            const now = new Date();
+            const currentDay = now.getDay();
+            const currentTime = `${now.getHours().toString().padStart(2, "0")}:${now.getMinutes().toString().padStart(2, "0")}`;
+            let nextSession = null;
 
-        function searchStudent() {
-            const searchInput = document.getElementById("search-bar").value.toLowerCase();
-            const resultDiv = document.getElementById("search-result");
-            resultDiv.innerHTML = "";
+            foerderzeiten.forEach(zeit => {
+                const sessionDayDiff = (zeit.day - currentDay + 7) % 7;
+                const isSameDay = sessionDayDiff === 0 && currentTime < zeit.start;
 
-            for (const klasse in schueler) {
-                schueler[klasse].forEach(name => {
-                    if (name.toLowerCase().includes(searchInput)) {
-                        resultDiv.innerHTML += `<p>${name} - ${klasse}</p>`;
-                    }
-                });
+                if (!nextSession || sessionDayDiff < ((nextSession.day - currentDay + 7) % 7) || isSameDay) {
+                    nextSession = zeit;
+                }
+            });
+
+            const nextSessionDiv = document.getElementById("next-session");
+            const countdownDiv = document.getElementById("countdown");
+
+            if (nextSession) {
+                const nextDate = new Date();
+                nextDate.setDate(nextDate.getDate() + ((nextSession.day - currentDay + 7) % 7));
+                nextDate.setHours(nextSession.start.split(":")[0]);
+                nextDate.setMinutes(nextSession.start.split(":")[1]);
+
+                const countdown = calculateCountdown(nextDate);
+                nextSessionDiv.innerHTML = `<strong>Nächste Förderung:</strong> ${nextSession.fach} am ${wochentage[nextSession.day]} (${nextSession.stunde})`;
+                countdownDiv.textContent = `Countdown: ${countdown}`;
+            } else {
+                nextSessionDiv.innerHTML = `<strong>Nächste Förderung:</strong> Keine weiteren Termine geplant.`;
+                countdownDiv.textContent = "";
             }
         }
+
+        function simulateMode() {
+            const title = document.getElementById("status-title");
+            const nextSessionDiv = document.getElementById("next-session");
+            isSimulationMode = !isSimulationMode;
+
+            if (isSimulationMode) {
+                document.body.style.backgroundColor = "#dc3545"; // Rot
+                title.textContent = "⚠️ Anschlussförderung aktiv";
+                nextSessionDiv.innerHTML = `<strong>Aktiv:</strong> Deutsch (1./2. Stunde)`;
+            } else {
+                document.body.style.backgroundColor = "#28a745"; // Grün
+                title.textContent = "Keine Anschlussförderung";
+                updateNextSession();
+            }
+        }
+
+        setInterval(updateNextSession, 1000);
+        updateNextSession();
     </script>
 </body>
 </html>
