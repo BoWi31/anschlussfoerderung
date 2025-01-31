@@ -34,8 +34,8 @@
         .status-container {
             background: white;
             color: #212529;
-            padding: 2em;
-            border-radius: 15px;
+            padding: 1.5em;
+            border-radius: 10px;
             box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
             max-width: 600px;
             width: 90%;
@@ -44,18 +44,34 @@
         }
 
         h1 {
-            font-size: 2.5em;
+            font-size: 2em;
             margin-bottom: 1em;
+        }
+
+        h2 {
+            font-size: 1.5em;
+            margin-bottom: 0.5em;
+        }
+
+        ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        ul li {
+            font-size: 1em;
+            margin: 5px 0;
         }
 
         button {
             background-color: #007bff;
             color: white;
             border: none;
-            padding: 10px 20px;
+            padding: 10px 15px;
             border-radius: 5px;
             cursor: pointer;
-            font-size: 1em;
+            font-size: 0.9em;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
             position: fixed;
             bottom: 20px;
@@ -86,6 +102,14 @@
             { fach: "Mathe", day: 2, stunde: "3./4. Stunde", start: "09:30", end: "11:20" },
             { fach: "Englisch", day: 3, stunde: "5./6. Stunde", start: "11:20", end: "13:10" }
         ];
+
+        const schueler = {
+            "5a": ["Anastasia"],
+            "5.1": ["Alina", "Vojdan"],
+            "6.1": ["Daniil", "Mohammed L."],
+            "7.1": ["Mohammed H.", "Marin", "Evelina"],
+            "7.2": ["Ili", "Ilyas", "Beyar", "Emma", "Artur"]
+        };
 
         const wochentage = ["Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"];
 
@@ -146,10 +170,21 @@
             if (isSimulationMode) {
                 document.body.style.backgroundColor = "#dc3545"; // Hintergrund auf Rot
                 document.body.style.animation = "pulseBackgroundRed 3s infinite";
+
+                let schuelerListe = "";
+                for (const klasse in schueler) {
+                    schuelerListe += `<h2>${klasse}</h2><ul>`;
+                    schueler[klasse].forEach(name => {
+                        schuelerListe += `<li>${name}</li>`;
+                    });
+                    schuelerListe += `</ul>`;
+                }
+
                 statusContainer.innerHTML = `
                     <h1>⚠️ Anschlussförderung aktiv</h1>
                     <p><strong>Fach:</strong> Deutsch</p>
                     <p><strong>Zeitraum:</strong> 1./2. Stunde</p>
+                    ${schuelerListe}
                 `;
                 toggleButton.textContent = "🔘 Real-Modus";
             } else {
