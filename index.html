@@ -6,8 +6,6 @@
     <meta name="robots" content="noindex, nofollow">
     <title>Anschlussförderung</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
-    
-    <!-- PWA Manifest -->
     <link rel="manifest" href="./manifest.json">
 
     <style>
@@ -59,59 +57,28 @@
             font-size: 1em;
         }
 
-        .status-icon {
-            font-size: 3em;
-            margin-bottom: 0.5em;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 1em;
-        }
-
-        table th, table td {
-            border: 1px solid #ddd;
-            padding: 8px;
-            text-align: left;
-        }
-
-        table th {
-            background-color: #f4f4f4;
-            font-weight: bold;
-        }
-
-        #simulate-button {
+        #buttons-container {
             position: fixed;
-            bottom: 20px;
+            top: 20px;
             right: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        button {
             background-color: #007bff;
             color: white;
             border: none;
             padding: 10px 20px;
-            border-radius: 50%;
+            border-radius: 5px;
             cursor: pointer;
-            font-size: 1.5em;
+            font-size: 1em;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            width: 50px;
-            height: 50px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
         }
 
-        #simulate-button:hover {
+        button:hover {
             background-color: #0056b3;
-        }
-
-        @media (max-width: 600px) {
-            h1 {
-                font-size: 1.8em;
-            }
-
-            table th, table td {
-                font-size: 0.9em;
-            }
         }
     </style>
 </head>
@@ -123,37 +90,83 @@
             <strong>Nächste Förderung:</strong> Wird geladen...
             <div id="countdown"></div>
         </div>
-        <table id="participant-table" style="display: none;">
-            <thead>
-                <tr>
-                    <th>Klasse</th>
-                    <th>Teilnehmer</th>
-                </tr>
-            </thead>
-            <tbody></tbody>
-        </table>
     </div>
-    <button id="simulate-button" onclick="simulateFoerderung()">🔘</button>
+    <div id="buttons-container">
+        <button onclick="simulateFoerderung()">🔘</button>
+        <button onclick="enableNotifications()">Benachrichtigung erhalten</button>
+    </div>
 
     <script>
-        function simulateFoerderung() {
+        const foerderzeiten = [
+            { fach: "Deutsch", day: 1, stunde: "1./2. Stunde", start: "07:40", end: "09:30" },
+            { fach: "Mathe", day: 2, stunde: "3./4. Stunde", start: "09:30", end: "11:20" },
+            { fach: "Englisch", day: 3, stunde: "5./6. Stunde", start: "11:20", end: "13:10" }
+        ];
+
+        const wochentage = ["Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"];
+
+        let notificationEnabled = false;
+
+        function calculateCountdown(targetDate) {
+            const now = new Date();
+            const diff = targetDate - now;
+            if (diff <= 0) return null;
+
+            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+            return `${days}d ${hours}h ${minutes}m ${seconds}s`;
+        }
+
+        function updateStatus() {
             const now = new Date();
             const currentDay = now.getDay();
+            const currentTime = `${now.getHours().toString().padStart(2, "0")}:${now.getMinutes().toString().padStart(2, "0")}`;
             let nextSession = null;
 
             foerderzeiten.forEach(zeit => {
-                if (!nextSession || zeit.day > currentDay || (zeit.day === currentDay && now.getHours() < parseInt(zeit.start.split(":")[0]))) {
+                if (!nextSession || zeit.day > currentDay || (zeit.day === currentDay && currentTime < zeit.start)) {
                     nextSession = zeit;
                 }
             });
 
+            const nextSessionDiv = document.getElementById("next-session");
+            const countdownDiv = document.getElementById("countdown");
+
             if (nextSession) {
-                document.body.style.backgroundColor = "#dc3545"; // Rot für aktive Förderung
-                document.getElementById("status-title").textContent = "Anschlussförderung aktiv";
-                document.getElementById("status-icon").textContent = "⚠️";
-                document.getElementById("next-session").innerHTML = `<strong>Aktive Förderung:</strong> ${nextSession.fach} (${nextSession.stunde})`;
+                const nextDate = new Date();
+                nextDate.setDate(nextDate.getDate() + ((nextSession.day - currentDay + 7) % 7));
+                nextDate.setHours(nextSession.start.split(":")[0]);
+                nextDate.setMinutes(nextSession.start.split(":")[1]);
+
+                const countdown = calculateCountdown(nextDate);
+                nextSessionDiv.innerHTML = `<strong>Nächste Förderung:</strong> ${nextSession.fach} am ${wochentage[nextSession.day]} (${nextSession.stunde})`;
+                countdownDiv.textContent = `Countdown: ${countdown}`;
+
+                if (notificationEnabled) {
+                    const notificationTime = new Date(nextDate.getTime() - 15 * 60 * 1000); // 15 Minuten vorher
+                    if (now >= notificationTime && now < nextDate) {
+                        alert(`Die nächste Förderung beginnt in 15 Minuten: ${nextSession.fach}`);
+                        notificationEnabled = false; // Nur einmal Benachrichtigung senden
+                    }
+                }
             }
         }
+
+        function simulateFoerderung() {
+            alert("Simulation der nächsten Förderung aktiviert.");
+            updateStatus();
+        }
+
+        function enableNotifications() {
+            notificationEnabled = true;
+            alert("Benachrichtigungen aktiviert. Sie erhalten 15 Minuten vor der nächsten Förderung eine Nachricht.");
+        }
+
+        setInterval(updateStatus, 1000);
+        updateStatus();
     </script>
 </body>
 </html>
