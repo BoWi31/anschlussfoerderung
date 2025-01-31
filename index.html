@@ -6,7 +6,6 @@
     <meta name="robots" content="noindex, nofollow">
     <title>Anschlussförderung</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
-
     <style>
         body {
             font-family: 'Roboto', sans-serif;
@@ -18,17 +17,13 @@
             flex-direction: column;
             min-height: 100vh;
             color: #212529;
-            background-color: #28a745; /* Standard: Grün */
-            transition: background-color 0.5s ease;
+            background-color: #f8f9fa; /* Standard: Hell */
+            transition: background-color 0.5s ease, color 0.5s ease;
         }
 
-        @keyframes pulseBackgroundRed {
-            0%, 100% {
-                background-color: #dc3545;
-            }
-            50% {
-                background-color: #ff4d4d;
-            }
+        .dark-mode {
+            background-color: #212529; /* Dunkel */
+            color: #f8f9fa;
         }
 
         .status-container {
@@ -37,10 +32,15 @@
             padding: 1.5em;
             border-radius: 10px;
             box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
-            max-width: 600px;
+            max-width: 800px;
             width: 90%;
             text-align: center;
             transition: all 0.3s ease;
+        }
+
+        .dark-mode .status-container {
+            background: #343a40;
+            color: #f8f9fa;
         }
 
         h1 {
@@ -53,49 +53,102 @@
             margin-bottom: 0.5em;
         }
 
-        ul {
-            list-style: none;
-            padding: 0;
-            margin: 0;
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1em 0;
         }
 
-        ul li {
-            font-size: 1em;
-            margin: 5px 0;
+        table th, table td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: center;
+        }
+
+        table th {
+            background-color: #007bff;
+            color: white;
+        }
+
+        .dark-mode table th {
+            background-color: #0056b3;
         }
 
         button {
             background-color: #007bff;
             color: white;
             border: none;
-            padding: 10px 15px;
+            padding: 10px 20px;
             border-radius: 5px;
             cursor: pointer;
             font-size: 0.9em;
+            margin: 5px;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
         }
 
         button:hover {
             background-color: #0056b3;
         }
+
+        .dark-mode button {
+            background-color: #0056b3;
+        }
+
+        .dark-mode button:hover {
+            background-color: #003f7f;
+        }
+
+        .toggle-dark-mode {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+        }
+
+        input[type="text"] {
+            padding: 10px;
+            margin: 10px 0;
+            width: 100%;
+            max-width: 400px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #007bff;
+            box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+        }
     </style>
 </head>
 <body>
-    <div class="status-container" id="status-container">
-        <div id="status-icon" class="status-icon">✅</div>
+    <button class="toggle-dark-mode" onclick="toggleDarkMode()">🌙 Dark Mode</button>
+    <div class="status-container">
         <h1 id="status-title">Keine Anschlussförderung</h1>
         <div class="next-session" id="next-session">
             <strong>Nächste Förderung:</strong> Wird geladen...
             <div id="countdown"></div>
         </div>
+        <input type="text" id="search-bar" placeholder="Schülername eingeben..." oninput="searchStudent()">
+        <div id="search-result"></div>
     </div>
-    <button id="toggle-button" onclick="toggleMode()">🔘 Simulieren</button>
+
+    <button onclick="toggleMode()">🔘 Simulieren</button>
+
+    <table id="schedule-table">
+        <thead>
+            <tr>
+                <th>Tag</th>
+                <th>Fach</th>
+                <th>Stunde</th>
+                <th>Schüler</th>
+            </tr>
+        </thead>
+        <tbody id="schedule-body"></tbody>
+    </table>
 
     <script>
         let isSimulationMode = false;
+        let isDarkMode = false;
 
         const foerderzeiten = [
             { fach: "Deutsch", day: 1, stunde: "1./2. Stunde", start: "07:40", end: "09:30" },
@@ -113,98 +166,29 @@
 
         const wochentage = ["Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"];
 
-        function calculateCountdown(targetDate) {
-            const now = new Date();
-            const diff = targetDate - now;
-            if (diff <= 0) return null;
-
-            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-            const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-            const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-
-            return `${days}d ${hours}h ${minutes}m ${seconds}s`;
-        }
-
-        function updateStatus() {
-            if (isSimulationMode) return; // Im Simulationsmodus wird nichts aktualisiert
-
-            const now = new Date();
-            const currentDay = now.getDay();
-            const currentTime = `${now.getHours().toString().padStart(2, "0")}:${now.getMinutes().toString().padStart(2, "0")}`;
-            let nextSession = null;
-
-            foerderzeiten.forEach(zeit => {
-                const sessionDayDiff = (zeit.day - currentDay + 7) % 7;
-                const isSameDay = sessionDayDiff === 0 && currentTime < zeit.start;
-
-                if (!nextSession || sessionDayDiff < ((nextSession.day - currentDay + 7) % 7) || isSameDay) {
-                    nextSession = zeit;
-                }
-            });
-
-            const nextSessionDiv = document.getElementById("next-session");
-            const countdownDiv = document.getElementById("countdown");
-
-            if (nextSession) {
-                const nextDate = new Date();
-                nextDate.setDate(nextDate.getDate() + ((nextSession.day - currentDay + 7) % 7));
-                nextDate.setHours(nextSession.start.split(":")[0]);
-                nextDate.setMinutes(nextSession.start.split(":")[1]);
-
-                const countdown = calculateCountdown(nextDate);
-                nextSessionDiv.innerHTML = `<strong>Nächste Förderung:</strong> ${nextSession.fach} am ${wochentage[nextSession.day]} (${nextSession.stunde})`;
-                countdownDiv.textContent = `Countdown: ${countdown}`;
-            } else {
-                nextSessionDiv.innerHTML = `<strong>Nächste Förderung:</strong> Keine weiteren Termine geplant.`;
-                countdownDiv.textContent = "";
-            }
+        function toggleDarkMode() {
+            isDarkMode = !isDarkMode;
+            document.body.classList.toggle('dark-mode', isDarkMode);
         }
 
         function toggleMode() {
-            const statusContainer = document.getElementById("status-container");
-            const toggleButton = document.getElementById("toggle-button");
-
             isSimulationMode = !isSimulationMode;
-
-            if (isSimulationMode) {
-                document.body.style.backgroundColor = "#dc3545"; // Hintergrund auf Rot
-                document.body.style.animation = "pulseBackgroundRed 3s infinite";
-
-                let schuelerListe = "";
-                for (const klasse in schueler) {
-                    schuelerListe += `<h2>${klasse}</h2><ul>`;
-                    schueler[klasse].forEach(name => {
-                        schuelerListe += `<li>${name}</li>`;
-                    });
-                    schuelerListe += `</ul>`;
-                }
-
-                statusContainer.innerHTML = `
-                    <h1>⚠️ Anschlussförderung aktiv</h1>
-                    <p><strong>Fach:</strong> Deutsch</p>
-                    <p><strong>Zeitraum:</strong> 1./2. Stunde</p>
-                    ${schuelerListe}
-                `;
-                toggleButton.textContent = "🔘 Real-Modus";
-            } else {
-                document.body.style.backgroundColor = "#28a745"; // Hintergrund zurück auf Grün
-                document.body.style.animation = "none";
-                statusContainer.innerHTML = `
-                    <div id="status-icon" class="status-icon">✅</div>
-                    <h1 id="status-title">Keine Anschlussförderung</h1>
-                    <div class="next-session" id="next-session">
-                        <strong>Nächste Förderung:</strong> Wird geladen...
-                        <div id="countdown"></div>
-                    </div>
-                `;
-                toggleButton.textContent = "🔘 Simulieren";
-                updateStatus(); // Echtzeitstatus erneut laden
-            }
+            document.getElementById("status-title").textContent = isSimulationMode ? "⚠️ Anschlussförderung aktiv" : "Keine Anschlussförderung";
         }
 
-        setInterval(updateStatus, 1000);
-        updateStatus();
+        function searchStudent() {
+            const searchInput = document.getElementById("search-bar").value.toLowerCase();
+            const resultDiv = document.getElementById("search-result");
+            resultDiv.innerHTML = "";
+
+            for (const klasse in schueler) {
+                schueler[klasse].forEach(name => {
+                    if (name.toLowerCase().includes(searchInput)) {
+                        resultDiv.innerHTML += `<p>${name} - ${klasse}</p>`;
+                    }
+                });
+            }
+        }
     </script>
 </body>
 </html>
