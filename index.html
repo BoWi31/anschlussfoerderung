@@ -124,7 +124,7 @@
             const countdownDiv = document.getElementById("countdown");
             const simulateBtn = document.getElementById("simulate-btn");
 
-            if (isSimulationMode) {
+            if (isSimulationMode && nextSession) {
                 document.body.style.backgroundColor = "#dc3545"; // Rot für aktive Förderung
                 statusTitle.textContent = "⚠️ Anschlussförderung aktiv";
                 nextSessionDiv.innerHTML = `<strong>Fach:</strong> ${nextSession.fach} (${nextSession.stunde})`;
