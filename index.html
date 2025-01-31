@@ -75,9 +75,9 @@
 
     <script>
         const foerderzeiten = [
-            { fach: "Deutsch", day: 1, start: "07:40", end: "09:30", students: ["Anastasia", "Alina", "Vojdan", "Daniil", "Mohammed H.", "Mohammed L.", "Marin", "Evelina", "Ilyas", "Beyar", "Emma", "Artur"] },
-            { fach: "Mathe", day: 2, start: "11:20", end: "13:10", students: ["Anastasia", "Alina", "Vojdan", "Daniil", "Mohammed H.", "Mohammed L.", "Marin", "Evelina", "Ilyas", "Beyar", "Emma", "Artur"] },
-            { fach: "Englisch", day: 3, start: "09:30", end: "11:20", students: ["Anastasia", "Alina", "Vojdan", "Daniil", "Mohammed H.", "Mohammed L.", "Marin", "Evelina", "Ilyas", "Beyar", "Emma", "Artur"] },
+            { fach: "Deutsch", day: 1, start: "07:40", end: "09:30", students: ["Anastasia", "Alina", "Vojdan", "Daniil", "Mohammed H.", "Mohammed L.", "Marin", "Evelina", "Ili", "Ilyas", "Beyar", "Emma", "Artur"] },
+            { fach: "Mathe", day: 2, start: "11:20", end: "13:10", students: ["Anastasia", "Alina", "Vojdan", "Daniil", "Mohammed H.", "Mohammed L.", "Marin", "Evelina", "Ili", "Ilyas", "Beyar", "Emma", "Artur"] },
+            { fach: "Englisch", day: 3, start: "09:30", end: "11:20", students: ["Anastasia", "Alina", "Vojdan", "Daniil", "Mohammed H.", "Mohammed L.", "Marin", "Evelina", "Ili", "Ilyas", "Beyar", "Emma", "Artur"] },
         ];
 
         let simulationMode = false;
@@ -110,12 +110,15 @@
 
             if (activeSession) {
                 document.body.style.backgroundColor = "#dc3545";
+                studentsContainer.innerHTML = `
+                    <div class="students">
+                        <h3>Teilnehmende SuS:</h3>
+                        ${activeSession.students.map(student => `<li>${student}</li>`).join("")}
+                    </div>
+                `;
                 statusContainer.innerHTML = `
                     <h1>Anschlussförderung aktiv</h1>
                     <p><strong>Fach:</strong> ${activeSession.fach} (${activeSession.start}-${activeSession.end})</p>
-                    <div class="students">
-                        ${activeSession.students.map(student => `<li>${student}</li>`).join("")}
-                    </div>
                 `;
             } else {
                 document.body.style.backgroundColor = "#28a745";
@@ -140,11 +143,12 @@
             }
 
             const diff = nextDate - now;
-            const hours = Math.floor(diff / (1000 * 60 * 60));
+            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
             const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
             const seconds = Math.floor((diff % (1000 * 60)) / 1000);
 
-            return `${hours}h ${minutes}m ${seconds}s`;
+            return `${days}d ${hours}h ${minutes}m ${seconds}s`;
         }
 
         function formatDay(day) {
