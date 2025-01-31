@@ -31,6 +31,17 @@
             text-align: center;
         }
 
+        ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            text-align: left;
+        }
+
+        ul li {
+            margin: 0.3em 0;
+        }
+
         button {
             background-color: #007bff;
             color: white;
@@ -58,16 +69,16 @@
         <div id="next-session">
             <strong>Nächste Förderung:</strong> Wird geladen...
         </div>
+        <div id="students-list"></div>
         <div id="countdown"></div>
         <button id="simulate-btn" onclick="simulateMode()">Nächste Anschlussförderung?</button>
     </div>
 
     <script>
         const foerderzeiten = [
-            { fach: "Deutsch", day: 1, start: "07:40", end: "09:30", stunde: "1./2. Stunde" },
-            { fach: "Deutsch", day: 2, start: "09:30", end: "11:20", stunde: "3./4. Stunde" },
-            { fach: "Mathe", day: 2, start: "11:20", end: "13:10", stunde: "5./6. Stunde" },
-            { fach: "Englisch", day: 3, start: "09:30", end: "11:20", stunde: "3./4. Stunde" }
+            { fach: "Deutsch", day: 1, start: "07:40", end: "09:30", stunde: "1./2. Stunde", schueler: { "5a": ["Anastasia"], "6.1": ["Mohammed L."], "7.1": ["Marin", "Evelina"], "7.2": ["Ilyas", "Emma"] } },
+            { fach: "Mathe", day: 2, start: "11:20", end: "13:10", stunde: "5./6. Stunde", schueler: { "5.1": ["Alina"], "7.1": ["Mohammed H."], "7.2": ["Beyar", "Artur"] } },
+            { fach: "Englisch", day: 3, start: "09:30", end: "11:20", stunde: "3./4. Stunde", schueler: { "5a": ["Vojdan"], "6.1": ["Daniil"], "7.2": ["Ili"] } }
         ];
 
         let isSimulationMode = false;
@@ -109,24 +120,45 @@
             const nextSession = findNextSession();
             const statusTitle = document.getElementById("status-title");
             const nextSessionDiv = document.getElementById("next-session");
+            const studentsListDiv = document.getElementById("students-list");
             const countdownDiv = document.getElementById("countdown");
+            const simulateBtn = document.getElementById("simulate-btn");
 
             if (isSimulationMode) {
                 document.body.style.backgroundColor = "#dc3545"; // Rot für aktive Förderung
                 statusTitle.textContent = "⚠️ Anschlussförderung aktiv";
                 nextSessionDiv.innerHTML = `<strong>Fach:</strong> ${nextSession.fach} (${nextSession.stunde})`;
+                studentsListDiv.innerHTML = generateStudentsHTML(nextSession.schueler);
                 countdownDiv.textContent = "Aktive Förderung läuft!";
+                simulateBtn.textContent = "Aktueller Status?";
             } else if (nextSession) {
                 document.body.style.backgroundColor = "#28a745"; // Grün für keine Förderung
                 statusTitle.textContent = "Keine Anschlussförderung";
                 nextSessionDiv.innerHTML = `<strong>Nächste Förderung:</strong> ${nextSession.fach} am ${["Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"][nextSession.day]} (${nextSession.stunde})`;
+                studentsListDiv.innerHTML = generateStudentsHTML(nextSession.schueler);
                 countdownDiv.textContent = `Countdown: ${updateCountdown(nextSession.date)}`;
+                simulateBtn.textContent = "Nächste Anschlussförderung?";
             } else {
                 document.body.style.backgroundColor = "#28a745";
                 statusTitle.textContent = "Keine Anschlussförderung";
                 nextSessionDiv.innerHTML = "<strong>Nächste Förderung:</strong> Keine weiteren Termine!";
+                studentsListDiv.innerHTML = "";
                 countdownDiv.textContent = "";
+                simulateBtn.textContent = "Nächste Anschlussförderung?";
             }
+        }
+
+        function generateStudentsHTML(schueler) {
+            let html = "<ul>";
+            for (const klasse in schueler) {
+                html += `<li><strong>${klasse}:</strong><ul>`;
+                schueler[klasse].forEach(name => {
+                    html += `<li>${name}</li>`;
+                });
+                html += "</ul></li>";
+            }
+            html += "</ul>";
+            return html;
         }
 
         function simulateMode() {
