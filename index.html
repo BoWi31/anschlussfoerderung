@@ -6,6 +6,10 @@
     <meta name="robots" content="noindex, nofollow">
     <title>Anschlussförderung</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="./manifest.json">
+
     <style>
         body {
             font-family: 'Roboto', sans-serif;
@@ -132,19 +136,18 @@
     <button id="simulate-button" onclick="simulateFoerderung()">Simuliere Förderung</button>
 
     <script>
+        // Registrierung des Service Workers
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('./service-worker.js')
+                .then(() => console.log("Service Worker registriert."))
+                .catch(error => console.error("Service Worker Registrierung fehlgeschlagen:", error));
+        }
+
         const foerderzeiten = [
             { fach: "Deutsch", day: 1, stunde: "1./2. Stunde", start: "07:40", end: "09:30", color: "#ffc107" },
             { fach: "Mathe", day: 2, stunde: "3./4. Stunde", start: "09:30", end: "11:20", color: "#17a2b8" },
             { fach: "Englisch", day: 3, stunde: "5./6. Stunde", start: "11:20", end: "13:10", color: "#dc3545" }
         ];
-
-        const schueler = {
-            "5a": ["Anastasia"],
-            "5.1": ["Alina", "Vojdan"],
-            "6.1": ["Daniil", "Mohammed L."],
-            "7.1": ["Mohammed H.", "Marin", "Evelina"],
-            "7.2": ["Ili", "Ilyas", "Beyar", "Emma", "Artur"]
-        };
 
         const wochentage = ["Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"];
 
@@ -165,40 +168,16 @@
             const now = new Date();
             const currentDay = now.getDay();
             const currentTime = `${now.getHours().toString().padStart(2, "0")}:${now.getMinutes().toString().padStart(2, "0")}`;
-            let activeSessions = [];
             let nextSession = null;
 
             foerderzeiten.forEach(zeit => {
-                if (zeit.day === currentDay && currentTime >= zeit.start && currentTime <= zeit.end) {
-                    activeSessions.push(zeit);
-                } else if (!nextSession || zeit.day > currentDay || (zeit.day === currentDay && currentTime < zeit.start)) {
+                if (!nextSession || zeit.day > currentDay || (zeit.day === currentDay && currentTime < zeit.start)) {
                     nextSession = zeit;
                 }
             });
 
-            const statusTitle = document.getElementById("status-title");
-            const statusIcon = document.getElementById("status-icon");
             const nextSessionDiv = document.getElementById("next-session");
             const countdownDiv = document.getElementById("countdown");
-            const participantTable = document.getElementById("participant-table");
-            const tableBody = participantTable.querySelector("tbody");
-
-            if (activeSessions.length > 0) {
-                statusTitle.textContent = "Anschlussförderung aktiv";
-                statusIcon.textContent = "⚠️";
-                participantTable.style.display = "table";
-
-                tableBody.innerHTML = "";
-                for (const klasse in schueler) {
-                    const row = document.createElement("tr");
-                    row.innerHTML = `<td>${klasse}</td><td>${schueler[klasse].join(", ")}</td>`;
-                    tableBody.appendChild(row);
-                }
-            } else {
-                statusTitle.textContent = "Keine Anschlussförderung";
-                statusIcon.textContent = "✅";
-                participantTable.style.display = "none";
-            }
 
             if (nextSession) {
                 const nextDate = new Date();
@@ -209,33 +188,11 @@
                 const countdown = calculateCountdown(nextDate);
                 nextSessionDiv.innerHTML = `<strong>Nächste Förderung:</strong> ${nextSession.fach} am ${wochentage[nextSession.day]} (${nextSession.stunde})`;
                 countdownDiv.textContent = `Countdown: ${countdown}`;
-            } else {
-                nextSessionDiv.innerHTML = "<strong>Nächste Förderung:</strong> Keine weiteren Förderungen geplant.";
-                countdownDiv.textContent = "";
             }
         }
 
         function simulateFoerderung() {
-            const now = new Date();
-            const currentDay = now.getDay();
-            let nextSession = null;
-
-            foerderzeiten.forEach(zeit => {
-                if (!nextSession || zeit.day > currentDay || (zeit.day === currentDay && now.getHours() < parseInt(zeit.start.split(":")[0]))) {
-                    nextSession = zeit;
-                }
-            });
-
-            if (nextSession) {
-                const simulatedDate = new Date();
-                simulatedDate.setDate(simulatedDate.getDate() + ((nextSession.day - currentDay + 7) % 7));
-                simulatedDate.setHours(nextSession.start.split(":")[0]);
-                simulatedDate.setMinutes(nextSession.start.split(":")[1]);
-
-                alert(`Simulierte Anschlussförderung: ${nextSession.fach} am ${wochentage[nextSession.day]} (${nextSession.stunde})`);
-            } else {
-                alert("Keine weiteren Förderungen vorhanden.");
-            }
+            alert("Simulierte Förderung aktiviert!");
         }
 
         setInterval(updateStatus, 1000);
