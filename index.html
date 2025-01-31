@@ -31,6 +31,18 @@
             text-align: center;
         }
 
+        .classes-list {
+            margin-top: 15px;
+            text-align: left;
+        }
+
+        .classes-list h3 {
+            margin: 0;
+            margin-bottom: 5px;
+            font-size: 1.1em;
+            text-decoration: underline;
+        }
+
         button {
             background-color: #007bff;
             color: white;
@@ -44,6 +56,12 @@
         button:hover {
             background-color: #0056b3;
         }
+
+        #countdown {
+            margin-top: 15px;
+            font-size: 1em;
+            color: #555;
+        }
     </style>
 </head>
 <body>
@@ -52,28 +70,111 @@
         <div id="next-session">
             <strong>Nächste Förderung:</strong> Wird geladen...
         </div>
+        <div id="countdown"></div>
+        <div id="class-list" class="classes-list" style="display: none;">
+            <h3>Klassen und Schüler:</h3>
+            <ul id="class-details"></ul>
+        </div>
         <button id="simulate-btn" onclick="simulateMode()">Nächste Anschlussförderung?</button>
     </div>
 
     <script>
+        const foerderzeiten = [
+            { fach: "Deutsch", day: 1, start: "07:40", end: "09:30", stunde: "1./2. Stunde" },
+            { fach: "Deutsch", day: 2, start: "09:30", end: "11:20", stunde: "3./4. Stunde" },
+            { fach: "Deutsch", day: 4, start: "09:30", end: "11:20", stunde: "3./4. Stunde" },
+            { fach: "Mathe", day: 2, start: "11:20", end: "13:10", stunde: "5./6. Stunde" },
+            { fach: "Englisch", day: 3, start: "09:30", end: "11:20", stunde: "3./4. Stunde" },
+        ];
+
+        const schueler = {
+            "5a": ["Anastasia"],
+            "5.1": ["Alina", "Vojdan"],
+            "6.1": ["Daniil", "Mohammed L."],
+            "7.1": ["Mohammed H.", "Marin", "Evelina"],
+            "7.2": ["Ili", "Ilyas", "Beyar", "Emma", "Artur"]
+        };
+
         let isSimulationMode = false;
 
-        function simulateMode() {
+        function updateCountdown(targetDate) {
+            const now = new Date();
+            const diff = targetDate - now;
+
+            if (diff <= 0) return "Jetzt!";
+
+            const hours = Math.floor(diff / (1000 * 60 * 60));
+            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+            return `${hours}h ${minutes}m ${seconds}s`;
+        }
+
+        function findNextSession() {
+            const now = new Date();
+            const currentDay = now.getDay();
+            const currentTime = `${now.getHours().toString().padStart(2, "0")}:${now.getMinutes().toString().padStart(2, "0")}`;
+            let nextSession = null;
+
+            foerderzeiten.forEach(session => {
+                if (
+                    session.day > currentDay ||
+                    (session.day === currentDay && session.start > currentTime)
+                ) {
+                    const sessionDate = new Date();
+                    sessionDate.setDate(now.getDate() + ((session.day - currentDay + 7) % 7));
+                    sessionDate.setHours(session.start.split(":")[0]);
+                    sessionDate.setMinutes(session.start.split(":")[1]);
+                    sessionDate.setSeconds(0);
+
+                    if (!nextSession || sessionDate < nextSession.date) {
+                        nextSession = { ...session, date: sessionDate };
+                    }
+                }
+            });
+
+            return nextSession;
+        }
+
+        function updateUI() {
+            const nextSession = findNextSession();
             const statusTitle = document.getElementById("status-title");
             const nextSessionDiv = document.getElementById("next-session");
-
-            isSimulationMode = !isSimulationMode;
+            const countdownDiv = document.getElementById("countdown");
+            const classListDiv = document.getElementById("class-list");
+            const classDetails = document.getElementById("class-details");
 
             if (isSimulationMode) {
                 document.body.style.backgroundColor = "#dc3545"; // Rot für aktive Förderung
                 statusTitle.textContent = "⚠️ Anschlussförderung aktiv";
-                nextSessionDiv.innerHTML = "<strong>Fach:</strong> Deutsch (1./2. Stunde)";
-            } else {
+                nextSessionDiv.innerHTML = `<strong>Fach:</strong> Deutsch (1./2. Stunde)`;
+                classListDiv.style.display = "block";
+                classDetails.innerHTML = Object.entries(schueler)
+                    .map(([klasse, names]) => `<li><strong>${klasse}</strong>: ${names.join(", ")}</li>`)
+                    .join("");
+                countdownDiv.textContent = "";
+            } else if (nextSession) {
                 document.body.style.backgroundColor = "#28a745"; // Grün für keine Förderung
                 statusTitle.textContent = "Keine Anschlussförderung";
-                nextSessionDiv.innerHTML = "<strong>Nächste Förderung:</strong> Wird geladen...";
+                nextSessionDiv.innerHTML = `<strong>Nächste Förderung:</strong> ${nextSession.fach} am ${["Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"][nextSession.day]} (${nextSession.stunde})`;
+                countdownDiv.textContent = `Countdown: ${updateCountdown(nextSession.date)}`;
+                classListDiv.style.display = "none";
+            } else {
+                document.body.style.backgroundColor = "#28a745";
+                statusTitle.textContent = "Keine Anschlussförderung";
+                nextSessionDiv.innerHTML = "<strong>Nächste Förderung:</strong> Keine weiteren Termine!";
+                countdownDiv.textContent = "";
+                classListDiv.style.display = "none";
             }
         }
+
+        function simulateMode() {
+            isSimulationMode = !isSimulationMode;
+            updateUI();
+        }
+
+        setInterval(updateUI, 1000);
+        updateUI();
     </script>
 </body>
 </html>
