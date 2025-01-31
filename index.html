@@ -14,97 +14,143 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
-            text-align: center;
-            animation: pulse 3s infinite;
-            transition: background-color 0.5s ease;
+            flex-direction: column;
+            min-height: 100vh;
+            background-color: #f8f9fa;
+            color: #212529;
+            animation: fadeInBackground 3s infinite;
         }
-        @keyframes pulse {
+
+        @keyframes fadeInBackground {
             0% {
-                background-color: #28a745;
+                background-color: #f8f9fa;
             }
             50% {
-                background-color: #32cd32;
+                background-color: #e9ecef;
             }
             100% {
-                background-color: #28a745;
+                background-color: #f8f9fa;
             }
         }
-        .active {
-            animation: pulse-red 3s infinite;
-        }
-        @keyframes pulse-red {
-            0% {
-                background-color: #dc3545;
-            }
-            50% {
-                background-color: #ff4d4d;
-            }
-            100% {
-                background-color: #dc3545;
-            }
-        }
+
         .status-container {
-            padding: 2em;
-            border-radius: 20px;
             background: white;
-            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+            color: #212529;
+            padding: 2em;
+            border-radius: 15px;
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
+            max-width: 600px;
             width: 90%;
-            max-width: 400px;
-            transition: all 0.3s ease-in-out;
+            text-align: center;
+            position: relative;
+            animation: fadeIn 1s;
         }
-        h1 {
-            margin: 0;
-            font-size: 2em;
-            color: black;
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
         }
-        p {
-            margin: 0.5em 0;
-            font-size: 1.2em;
-            color: black;
-        }
+
         .icon {
             font-size: 3em;
-            margin-bottom: 0.5em;
+            margin-bottom: 10px;
         }
-        .icon.green {
-            color: #28a745;
+
+        .active-session {
+            background: #fff3cd;
+            padding: 1em;
+            border: 1px solid #ffeeba;
+            border-radius: 10px;
+            margin-bottom: 1em;
         }
-        .icon.red {
-            color: #dc3545;
+
+        .class-list {
+            margin-top: 1em;
+            text-align: left;
         }
+
+        .class-title {
+            font-size: 1.2em;
+            font-weight: bold;
+            margin: 1em 0 0.5em;
+            color: #495057;
+        }
+
+        ul {
+            list-style: none;
+            padding-left: 1em;
+        }
+
+        ul li {
+            margin: 0.2em 0;
+        }
+
+        .next-session {
+            margin-top: 1.5em;
+            padding: 1em;
+            background: #e9ecef;
+            border-radius: 10px;
+            font-size: 1em;
+        }
+
+        .check-student {
+            margin-top: 2em;
+        }
+
+        .progress-container {
+            background: #e9ecef;
+            border-radius: 10px;
+            height: 20px;
+            margin-top: 10px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            background: #28a745;
+            height: 100%;
+            transition: width 0.5s ease;
+        }
+
         @media (max-width: 600px) {
-            .status-container {
-                width: 95%;
-                padding: 1.5em;
-            }
             h1 {
                 font-size: 1.8em;
             }
-            p {
+
+            .class-title {
                 font-size: 1em;
+            }
+
+            ul {
+                padding-left: 0.5em;
             }
         }
     </style>
 </head>
 <body>
-    <div id="status" class="status-container">
-        <div id="status-icon" class="icon">🔄</div>
-        <h1>Überprüfung läuft...</h1>
-        <p id="next-session"></p>
-        <p id="countdown"></p>
+    <div class="status-container">
+        <div class="icon green" id="status-icon">✅</div>
+        <h1 id="status-title">Keine Anschlussförderung</h1>
+        <div id="active-session" class="active-session" style="display: none;"></div>
+        <div class="class-list" id="class-list"></div>
+        <div class="next-session" id="next-session">
+            <strong>Nächste Förderung:</strong> Wird geladen...
+        </div>
+        <div class="check-student">
+            <input type="text" id="student-name" placeholder="Schülername eingeben">
+            <button onclick="checkStudent()">Prüfen</button>
+            <div id="student-result"></div>
+        </div>
     </div>
 
     <script>
-        const wochentage = ["Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"];
-
         const foerderzeiten = [
-            { fach: "Deutsch", day: 1, stunde: "1./2. Stunde", start: "07:40", end: "09:30" },
-            { fach: "Deutsch", day: 2, stunde: "3./4. Stunde", start: "09:30", end: "11:20" },
-            { fach: "Deutsch", day: 4, stunde: "3./4. Stunde", start: "09:30", end: "11:20" },
-            { fach: "Deutsch", day: 5, stunde: "5./6. Stunde", start: "11:20", end: "13:10" },
-            { fach: "Mathe", day: 2, stunde: "5./6. Stunde", start: "11:20", end: "13:10" },
-            { fach: "Englisch", day: 3, stunde: "3./4. Stunde", start: "09:30", end: "11:20" }
+            { fach: "Deutsch", day: 1, stunde: "1./2. Stunde", start: "07:40", end: "09:30", color: "#ffc107" },
+            { fach: "Mathe", day: 2, stunde: "3./4. Stunde", start: "09:30", end: "11:20", color: "#17a2b8" },
+            { fach: "Englisch", day: 3, stunde: "5./6. Stunde", start: "11:20", end: "13:10", color: "#dc3545" }
         ];
 
         const schueler = {
@@ -115,57 +161,9 @@
             "7.2": ["Ili", "Ilyas", "Beyar", "Emma", "Artur"]
         };
 
-        function checkFoerderung() {
-            const jetzt = new Date();
-            const aktuelleZeit = `${jetzt.getHours().toString().padStart(2, "0")}:${jetzt.getMinutes().toString().padStart(2, "0")}`;
-            const aktuellerTag = jetzt.getDay();
-            let foerderungAktiv = false;
-            let aktuelleFaecher = [];
-            let naechsteFoerderung = null;
-
-            foerderzeiten.forEach(zeit => {
-                if (aktuellerTag === zeit.day && aktuelleZeit >= zeit.start && aktuelleZeit <= zeit.end) {
-                    foerderungAktiv = true;
-                    aktuelleFaecher.push(`${zeit.fach} (${zeit.stunde})`);
-                } else if (!naechsteFoerderung || aktuellerTag < zeit.day || (aktuellerTag === zeit.day && aktuelleZeit < zeit.start)) {
-                    const naechsteZeit = new Date(jetzt);
-                    naechsteZeit.setDate(jetzt.getDate() + (zeit.day - aktuellerTag + 7) % 7);
-                    naechsteZeit.setHours(zeit.start.split(":")[0], zeit.start.split(":")[1], 0, 0);
-
-                    if (!naechsteFoerderung || naechsteZeit < naechsteFoerderung.date) {
-                        naechsteFoerderung = { ...zeit, date: naechsteZeit };
-                    }
-                }
-            });
-
-            const container = document.getElementById("status");
-            const icon = document.getElementById("status-icon");
-
-            document.body.className = foerderungAktiv ? "active" : "";
-            icon.textContent = foerderungAktiv ? "⚠️" : "✅";
-            icon.className = `icon ${foerderungAktiv ? "red" : "green"}`;
-
-            let schuelerHTML = "";
-            for (const [klasse, schuelerNamen] of Object.entries(schueler)) {
-                schuelerHTML += `<div class='class-header'>${klasse}</div><ul class='student-list'>${schuelerNamen.map(s => `<li>- ${s}</li>`).join("")}</ul>`;
-            }
-
-            const nextSessionHTML = naechsteFoerderung
-                ? `${naechsteFoerderung.fach} ${(naechsteFoerderung.day === aktuellerTag ? "heute" : "am " + wochentage[naechsteFoerderung.day])} (${naechsteFoerderung.stunde})`
-                : "Keine";
-
-            container.innerHTML = `
-                <div id="status-icon" class="icon">${icon.textContent}</div>
-                <h1>${foerderungAktiv ? "Anschlussförderung aktiv" : "Keine Anschlussförderung"}</h1>
-                ${foerderungAktiv ? schuelerHTML : ""}
-                <p><strong>Nächste Förderung:</strong> ${nextSessionHTML}</p>
-                <p id="countdown">Countdown: ${naechsteFoerderung ? calculateCountdown(naechsteFoerderung.date) : "-"}</p>
-            `;
-        }
-
         function calculateCountdown(targetDate) {
-            const jetzt = new Date();
-            const diff = targetDate - jetzt;
+            const now = new Date();
+            const diff = targetDate - now;
             if (diff <= 0) return null;
 
             const hours = Math.floor(diff / (1000 * 60 * 60));
@@ -175,8 +173,63 @@
             return `${hours}h ${minutes}m ${seconds}s`;
         }
 
-        setInterval(checkFoerderung, 1000);
-        checkFoerderung();
+        function checkStudent() {
+            const studentName = document.getElementById("student-name").value.toLowerCase();
+            const resultDiv = document.getElementById("student-result");
+
+            let found = false;
+            for (const klasse in schueler) {
+                if (schueler[klasse].some(name => name.toLowerCase() === studentName)) {
+                    found = true;
+                    resultDiv.innerHTML = `<p>${studentName} ist in der Klasse ${klasse} und für die Förderung eingeplant.</p>`;
+                    break;
+                }
+            }
+
+            if (!found) {
+                resultDiv.innerHTML = `<p>${studentName} ist nicht in der Förderung eingeplant.</p>`;
+            }
+        }
+
+        function updateStatus() {
+            const now = new Date();
+            const currentDay = now.getDay();
+            const currentTime = `${now.getHours().toString().padStart(2, "0")}:${now.getMinutes().toString().padStart(2, "0")}`;
+            let activeSessions = [];
+            let nextSession = null;
+
+            foerderzeiten.forEach(zeit => {
+                if (zeit.day === currentDay && currentTime >= zeit.start && currentTime <= zeit.end) {
+                    activeSessions.push(zeit);
+                } else if (!nextSession || zeit.day > currentDay || (zeit.day === currentDay && currentTime < zeit.start)) {
+                    nextSession = zeit;
+                }
+            });
+
+            const statusIcon = document.getElementById("status-icon");
+            const statusTitle = document.getElementById("status-title");
+            const activeSessionDiv = document.getElementById("active-session");
+            const nextSessionDiv = document.getElementById("next-session");
+            const classListDiv = document.getElementById("class-list");
+
+            if (activeSessions.length > 0) {
+                statusIcon.textContent = "⚠️";
+                statusTitle.textContent = "Anschlussförderung aktiv";
+                activeSessionDiv.style.display = "block";
+                activeSessionDiv.innerHTML = activeSessions.map(session => `<p style="color:${session.color};">${session.fach} (${session.stunde})</p>`).join("");
+            } else {
+                statusIcon.textContent = "✅";
+                statusTitle.textContent = "Keine Anschlussförderung";
+                activeSessionDiv.style.display = "none";
+            }
+
+            if (nextSession) {
+                nextSessionDiv.innerHTML = `<strong>Nächste Förderung:</strong> ${nextSession.fach} (${nextSession.stunde})`;
+            }
+        }
+
+        setInterval(updateStatus, 1000);
+        updateStatus();
     </script>
 </body>
 </html>
