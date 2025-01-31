@@ -89,10 +89,15 @@
             color: white;
             border: none;
             padding: 10px 20px;
-            border-radius: 5px;
+            border-radius: 50%;
             cursor: pointer;
-            font-size: 1em;
+            font-size: 1.5em;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         #simulate-button:hover {
@@ -105,11 +110,6 @@
             }
 
             table th, table td {
-                font-size: 0.9em;
-            }
-
-            #simulate-button {
-                padding: 8px 16px;
                 font-size: 0.9em;
             }
         }
@@ -133,70 +133,27 @@
             <tbody></tbody>
         </table>
     </div>
-    <button id="simulate-button" onclick="simulateFoerderung()">Simuliere Förderung</button>
+    <button id="simulate-button" onclick="simulateFoerderung()">🔘</button>
 
     <script>
-        // Registrierung des Service Workers
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('./service-worker.js')
-                .then(() => console.log("Service Worker registriert."))
-                .catch(error => console.error("Service Worker Registrierung fehlgeschlagen:", error));
-        }
-
-        const foerderzeiten = [
-            { fach: "Deutsch", day: 1, stunde: "1./2. Stunde", start: "07:40", end: "09:30", color: "#ffc107" },
-            { fach: "Mathe", day: 2, stunde: "3./4. Stunde", start: "09:30", end: "11:20", color: "#17a2b8" },
-            { fach: "Englisch", day: 3, stunde: "5./6. Stunde", start: "11:20", end: "13:10", color: "#dc3545" }
-        ];
-
-        const wochentage = ["Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"];
-
-        function calculateCountdown(targetDate) {
-            const now = new Date();
-            const diff = targetDate - now;
-            if (diff <= 0) return null;
-
-            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-            const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-            const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-
-            return `${days}d ${hours}h ${minutes}m ${seconds}s`;
-        }
-
-        function updateStatus() {
+        function simulateFoerderung() {
             const now = new Date();
             const currentDay = now.getDay();
-            const currentTime = `${now.getHours().toString().padStart(2, "0")}:${now.getMinutes().toString().padStart(2, "0")}`;
             let nextSession = null;
 
             foerderzeiten.forEach(zeit => {
-                if (!nextSession || zeit.day > currentDay || (zeit.day === currentDay && currentTime < zeit.start)) {
+                if (!nextSession || zeit.day > currentDay || (zeit.day === currentDay && now.getHours() < parseInt(zeit.start.split(":")[0]))) {
                     nextSession = zeit;
                 }
             });
 
-            const nextSessionDiv = document.getElementById("next-session");
-            const countdownDiv = document.getElementById("countdown");
-
             if (nextSession) {
-                const nextDate = new Date();
-                nextDate.setDate(nextDate.getDate() + ((nextSession.day - currentDay + 7) % 7));
-                nextDate.setHours(nextSession.start.split(":")[0]);
-                nextDate.setMinutes(nextSession.start.split(":")[1]);
-
-                const countdown = calculateCountdown(nextDate);
-                nextSessionDiv.innerHTML = `<strong>Nächste Förderung:</strong> ${nextSession.fach} am ${wochentage[nextSession.day]} (${nextSession.stunde})`;
-                countdownDiv.textContent = `Countdown: ${countdown}`;
+                document.body.style.backgroundColor = "#dc3545"; // Rot für aktive Förderung
+                document.getElementById("status-title").textContent = "Anschlussförderung aktiv";
+                document.getElementById("status-icon").textContent = "⚠️";
+                document.getElementById("next-session").innerHTML = `<strong>Aktive Förderung:</strong> ${nextSession.fach} (${nextSession.stunde})`;
             }
         }
-
-        function simulateFoerderung() {
-            alert("Simulierte Förderung aktiviert!");
-        }
-
-        setInterval(updateStatus, 1000);
-        updateStatus();
     </script>
 </body>
 </html>
