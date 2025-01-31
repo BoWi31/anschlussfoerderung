@@ -21,6 +21,11 @@
             transition: background-color 0.5s ease, color 0.5s ease;
         }
 
+        .dark-mode {
+            background-color: #212529; /* Dunkel */
+            color: #f8f9fa;
+        }
+
         .status-container {
             background: white;
             color: #212529;
@@ -30,6 +35,11 @@
             max-width: 800px;
             width: 90%;
             text-align: center;
+        }
+
+        .dark-mode .status-container {
+            background: #343a40;
+            color: #f8f9fa;
         }
 
         .next-session {
@@ -49,14 +59,55 @@
         button:hover {
             background-color: #0056b3;
         }
+
+        .dark-mode button {
+            background-color: #0056b3;
+        }
+
+        .dark-mode button:hover {
+            background-color: #003f7f;
+        }
+
+        .student-list {
+            text-align: left;
+            margin-top: 1em;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background: #f8f9fa;
+            max-width: 600px;
+        }
+
+        .dark-mode .student-list {
+            background: #495057;
+            color: #f8f9fa;
+            border-color: #343a40;
+        }
+
+        .highlight-deutsch {
+            background-color: #f9c74f;
+        }
+
+        .highlight-englisch {
+            background-color: #f94144;
+        }
+
+        .highlight-mathe {
+            background-color: #277da1;
+        }
     </style>
 </head>
 <body>
+    <button class="toggle-dark-mode" onclick="toggleDarkMode()">🌙 Dark Mode</button>
     <div class="status-container">
         <h1 id="status-title">Keine Anschlussförderung</h1>
         <div class="next-session" id="next-session">
             <strong>Nächste Förderung:</strong> Wird geladen...
             <div id="countdown"></div>
+        </div>
+        <div id="student-list" class="student-list" style="display: none;">
+            <h3>Schülerliste:</h3>
+            <ul id="student-list-content"></ul>
         </div>
         <button onclick="simulateMode()">🔘 Simulieren</button>
     </div>
@@ -68,23 +119,24 @@
             { fach: "Englisch", day: 3, stunde: "5./6. Stunde", start: "11:20", end: "13:10" }
         ];
 
+        const schueler = {
+            "5a": ["Anastasia"],
+            "5.1": ["Alina", "Vojdan"],
+            "6.1": ["Daniil", "Mohammed L."],
+            "7.1": ["Mohammed H.", "Marin", "Evelina"],
+            "7.2": ["Ili", "Ilyas", "Beyar", "Emma", "Artur"]
+        };
+
         const wochentage = ["Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"];
         let isSimulationMode = false;
 
-        function calculateCountdown(targetDate) {
-            const now = new Date();
-            const diff = targetDate - now;
-            if (diff <= 0) return null;
-
-            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-            const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-            const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-
-            return `${days}d ${hours}h ${minutes}m ${seconds}s`;
+        function toggleDarkMode() {
+            document.body.classList.toggle('dark-mode');
         }
 
         function updateNextSession() {
+            if (isSimulationMode) return;
+
             const now = new Date();
             const currentDay = now.getDay();
             const currentTime = `${now.getHours().toString().padStart(2, "0")}:${now.getMinutes().toString().padStart(2, "0")}`;
@@ -118,19 +170,40 @@
         }
 
         function simulateMode() {
-            const title = document.getElementById("status-title");
-            const nextSessionDiv = document.getElementById("next-session");
+            const statusTitle = document.getElementById("status-title");
+            const studentList = document.getElementById("student-list");
+            const studentListContent = document.getElementById("student-list-content");
+
             isSimulationMode = !isSimulationMode;
 
             if (isSimulationMode) {
-                document.body.style.backgroundColor = "#dc3545"; // Rot
-                title.textContent = "⚠️ Anschlussförderung aktiv";
-                nextSessionDiv.innerHTML = `<strong>Aktiv:</strong> Deutsch (1./2. Stunde)`;
+                document.body.style.backgroundColor = "#dc3545";
+                statusTitle.textContent = "⚠️ Anschlussförderung aktiv";
+                studentList.style.display = "block";
+                studentListContent.innerHTML = "";
+
+                for (const klasse in schueler) {
+                    studentListContent.innerHTML += `<li><strong>${klasse}:</strong> ${schueler[klasse].join(", ")}</li>`;
+                }
             } else {
-                document.body.style.backgroundColor = "#28a745"; // Grün
-                title.textContent = "Keine Anschlussförderung";
+                document.body.style.backgroundColor = "#28a745";
+                statusTitle.textContent = "Keine Anschlussförderung";
+                studentList.style.display = "none";
                 updateNextSession();
             }
+        }
+
+        function calculateCountdown(targetDate) {
+            const now = new Date();
+            const diff = targetDate - now;
+            if (diff <= 0) return null;
+
+            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+            return `${days}d ${hours}h ${minutes}m ${seconds}s`;
         }
 
         setInterval(updateNextSession, 1000);
