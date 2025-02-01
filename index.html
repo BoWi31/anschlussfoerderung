@@ -18,7 +18,7 @@
             flex-direction: column;
             min-height: 100vh;
             color: #212529;
-            background-color: #28a745; /* Standard: Grün */
+            background-color: #28a745;
             transition: background-color 0.5s ease;
         }
 
@@ -101,16 +101,16 @@
         let isSimulationMode = false;
 
         const foerderzeiten = [
-            { fach: "Deutsch", day: 1, stunde: "1./2. Stunde", start: "07:40", end: "09:30" },
-            { fach: "Mathe", day: 2, stunde: "3./4. Stunde", start: "09:30", end: "11:20" },
-            { fach: "Englisch", day: 3, stunde: "5./6. Stunde", start: "11:20", end: "13:10" }
+            { fach: "Deutsch", day: 1, stunde: "1./2. Stunde", start: "07:40", end: "09:30", raum: "W204" },
+            { fach: "Mathe", day: 2, stunde: "3./4. Stunde", start: "09:30", end: "11:20", raum: "W005" },
+            { fach: "Englisch", day: 3, stunde: "5./6. Stunde", start: "11:20", end: "13:10", raum: "W204" }
         ];
 
         const schueler = {
             "5a": ["Anastasia"],
             "5.1": ["Alina", "Vojdan"],
-            "6.1": ["Daniil", "Mohammed L."],
-            "7.1": ["Mohammed H.", "Marin", "Evelina"],
+            "6.1": ["Daniil", "Mohammed"],
+            "7.1": ["Mohammed", "Marin", "Evelina"],
             "7.2": ["Ili", "Ilyas", "Beyar", "Emma", "Artur"]
         };
 
@@ -156,7 +156,7 @@
                 nextDate.setMinutes(nextSession.start.split(":")[1]);
 
                 const countdown = calculateCountdown(nextDate);
-                nextSessionDiv.innerHTML = `<strong>Nächste Förderung:</strong> ${nextSession.fach} am ${wochentage[nextSession.day]} (${nextSession.stunde})`;
+                nextSessionDiv.innerHTML = `<strong>Nächste Förderung:</strong> ${nextSession.fach} am ${wochentage[nextSession.day]} (${nextSession.stunde}, Raum: ${nextSession.raum})`;
                 countdownDiv.textContent = `Countdown: ${countdown}`;
             } else {
                 nextSessionDiv.innerHTML = `<strong>Nächste Förderung:</strong> Keine weiteren Termine geplant.`;
@@ -189,6 +189,7 @@
                     <h1>⚠️ Anschlussförderung aktiv</h1>
                     <p><strong>Fach:</strong> Deutsch</p>
                     <p><strong>Zeitraum:</strong> 1./2. Stunde</p>
+                    <p><strong>Raum:</strong> W204</p>
                     ${schuelerListe}
                 `;
                 toggleButton.textContent = "🔘 Real-Modus";
