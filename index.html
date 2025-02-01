@@ -18,8 +18,17 @@
             flex-direction: column;
             min-height: 100vh;
             color: #212529;
-            background-color: #28a745;
+            background-color: #28a745; /* Standard: Grün */
             transition: background-color 0.5s ease;
+        }
+
+        @keyframes pulseBackgroundRed {
+            0%, 100% {
+                background-color: #dc3545;
+            }
+            50% {
+                background-color: #ff4d4d;
+            }
         }
 
         .status-container {
@@ -31,6 +40,7 @@
             max-width: 600px;
             width: 90%;
             text-align: center;
+            transition: all 0.3s ease;
         }
 
         h1 {
@@ -39,33 +49,19 @@
         }
 
         h2 {
-            font-size: 1.2em;
+            font-size: 1.5em;
             margin-bottom: 0.5em;
         }
 
-        .students {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 10px;
-            text-align: left;
-            margin-top: 15px;
-        }
-
-        .students h3 {
-            font-size: 1em;
-            margin-bottom: 5px;
-            color: #dc3545;
-        }
-
-        .students ul {
+        ul {
             list-style: none;
             padding: 0;
             margin: 0;
-            font-size: 0.9em;
         }
 
-        .students li {
-            margin: 2px 0;
+        ul li {
+            font-size: 1em;
+            margin: 5px 0;
         }
 
         button {
@@ -85,12 +81,56 @@
         button:hover {
             background-color: #0056b3;
         }
+
+        /* Media Queries */
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 1.5em;
+            }
+
+            h2 {
+                font-size: 1.2em;
+            }
+
+            ul li {
+                font-size: 0.9em;
+            }
+
+            button {
+                font-size: 0.8em;
+                padding: 8px 12px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .status-container {
+                padding: 1em;
+            }
+
+            h1 {
+                font-size: 1.2em;
+            }
+
+            h2 {
+                font-size: 1em;
+            }
+
+            ul li {
+                font-size: 0.8em;
+            }
+
+            button {
+                font-size: 0.7em;
+                padding: 6px 10px;
+            }
+        }
     </style>
 </head>
 <body>
     <div class="status-container" id="status-container">
+        <div id="status-icon" class="status-icon">✅</div>
         <h1 id="status-title">Keine Anschlussförderung</h1>
-        <div id="next-session">
+        <div class="next-session" id="next-session">
             <strong>Nächste Förderung:</strong> Wird geladen...
             <div id="countdown"></div>
         </div>
@@ -101,9 +141,9 @@
         let isSimulationMode = false;
 
         const foerderzeiten = [
-            { fach: "Deutsch", day: 1, stunde: "1./2. Stunde", start: "07:40", end: "09:30", raum: "W204" },
-            { fach: "Mathe", day: 2, stunde: "3./4. Stunde", start: "09:30", end: "11:20", raum: "W005" },
-            { fach: "Englisch", day: 3, stunde: "5./6. Stunde", start: "11:20", end: "13:10", raum: "W204" }
+            { fach: "Deutsch", raum: "W204", day: 1, stunde: "1./2. Stunde", start: "07:40", end: "09:30" },
+            { fach: "Mathe", raum: "W005", day: 2, stunde: "3./4. Stunde", start: "09:30", end: "11:20" },
+            { fach: "Englisch", raum: "W204", day: 3, stunde: "5./6. Stunde", start: "11:20", end: "13:10" }
         ];
 
         const schueler = {
@@ -156,7 +196,7 @@
                 nextDate.setMinutes(nextSession.start.split(":")[1]);
 
                 const countdown = calculateCountdown(nextDate);
-                nextSessionDiv.innerHTML = `<strong>Nächste Förderung:</strong> ${nextSession.fach} am ${wochentage[nextSession.day]} (${nextSession.stunde}, Raum: ${nextSession.raum})`;
+                nextSessionDiv.innerHTML = `<strong>Nächste Förderung:</strong> ${nextSession.fach} (${nextSession.raum}) am ${wochentage[nextSession.day]} (${nextSession.stunde})`;
                 countdownDiv.textContent = `Countdown: ${countdown}`;
             } else {
                 nextSessionDiv.innerHTML = `<strong>Nächste Förderung:</strong> Keine weiteren Termine geplant.`;
@@ -171,19 +211,17 @@
             isSimulationMode = !isSimulationMode;
 
             if (isSimulationMode) {
-                document.body.style.backgroundColor = "#dc3545";
-                let schuelerListe = `
-                    <div class="students">
-                        ${Object.entries(schueler)
-                            .map(
-                                ([klasse, namen]) => `
-                                    <div>
-                                        <h3>${klasse}</h3>
-                                        <ul>${namen.map(name => `<li>${name}</li>`).join("")}</ul>
-                                    </div>`
-                            )
-                            .join("")}
-                    </div>`;
+                document.body.style.backgroundColor = "#dc3545"; 
+                document.body.style.animation = "pulseBackgroundRed 3s infinite";
+
+                let schuelerListe = "";
+                for (const klasse in schueler) {
+                    schuelerListe += `<h2>${klasse}</h2><ul>`;
+                    schueler[klasse].forEach(name => {
+                        schuelerListe += `<li>${name}</li>`;
+                    });
+                    schuelerListe += `</ul>`;
+                }
 
                 statusContainer.innerHTML = `
                     <h1>⚠️ Anschlussförderung aktiv</h1>
@@ -194,10 +232,12 @@
                 `;
                 toggleButton.textContent = "🔘 Real-Modus";
             } else {
-                document.body.style.backgroundColor = "#28a745";
+                document.body.style.backgroundColor = "#28a745"; 
+                document.body.style.animation = "none";
                 statusContainer.innerHTML = `
+                    <div id="status-icon" class="status-icon">✅</div>
                     <h1 id="status-title">Keine Anschlussförderung</h1>
-                    <div id="next-session">
+                    <div class="next-session" id="next-session">
                         <strong>Nächste Förderung:</strong> Wird geladen...
                         <div id="countdown"></div>
                     </div>
