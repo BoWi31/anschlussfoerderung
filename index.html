@@ -22,15 +22,6 @@
             transition: background-color 0.5s ease;
         }
 
-        @keyframes pulseBackgroundRed {
-            0%, 100% {
-                background-color: #dc3545;
-            }
-            50% {
-                background-color: #ff4d4d;
-            }
-        }
-
         .status-container {
             background: white;
             color: #212529;
@@ -40,35 +31,48 @@
             max-width: 600px;
             width: 90%;
             text-align: center;
-            transition: all 0.3s ease;
         }
 
         h1 {
-            font-size: 1.8em;
+            font-size: 2em;
             margin-bottom: 1em;
         }
 
         h2 {
-            font-size: 1.3em;
+            font-size: 1.2em;
             margin-bottom: 0.5em;
         }
 
-        ul {
+        .students {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            text-align: left;
+            margin-top: 15px;
+        }
+
+        .students h3 {
+            font-size: 1em;
+            margin-bottom: 5px;
+            color: #dc3545;
+        }
+
+        .students ul {
             list-style: none;
             padding: 0;
             margin: 0;
+            font-size: 0.9em;
         }
 
-        ul li {
-            font-size: 0.9em;
-            margin: 3px 0;
+        .students li {
+            margin: 2px 0;
         }
 
         button {
             background-color: #007bff;
             color: white;
             border: none;
-            padding: 8px 12px;
+            padding: 10px 15px;
             border-radius: 5px;
             cursor: pointer;
             font-size: 0.9em;
@@ -85,9 +89,8 @@
 </head>
 <body>
     <div class="status-container" id="status-container">
-        <div id="status-icon" class="status-icon">✅</div>
         <h1 id="status-title">Keine Anschlussförderung</h1>
-        <div class="next-session" id="next-session">
+        <div id="next-session">
             <strong>Nächste Förderung:</strong> Wird geladen...
             <div id="countdown"></div>
         </div>
@@ -169,16 +172,18 @@
 
             if (isSimulationMode) {
                 document.body.style.backgroundColor = "#dc3545";
-                document.body.style.animation = "pulseBackgroundRed 3s infinite";
-
-                let schuelerListe = "";
-                for (const klasse in schueler) {
-                    schuelerListe += `<h2>${klasse}</h2><ul>`;
-                    schueler[klasse].forEach(name => {
-                        schuelerListe += `<li>${name}</li>`;
-                    });
-                    schuelerListe += `</ul>`;
-                }
+                let schuelerListe = `
+                    <div class="students">
+                        ${Object.entries(schueler)
+                            .map(
+                                ([klasse, namen]) => `
+                                    <div>
+                                        <h3>${klasse}</h3>
+                                        <ul>${namen.map(name => `<li>${name}</li>`).join("")}</ul>
+                                    </div>`
+                            )
+                            .join("")}
+                    </div>`;
 
                 statusContainer.innerHTML = `
                     <h1>⚠️ Anschlussförderung aktiv</h1>
@@ -189,11 +194,9 @@
                 toggleButton.textContent = "🔘 Real-Modus";
             } else {
                 document.body.style.backgroundColor = "#28a745";
-                document.body.style.animation = "none";
                 statusContainer.innerHTML = `
-                    <div id="status-icon" class="status-icon">✅</div>
                     <h1 id="status-title">Keine Anschlussförderung</h1>
-                    <div class="next-session" id="next-session">
+                    <div id="next-session">
                         <strong>Nächste Förderung:</strong> Wird geladen...
                         <div id="countdown"></div>
                     </div>
