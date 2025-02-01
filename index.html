@@ -3,7 +3,6 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="robots" content="noindex, nofollow">
     <title>Anschlussförderung</title>
     <style>
         body {
@@ -15,12 +14,12 @@
             align-items: center;
             flex-direction: column;
             min-height: 100vh;
-            background-color: #28a745;
-            color: #fff;
+            color: #212529;
+            background-color: #28a745; /* Grün */
             transition: background-color 0.5s ease;
         }
 
-        .container {
+        .status-container {
             background: white;
             color: #212529;
             padding: 1.5em;
@@ -29,32 +28,28 @@
             max-width: 600px;
             width: 90%;
             text-align: center;
+            transition: all 0.3s ease;
         }
 
         h1 {
             font-size: 2em;
-            margin-bottom: 0.5em;
+            margin-bottom: 1em;
         }
 
         h2 {
             font-size: 1.5em;
-            margin: 0.5em 0;
+            margin-bottom: 0.5em;
         }
 
         ul {
             list-style: none;
             padding: 0;
+            margin: 0;
         }
 
-        li {
+        ul li {
             font-size: 1em;
             margin: 5px 0;
-        }
-
-        .countdown {
-            margin-top: 1em;
-            font-size: 1.2em;
-            color: #555;
         }
 
         button {
@@ -66,31 +61,42 @@
             cursor: pointer;
             font-size: 0.9em;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            margin-top: 1em;
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
         }
 
         button:hover {
             background-color: #0056b3;
         }
+
+        .countdown {
+            font-size: 1.2em;
+            margin-top: 1em;
+        }
     </style>
 </head>
 <body>
-    <div class="container" id="status-container">
+    <div class="status-container" id="status-container">
+        <div id="status-icon" class="status-icon">✅</div>
         <h1 id="status-title">Keine Anschlussförderung</h1>
-        <h2 id="next-session">Nächste Förderung: Wird geladen...</h2>
-        <div class="countdown" id="countdown"></div>
-        <ul id="students-list"></ul>
+        <div class="next-session" id="next-session">
+            <strong>Nächste Förderung:</strong> Wird geladen...
+            <div id="countdown"></div>
+        </div>
     </div>
-    <button id="toggle-mode" onclick="toggleSimulationMode()">🔘 Simulieren</button>
+    <button id="toggle-button" onclick="toggleMode()">🔘 Simulieren</button>
 
     <script>
-        const foerderungen = [
-            { fach: "Deutsch", day: 1, time: "07:40", room: "W204" },
-            { fach: "Mathe", day: 2, time: "09:30", room: "W005" },
-            { fach: "Englisch", day: 3, time: "11:20", room: "W204" }
+        let isSimulationMode = false;
+
+        const foerderzeiten = [
+            { fach: "Deutsch", day: 1, stunde: "1./2. Stunde", start: "07:40", end: "09:30", raum: "W204" },
+            { fach: "Mathe", day: 2, stunde: "3./4. Stunde", start: "09:30", end: "11:20", raum: "W005" },
+            { fach: "Englisch", day: 3, stunde: "5./6. Stunde", start: "11:20", end: "13:10", raum: "W204" }
         ];
 
-        const students = {
+        const schueler = {
             "5a": ["Anastasia"],
             "5.1": ["Alina", "Vojdan"],
             "6.1": ["Daniil", "Mohammed"],
@@ -98,18 +104,11 @@
             "7.2": ["Ili", "Ilyas", "Beyar", "Emma", "Artur"]
         };
 
-        let simulationMode = false;
+        const wochentage = ["Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"];
 
-        function toggleSimulationMode() {
-            simulationMode = !simulationMode;
-            document.getElementById("toggle-mode").textContent = simulationMode ? "🔘 Real-Modus" : "🔘 Simulieren";
-            updateStatus();
-        }
-
-        function calculateCountdown(targetTime) {
+        function calculateCountdown(targetDate) {
             const now = new Date();
-            const diff = targetTime - now;
-
+            const diff = targetDate - now;
             if (diff <= 0) return null;
 
             const days = Math.floor(diff / (1000 * 60 * 60 * 24));
@@ -121,47 +120,78 @@
         }
 
         function updateStatus() {
+            if (isSimulationMode) return;
+
             const now = new Date();
             const currentDay = now.getDay();
             const currentTime = `${now.getHours().toString().padStart(2, "0")}:${now.getMinutes().toString().padStart(2, "0")}`;
-
             let nextSession = null;
-            foerderungen.forEach(session => {
-                const dayDiff = (session.day - currentDay + 7) % 7;
-                if (!nextSession || dayDiff < (nextSession.day - currentDay + 7) % 7) {
-                    nextSession = session;
+
+            foerderzeiten.forEach(zeit => {
+                const sessionDayDiff = (zeit.day - currentDay + 7) % 7;
+                const isSameDay = sessionDayDiff === 0 && currentTime < zeit.start;
+
+                if (!nextSession || sessionDayDiff < ((nextSession.day - currentDay + 7) % 7) || isSameDay) {
+                    nextSession = zeit;
                 }
             });
 
-            const statusContainer = document.getElementById("status-container");
-            const studentsList = document.getElementById("students-list");
-            const countdownElement = document.getElementById("countdown");
+            const nextSessionDiv = document.getElementById("next-session");
+            const countdownDiv = document.getElementById("countdown");
 
-            if (simulationMode && nextSession) {
-                document.body.style.backgroundColor = "#dc3545";
-                statusContainer.innerHTML = `
-                    <h1>⚠️ Anschlussförderung aktiv</h1>
-                    <h2>Fach: ${nextSession.fach}</h2>
-                    <p>Zeitraum: ${nextSession.time}</p>
-                    <p>Raum: ${nextSession.room}</p>
-                `;
-                studentsList.innerHTML = Object.keys(students).map(klasse => `
-                    <h3>${klasse}</h3>
-                    <ul>${students[klasse].map(name => `<li>${name}</li>`).join("")}</ul>
-                `).join("");
-            } else if (nextSession) {
-                document.body.style.backgroundColor = "#28a745";
+            if (nextSession) {
                 const nextDate = new Date();
                 nextDate.setDate(nextDate.getDate() + ((nextSession.day - currentDay + 7) % 7));
-                nextDate.setHours(parseInt(nextSession.time.split(":"))); // Startzeit einstellen
+                nextDate.setHours(nextSession.start.split(":")[0]);
+                nextDate.setMinutes(nextSession.start.split(":")[1]);
 
-                countdownElement.textContent = `Countdown: ${calculateCountdown(nextDate)}`;
-                statusContainer.innerHTML = `
-                    <h1>Keine Anschlussförderung</h1>
-                    <h2>Nächste Förderung: ${nextSession.fach}, Raum ${nextSession.room}</h2>
-                `;
+                const countdown = calculateCountdown(nextDate);
+                nextSessionDiv.innerHTML = `<strong>Nächste Förderung:</strong> ${nextSession.fach} am ${wochentage[nextSession.day]} (${nextSession.stunde}) <br> Raum: ${nextSession.raum}`;
+                countdownDiv.textContent = `Countdown: ${countdown}`;
             } else {
-                statusContainer.innerHTML = "Keine weiteren Termine.";
+                nextSessionDiv.innerHTML = `<strong>Nächste Förderung:</strong> Keine weiteren Termine geplant.`;
+                countdownDiv.textContent = "";
+            }
+        }
+
+        function toggleMode() {
+            const statusContainer = document.getElementById("status-container");
+            const toggleButton = document.getElementById("toggle-button");
+
+            isSimulationMode = !isSimulationMode;
+
+            if (isSimulationMode) {
+                document.body.style.backgroundColor = "#dc3545";
+
+                let schuelerListe = "";
+                for (const klasse in schueler) {
+                    schuelerListe += `<h2>${klasse}</h2><ul>`;
+                    schueler[klasse].forEach(name => {
+                        schuelerListe += `<li>${name}</li>`;
+                    });
+                    schuelerListe += `</ul>`;
+                }
+
+                statusContainer.innerHTML = `
+                    <h1>⚠️ Anschlussförderung aktiv</h1>
+                    <p><strong>Fach:</strong> Deutsch</p>
+                    <p><strong>Zeitraum:</strong> 1./2. Stunde</p>
+                    <p><strong>Raum:</strong> W204</p>
+                    ${schuelerListe}
+                `;
+                toggleButton.textContent = "🔘 Real-Modus";
+            } else {
+                document.body.style.backgroundColor = "#28a745";
+                statusContainer.innerHTML = `
+                    <div id="status-icon" class="status-icon">✅</div>
+                    <h1 id="status-title">Keine Anschlussförderung</h1>
+                    <div class="next-session" id="next-session">
+                        <strong>Nächste Förderung:</strong> Wird geladen...
+                        <div id="countdown"></div>
+                    </div>
+                `;
+                toggleButton.textContent = "🔘 Simulieren";
+                updateStatus();
             }
         }
 
