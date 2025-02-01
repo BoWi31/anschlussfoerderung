@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
     <title>Anschlussförderung</title>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
     <style>
         body {
-            font-family: 'Roboto', sans-serif;
+            font-family: Arial, sans-serif;
             margin: 0;
             padding: 0;
             display: flex;
@@ -15,21 +15,12 @@
             align-items: center;
             flex-direction: column;
             min-height: 100vh;
-            color: #212529;
             background-color: #28a745;
+            color: #fff;
             transition: background-color 0.5s ease;
         }
 
-        @keyframes pulseBackgroundRed {
-            0%, 100% {
-                background-color: #dc3545;
-            }
-            50% {
-                background-color: #ff4d4d;
-            }
-        }
-
-        .status-container {
+        .container {
             background: white;
             color: #212529;
             padding: 1.5em;
@@ -38,33 +29,31 @@
             max-width: 600px;
             width: 90%;
             text-align: center;
-            transition: all 0.3s ease;
         }
 
         h1 {
             font-size: 2em;
-            margin-bottom: 1em;
+            margin-bottom: 0.5em;
         }
 
         h2 {
             font-size: 1.5em;
-            margin-bottom: 0.5em;
+            margin: 0.5em 0;
         }
 
         ul {
             list-style: none;
             padding: 0;
-            margin: 0;
         }
 
-        ul li {
+        li {
             font-size: 1em;
             margin: 5px 0;
         }
 
         .countdown {
+            margin-top: 1em;
             font-size: 1.2em;
-            margin-top: 15px;
             color: #555;
         }
 
@@ -77,60 +66,50 @@
             cursor: pointer;
             font-size: 0.9em;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
+            margin-top: 1em;
         }
 
         button:hover {
             background-color: #0056b3;
         }
-
-        @media (max-width: 768px) {
-            h1 {
-                font-size: 1.5em;
-            }
-
-            h2 {
-                font-size: 1.2em;
-            }
-
-            ul li {
-                font-size: 0.9em;
-            }
-
-            button {
-                font-size: 0.8em;
-                padding: 8px 12px;
-            }
-        }
     </style>
 </head>
 <body>
-    <div class="status-container" id="status-container">
-        <div id="status-icon" class="status-icon">✅</div>
+    <div class="container" id="status-container">
         <h1 id="status-title">Keine Anschlussförderung</h1>
-        <div class="next-session" id="next-session">
-            <strong>Nächste Förderung:</strong> Wird geladen...
-            <div id="countdown" class="countdown"></div>
-        </div>
+        <h2 id="next-session">Nächste Förderung: Wird geladen...</h2>
+        <div class="countdown" id="countdown"></div>
+        <ul id="students-list"></ul>
     </div>
-    <button id="toggle-button" onclick="toggleMode()">🔘 Simulieren</button>
+    <button id="toggle-mode" onclick="toggleSimulationMode()">🔘 Simulieren</button>
 
     <script>
-        let isSimulationMode = false;
-
-        const foerderzeiten = [
-            { fach: "Deutsch", raum: "W204", day: 1, stunde: "1./2. Stunde", start: "07:40", students: ["Anastasia", "Daniil", "Marin", "Evelina", "Ilyas", "Emma"] },
-            { fach: "Mathe", raum: "W005", day: 2, stunde: "3./4. Stunde", start: "09:30", students: ["Anastasia", "Daniil", "Marin", "Evelina", "Ilyas", "Emma"] },
-            { fach: "Englisch", raum: "W204", day: 3, stunde: "5./6. Stunde", start: "11:20", students: ["Anastasia", "Daniil", "Marin", "Evelina", "Ilyas", "Emma"] }
+        const foerderungen = [
+            { fach: "Deutsch", day: 1, time: "07:40", room: "W204" },
+            { fach: "Mathe", day: 2, time: "09:30", room: "W005" },
+            { fach: "Englisch", day: 3, time: "11:20", room: "W204" }
         ];
 
-        const wochentage = ["Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"];
+        const students = {
+            "5a": ["Anastasia"],
+            "5.1": ["Alina", "Vojdan"],
+            "6.1": ["Daniil", "Mohammed"],
+            "7.1": ["Marin", "Evelina"],
+            "7.2": ["Ili", "Ilyas", "Beyar", "Emma", "Artur"]
+        };
 
-        function calculateCountdown(targetDate) {
+        let simulationMode = false;
+
+        function toggleSimulationMode() {
+            simulationMode = !simulationMode;
+            document.getElementById("toggle-mode").textContent = simulationMode ? "🔘 Real-Modus" : "🔘 Simulieren";
+            updateStatus();
+        }
+
+        function calculateCountdown(targetTime) {
             const now = new Date();
-            const diff = targetDate - now;
+            const diff = targetTime - now;
+
             if (diff <= 0) return null;
 
             const days = Math.floor(diff / (1000 * 60 * 60 * 24));
@@ -138,70 +117,51 @@
             const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
             const seconds = Math.floor((diff % (1000 * 60)) / 1000);
 
-            return `${days}T ${hours}H ${minutes}M ${seconds}S`;
+            return `${days}d ${hours}h ${minutes}m ${seconds}s`;
         }
 
         function updateStatus() {
             const now = new Date();
             const currentDay = now.getDay();
+            const currentTime = `${now.getHours().toString().padStart(2, "0")}:${now.getMinutes().toString().padStart(2, "0")}`;
+
             let nextSession = null;
-
-            foerderzeiten.forEach(zeit => {
-                const sessionDayDiff = (zeit.day - currentDay + 7) % 7;
-                const sessionTime = new Date();
-                sessionTime.setDate(now.getDate() + sessionDayDiff);
-                sessionTime.setHours(zeit.start.split(":")[0], zeit.start.split(":")[1]);
-
-                if (!nextSession || sessionTime < nextSession.date) {
-                    nextSession = { ...zeit, date: sessionTime };
+            foerderungen.forEach(session => {
+                const dayDiff = (session.day - currentDay + 7) % 7;
+                if (!nextSession || dayDiff < (nextSession.day - currentDay + 7) % 7) {
+                    nextSession = session;
                 }
             });
 
-            const nextSessionDiv = document.getElementById("next-session");
-            const countdownDiv = document.getElementById("countdown");
-
-            if (nextSession) {
-                const countdown = calculateCountdown(nextSession.date);
-                nextSessionDiv.innerHTML = `<strong>Nächste Förderung:</strong> ${nextSession.fach} am ${wochentage[nextSession.day]} (${nextSession.stunde}) im Raum ${nextSession.raum}`;
-                countdownDiv.textContent = `Countdown: ${countdown}`;
-            } else {
-                nextSessionDiv.innerHTML = `<strong>Nächste Förderung:</strong> Keine weiteren Termine geplant.`;
-                countdownDiv.textContent = "";
-            }
-        }
-
-        function toggleMode() {
             const statusContainer = document.getElementById("status-container");
-            const toggleButton = document.getElementById("toggle-button");
+            const studentsList = document.getElementById("students-list");
+            const countdownElement = document.getElementById("countdown");
 
-            isSimulationMode = !isSimulationMode;
-
-            if (isSimulationMode) {
+            if (simulationMode && nextSession) {
                 document.body.style.backgroundColor = "#dc3545";
-                document.body.style.animation = "pulseBackgroundRed 3s infinite";
-
-                const students = foerderzeiten[0].students.map(name => `<li>${name}</li>`).join("");
                 statusContainer.innerHTML = `
                     <h1>⚠️ Anschlussförderung aktiv</h1>
-                    <p><strong>Fach:</strong> Deutsch</p>
-                    <p><strong>Zeitraum:</strong> 1./2. Stunde</p>
-                    <p><strong>Raum:</strong> W204</p>
-                    <ul>${students}</ul>
+                    <h2>Fach: ${nextSession.fach}</h2>
+                    <p>Zeitraum: ${nextSession.time}</p>
+                    <p>Raum: ${nextSession.room}</p>
                 `;
-                toggleButton.textContent = "🔘 Real-Modus";
-            } else {
+                studentsList.innerHTML = Object.keys(students).map(klasse => `
+                    <h3>${klasse}</h3>
+                    <ul>${students[klasse].map(name => `<li>${name}</li>`).join("")}</ul>
+                `).join("");
+            } else if (nextSession) {
                 document.body.style.backgroundColor = "#28a745";
-                document.body.style.animation = "none";
+                const nextDate = new Date();
+                nextDate.setDate(nextDate.getDate() + ((nextSession.day - currentDay + 7) % 7));
+                nextDate.setHours(parseInt(nextSession.time.split(":"))); // Startzeit einstellen
+
+                countdownElement.textContent = `Countdown: ${calculateCountdown(nextDate)}`;
                 statusContainer.innerHTML = `
-                    <div id="status-icon" class="status-icon">✅</div>
-                    <h1 id="status-title">Keine Anschlussförderung</h1>
-                    <div class="next-session" id="next-session">
-                        <strong>Nächste Förderung:</strong> Wird geladen...
-                        <div id="countdown" class="countdown"></div>
-                    </div>
+                    <h1>Keine Anschlussförderung</h1>
+                    <h2>Nächste Förderung: ${nextSession.fach}, Raum ${nextSession.room}</h2>
                 `;
-                toggleButton.textContent = "🔘 Simulieren";
-                updateStatus();
+            } else {
+                statusContainer.innerHTML = "Keine weiteren Termine.";
             }
         }
 
