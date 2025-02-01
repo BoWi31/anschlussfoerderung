@@ -153,4 +153,76 @@
 
             foerderzeiten.forEach(zeit => {
                 const sessionDayDiff = (zeit.day - currentDay + 7) % 7;
-                const isSameDay = sessionDayDiff === 0 && currentTime < zeit
+                const isSameDay = sessionDayDiff === 0 && currentTime < zeit.start;
+
+                if (!nextSession || sessionDayDiff < ((nextSession.day - currentDay + 7) % 7) || isSameDay) {
+                    nextSession = zeit;
+                }
+            });
+
+            const nextSessionDiv = document.getElementById("next-session");
+            const countdownDiv = document.getElementById("countdown");
+
+            if (nextSession) {
+                const nextDate = new Date();
+                nextDate.setDate(nextDate.getDate() + ((nextSession.day - currentDay + 7) % 7));
+                nextDate.setHours(nextSession.start.split(":")[0]);
+                nextDate.setMinutes(nextSession.start.split(":")[1]);
+
+                const countdown = calculateCountdown(nextDate);
+                nextSessionDiv.innerHTML = `<strong>Nächste Förderung:</strong> ${nextSession.fach} am ${wochentage[nextSession.day]} (${nextSession.stunde}) im Raum ${nextSession.raum}`;
+                countdownDiv.textContent = `Countdown: ${countdown}`;
+            } else {
+                nextSessionDiv.innerHTML = `<strong>Nächste Förderung:</strong> Keine weiteren Termine geplant.`;
+                countdownDiv.textContent = "";
+            }
+        }
+
+        function toggleMode() {
+            const statusContainer = document.getElementById("status-container");
+            const toggleButton = document.getElementById("toggle-button");
+
+            isSimulationMode = !isSimulationMode;
+
+            if (isSimulationMode) {
+                document.body.style.backgroundColor = "#dc3545";
+                document.body.style.animation = "pulseBackgroundRed 3s infinite";
+
+                let schuelerListe = "";
+                for (const klasse in schueler) {
+                    schuelerListe += `<h2>${klasse}</h2><ul>`;
+                    schueler[klasse].forEach(name => {
+                        schuelerListe += `<li>${name}</li>`;
+                    });
+                    schuelerListe += `</ul>`;
+                }
+
+                statusContainer.innerHTML = `
+                    <h1>⚠️ Anschlussförderung aktiv</h1>
+                    <p><strong>Fach:</strong> Deutsch</p>
+                    <p><strong>Zeitraum:</strong> 1./2. Stunde</p>
+                    <p><strong>Raum:</strong> W204</p>
+                    ${schuelerListe}
+                `;
+                toggleButton.textContent = "🔘 Real-Modus";
+            } else {
+                document.body.style.backgroundColor = "#28a745";
+                document.body.style.animation = "none";
+                statusContainer.innerHTML = `
+                    <div id="status-icon" class="status-icon">✅</div>
+                    <h1 id="status-title">Keine Anschlussförderung</h1>
+                    <div class="next-session" id="next-session">
+                        <strong>Nächste Förderung:</strong> Wird geladen...
+                        <div id="countdown"></div>
+                    </div>
+                `;
+                toggleButton.textContent = "🔘 Simulieren";
+                updateStatus();
+            }
+        }
+
+        setInterval(updateStatus, 1000);
+        updateStatus();
+    </script>
+</body>
+</html>
