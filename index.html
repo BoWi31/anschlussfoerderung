@@ -62,6 +62,12 @@
             margin: 5px 0;
         }
 
+        .countdown {
+            font-size: 1.2em;
+            margin-top: 15px;
+            color: #555;
+        }
+
         button {
             background-color: #007bff;
             color: white;
@@ -106,7 +112,7 @@
         <h1 id="status-title">Keine Anschlussförderung</h1>
         <div class="next-session" id="next-session">
             <strong>Nächste Förderung:</strong> Wird geladen...
-            <div id="countdown"></div>
+            <div id="countdown" class="countdown"></div>
         </div>
     </div>
     <button id="toggle-button" onclick="toggleMode()">🔘 Simulieren</button>
@@ -115,18 +121,10 @@
         let isSimulationMode = false;
 
         const foerderzeiten = [
-            { fach: "Deutsch", raum: "W204", day: 1, stunde: "1./2. Stunde", start: "07:40", end: "09:30" },
-            { fach: "Mathe", raum: "W005", day: 2, stunde: "3./4. Stunde", start: "09:30", end: "11:20" },
-            { fach: "Englisch", raum: "W204", day: 3, stunde: "5./6. Stunde", start: "11:20", end: "13:10" }
+            { fach: "Deutsch", raum: "W204", day: 1, stunde: "1./2. Stunde", start: "07:40" },
+            { fach: "Mathe", raum: "W005", day: 2, stunde: "3./4. Stunde", start: "09:30" },
+            { fach: "Englisch", raum: "W204", day: 3, stunde: "5./6. Stunde", start: "11:20" }
         ];
-
-        const schueler = {
-            "5a": ["Anastasia"],
-            "5.1": ["Alina", "Vojdan"],
-            "6.1": ["Daniil", "Mohammed"],
-            "7.1": ["Marin", "Evelina"],
-            "7.2": ["Ilyas", "Emma", "Beyar", "Artur"]
-        };
 
         const wochentage = ["Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"];
 
@@ -140,7 +138,7 @@
             const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
             const seconds = Math.floor((diff % (1000 * 60)) / 1000);
 
-            return `${days}d ${hours}h ${minutes}m ${seconds}s`;
+            return `${days}T ${hours}H ${minutes}M ${seconds}S`;
         }
 
         function updateStatus() {
@@ -148,15 +146,16 @@
 
             const now = new Date();
             const currentDay = now.getDay();
-            const currentTime = `${now.getHours().toString().padStart(2, "0")}:${now.getMinutes().toString().padStart(2, "0")}`;
             let nextSession = null;
 
             foerderzeiten.forEach(zeit => {
                 const sessionDayDiff = (zeit.day - currentDay + 7) % 7;
-                const isSameDay = sessionDayDiff === 0 && currentTime < zeit.start;
+                const sessionTime = new Date();
+                sessionTime.setDate(now.getDate() + sessionDayDiff);
+                sessionTime.setHours(zeit.start.split(":")[0], zeit.start.split(":")[1]);
 
-                if (!nextSession || sessionDayDiff < ((nextSession.day - currentDay + 7) % 7) || isSameDay) {
-                    nextSession = zeit;
+                if (!nextSession || sessionTime < nextSession.date) {
+                    nextSession = { ...zeit, date: sessionTime };
                 }
             });
 
@@ -164,12 +163,7 @@
             const countdownDiv = document.getElementById("countdown");
 
             if (nextSession) {
-                const nextDate = new Date();
-                nextDate.setDate(nextDate.getDate() + ((nextSession.day - currentDay + 7) % 7));
-                nextDate.setHours(nextSession.start.split(":")[0]);
-                nextDate.setMinutes(nextSession.start.split(":")[1]);
-
-                const countdown = calculateCountdown(nextDate);
+                const countdown = calculateCountdown(nextSession.date);
                 nextSessionDiv.innerHTML = `<strong>Nächste Förderung:</strong> ${nextSession.fach} am ${wochentage[nextSession.day]} (${nextSession.stunde}) im Raum ${nextSession.raum}`;
                 countdownDiv.textContent = `Countdown: ${countdown}`;
             } else {
@@ -188,21 +182,11 @@
                 document.body.style.backgroundColor = "#dc3545";
                 document.body.style.animation = "pulseBackgroundRed 3s infinite";
 
-                let schuelerListe = "";
-                for (const klasse in schueler) {
-                    schuelerListe += `<h2>${klasse}</h2><ul>`;
-                    schueler[klasse].forEach(name => {
-                        schuelerListe += `<li>${name}</li>`;
-                    });
-                    schuelerListe += `</ul>`;
-                }
-
                 statusContainer.innerHTML = `
                     <h1>⚠️ Anschlussförderung aktiv</h1>
                     <p><strong>Fach:</strong> Deutsch</p>
                     <p><strong>Zeitraum:</strong> 1./2. Stunde</p>
                     <p><strong>Raum:</strong> W204</p>
-                    ${schuelerListe}
                 `;
                 toggleButton.textContent = "🔘 Real-Modus";
             } else {
@@ -213,7 +197,7 @@
                     <h1 id="status-title">Keine Anschlussförderung</h1>
                     <div class="next-session" id="next-session">
                         <strong>Nächste Förderung:</strong> Wird geladen...
-                        <div id="countdown"></div>
+                        <div id="countdown" class="countdown"></div>
                     </div>
                 `;
                 toggleButton.textContent = "🔘 Simulieren";
