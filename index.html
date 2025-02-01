@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="de">
 <head>
@@ -45,12 +44,12 @@
         }
 
         h1 {
-            font-size: 2em;
+            font-size: 1.8em;
             margin-bottom: 1em;
         }
 
         h2 {
-            font-size: 1.5em;
+            font-size: 1.3em;
             margin-bottom: 0.5em;
         }
 
@@ -61,15 +60,15 @@
         }
 
         ul li {
-            font-size: 1em;
-            margin: 5px 0;
+            font-size: 0.9em;
+            margin: 3px 0;
         }
 
         button {
             background-color: #007bff;
             color: white;
             border: none;
-            padding: 10px 15px;
+            padding: 8px 12px;
             border-radius: 5px;
             cursor: pointer;
             font-size: 0.9em;
@@ -128,7 +127,7 @@
         }
 
         function updateStatus() {
-            if (isSimulationMode) return; // Im Simulationsmodus wird nichts aktualisiert
+            if (isSimulationMode) return;
 
             const now = new Date();
             const currentDay = now.getDay();
@@ -169,7 +168,7 @@
             isSimulationMode = !isSimulationMode;
 
             if (isSimulationMode) {
-                document.body.style.backgroundColor = "#dc3545"; // Hintergrund auf Rot
+                document.body.style.backgroundColor = "#dc3545";
                 document.body.style.animation = "pulseBackgroundRed 3s infinite";
 
                 let schuelerListe = "";
@@ -189,7 +188,7 @@
                 `;
                 toggleButton.textContent = "🔘 Real-Modus";
             } else {
-                document.body.style.backgroundColor = "#28a745"; // Hintergrund zurück auf Grün
+                document.body.style.backgroundColor = "#28a745";
                 document.body.style.animation = "none";
                 statusContainer.innerHTML = `
                     <div id="status-icon" class="status-icon">✅</div>
@@ -200,7 +199,7 @@
                     </div>
                 `;
                 toggleButton.textContent = "🔘 Simulieren";
-                updateStatus(); // Echtzeitstatus erneut laden
+                updateStatus();
             }
         }
 
