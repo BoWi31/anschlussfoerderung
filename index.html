@@ -25,31 +25,35 @@
             padding: 1.5em;
             border-radius: 10px;
             box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
-            max-width: 600px;
+            max-width: 500px;
             width: 90%;
             text-align: center;
             transition: all 0.3s ease;
         }
 
         h1 {
-            font-size: 2em;
+            font-size: 1.8em;
             margin-bottom: 1em;
         }
 
-        h2 {
-            font-size: 1.5em;
-            margin-bottom: 0.5em;
+        .compact-list h2 {
+            font-size: 1.2em;
+            margin: 0.5em 0;
         }
 
         ul {
             list-style: none;
             padding: 0;
             margin: 0;
+            font-size: 0.9em;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
         }
 
         ul li {
-            font-size: 1em;
-            margin: 5px 0;
+            margin: 0.3em 0;
+            flex: 0 0 45%; /* 2 Spalten */
         }
 
         button {
@@ -71,8 +75,9 @@
         }
 
         .countdown {
-            font-size: 1.2em;
+            font-size: 1em;
             margin-top: 1em;
+            color: #555;
         }
     </style>
 </head>
@@ -91,9 +96,9 @@
         let isSimulationMode = false;
 
         const foerderzeiten = [
-            { fach: "Deutsch", day: 1, stunde: "1./2. Stunde", start: "07:40", end: "09:30", raum: "W204" },
-            { fach: "Mathe", day: 2, stunde: "3./4. Stunde", start: "09:30", end: "11:20", raum: "W005" },
-            { fach: "Englisch", day: 3, stunde: "5./6. Stunde", start: "11:20", end: "13:10", raum: "W204" }
+            { fach: "Deutsch", day: 1, stunde: "1./2. Stunde", raum: "W204" },
+            { fach: "Mathe", day: 2, stunde: "3./4. Stunde", raum: "W005" },
+            { fach: "Englisch", day: 3, stunde: "5./6. Stunde", raum: "W204" }
         ];
 
         const schueler = {
@@ -124,15 +129,11 @@
 
             const now = new Date();
             const currentDay = now.getDay();
-            const currentTime = `${now.getHours().toString().padStart(2, "0")}:${now.getMinutes().toString().padStart(2, "0")}`;
             let nextSession = null;
 
-            foerderzeiten.forEach(zeit => {
-                const sessionDayDiff = (zeit.day - currentDay + 7) % 7;
-                const isSameDay = sessionDayDiff === 0 && currentTime < zeit.start;
-
-                if (!nextSession || sessionDayDiff < ((nextSession.day - currentDay + 7) % 7) || isSameDay) {
-                    nextSession = zeit;
+            foerderzeiten.forEach(session => {
+                if (!nextSession || session.day > currentDay) {
+                    nextSession = session;
                 }
             });
 
@@ -140,16 +141,9 @@
             const countdownDiv = document.getElementById("countdown");
 
             if (nextSession) {
-                const nextDate = new Date();
-                nextDate.setDate(nextDate.getDate() + ((nextSession.day - currentDay + 7) % 7));
-                nextDate.setHours(nextSession.start.split(":")[0]);
-                nextDate.setMinutes(nextSession.start.split(":")[1]);
-
-                const countdown = calculateCountdown(nextDate);
-                nextSessionDiv.innerHTML = `<strong>Nächste Förderung:</strong> ${nextSession.fach} am ${wochentage[nextSession.day]} (${nextSession.stunde}) <br> Raum: ${nextSession.raum}`;
-                countdownDiv.textContent = `Countdown: ${countdown}`;
+                nextSessionDiv.innerHTML = `<strong>Nächste Förderung:</strong> ${nextSession.fach}, Raum: ${nextSession.raum}`;
             } else {
-                nextSessionDiv.innerHTML = `<strong>Nächste Förderung:</strong> Keine weiteren Termine geplant.`;
+                nextSessionDiv.textContent = "Keine weiteren Termine.";
                 countdownDiv.textContent = "";
             }
         }
@@ -165,11 +159,11 @@
 
                 let schuelerListe = "";
                 for (const klasse in schueler) {
-                    schuelerListe += `<h2>${klasse}</h2><ul>`;
+                    schuelerListe += `<div class="compact-list"><h2>${klasse}</h2><ul>`;
                     schueler[klasse].forEach(name => {
                         schuelerListe += `<li>${name}</li>`;
                     });
-                    schuelerListe += `</ul>`;
+                    schuelerListe += `</ul></div>`;
                 }
 
                 statusContainer.innerHTML = `
@@ -182,15 +176,6 @@
                 toggleButton.textContent = "🔘 Real-Modus";
             } else {
                 document.body.style.backgroundColor = "#28a745";
-                statusContainer.innerHTML = `
-                    <div id="status-icon" class="status-icon">✅</div>
-                    <h1 id="status-title">Keine Anschlussförderung</h1>
-                    <div class="next-session" id="next-session">
-                        <strong>Nächste Förderung:</strong> Wird geladen...
-                        <div id="countdown"></div>
-                    </div>
-                `;
-                toggleButton.textContent = "🔘 Simulieren";
                 updateStatus();
             }
         }
