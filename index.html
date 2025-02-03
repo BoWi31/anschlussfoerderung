@@ -99,6 +99,7 @@
       fetch(url)
         .then(response => response.text())
         .then(text => {
+          // Entferne den JavaScript-Wrapper und parse das JSON
           const jsonText = text.substring(text.indexOf('{'), text.lastIndexOf('}') + 1);
           const data = JSON.parse(jsonText);
           callback(data);
@@ -133,7 +134,7 @@
       return days;
     }
 
-    // Wandelt sowohl numerische als auch Textangaben (z.B. "Montag") in eine Zahl um.
+    // Wandelt sowohl numerische als auch Textangaben (z. B. "Montag") in eine Zahl um.
     function processFoerderzeiten(data) {
       let times = [];
       if (!data || !data.table || !data.table.rows) return times;
@@ -209,7 +210,7 @@
       foerderzeiten.forEach(zeit => {
         let dayDiff = (zeit.day - now.getDay() + 7) % 7;
         const [startHour, startMinute] = zeit.start.split(":").map(Number);
-        // Falls der Termin heute liegt, aber die Startzeit bereits vorbei ist, wird er erst in 7 Tagen aktiv.
+        // Liegt der Termin heute, aber die Startzeit ist bereits vorbei, wird er erst in 7 Tagen aktiv.
         if (dayDiff === 0 && (now.getHours() > startHour || (now.getHours() === startHour && now.getMinutes() >= startMinute))) {
           dayDiff = 7;
         }
@@ -230,14 +231,11 @@
       if (isSimulationMode) return;
       const { session: nextSession, nextDate } = getNextSession();
       const nextSessionDiv = document.getElementById("next-session");
-      const countdownDiv = document.getElementById("countdown");
       if (foerderzeiten.length === 0 || !nextSession) {
-        nextSessionDiv.innerHTML = `<strong>Nächste Förderung:</strong> Keine Termine vorhanden.`;
-        countdownDiv.textContent = "";
+        nextSessionDiv.innerHTML = `<strong>Nächste Förderung:</strong> Keine Termine vorhanden.<div id="countdown"></div>`;
       } else {
         const countdown = calculateCountdown(nextDate) || "Aktuell aktiv";
-        nextSessionDiv.innerHTML = `<strong>Nächste Förderung:</strong> ${nextSession.fach} am ${wochentage[nextSession.day]} (${nextSession.stunde}), Raum: ${nextSession.raum}`;
-        countdownDiv.textContent = `Countdown: ${countdown}`;
+        nextSessionDiv.innerHTML = `<strong>Nächste Förderung:</strong> ${nextSession.fach} am ${wochentage[nextSession.day]} (${nextSession.stunde}), Raum: ${nextSession.raum}<br><div id="countdown">Countdown: ${countdown}</div>`;
       }
     }
 
