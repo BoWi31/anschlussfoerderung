@@ -92,9 +92,12 @@
             <div id="countdown"></div>
         </div>
     </div>
-    <button id="next-button" onclick="jumpToNextSession()">🔘 Nächste Anschlussförderung</button>
+    <button id="toggle-button" onclick="toggleSimulation()">🔘 Nächste Anschlussförderung</button>
 
     <script>
+        let isSimulationMode = false;
+        let intervalId = setInterval(updateStatus, 1000);
+
         const foerderzeiten = [
             { fach: "Deutsch", day: 1, stunde: "1./2. Stunde", raum: "W204", start: "07:40", end: "09:30" },
             { fach: "Deutsch", day: 2, stunde: "3./4. Stunde", raum: "W204", start: "09:30", end: "11:20" },
@@ -127,44 +130,43 @@
             return `${days}d ${hours}h ${minutes}m ${seconds}s`;
         }
 
-        function updateStatus() {
+        // Hilfsfunktion zur Ermittlung des nächsten Termins und dessen Datum
+        function getNextSession() {
             const now = new Date();
             let nextSession = null;
             let smallestDiff = Infinity;
+            let nextDate = null;
 
-            // Berechne für jede Förderzeit die nächste Vorkommnis
             foerderzeiten.forEach(zeit => {
                 let dayDiff = (zeit.day - now.getDay() + 7) % 7;
                 const [startHour, startMinute] = zeit.start.split(":").map(Number);
-                // Falls der Termin heute liegt, aber die Startzeit bereits überschritten wurde,
-                // berücksichtige erst den Termin in 7 Tagen.
+                // Liegt der Termin heute, aber ist die Startzeit bereits vorbei, wird er erst in 7 Tagen wieder aktiv.
                 if (dayDiff === 0 && (now.getHours() > startHour || (now.getHours() === startHour && now.getMinutes() >= startMinute))) {
                     dayDiff = 7;
                 }
-                const nextDate = new Date(now);
-                nextDate.setDate(now.getDate() + dayDiff);
-                nextDate.setHours(startHour, startMinute, 0, 0);
+                const candidateDate = new Date(now);
+                candidateDate.setDate(now.getDate() + dayDiff);
+                candidateDate.setHours(startHour, startMinute, 0, 0);
 
-                const diff = nextDate - now;
+                const diff = candidateDate - now;
                 if (diff < smallestDiff) {
                     smallestDiff = diff;
                     nextSession = zeit;
+                    nextDate = candidateDate;
                 }
             });
+            return { session: nextSession, nextDate: nextDate, diff: smallestDiff };
+        }
 
+        // Aktualisiert im Live-Modus den Countdown und die Anzeige des nächsten Termins.
+        function updateStatus() {
+            if (isSimulationMode) return; // Live-Update nur, wenn nicht im Simulationsmodus
+            const now = new Date();
+            const { session: nextSession, nextDate } = getNextSession();
             const nextSessionDiv = document.getElementById("next-session");
             const countdownDiv = document.getElementById("countdown");
 
             if (nextSession) {
-                const [startHour, startMinute] = nextSession.start.split(":").map(Number);
-                let dayDiff = (nextSession.day - now.getDay() + 7) % 7;
-                if (dayDiff === 0 && (now.getHours() > startHour || (now.getHours() === startHour && now.getMinutes() >= startMinute))) {
-                    dayDiff = 7;
-                }
-                const nextDate = new Date(now);
-                nextDate.setDate(now.getDate() + dayDiff);
-                nextDate.setHours(startHour, startMinute, 0, 0);
-
                 const countdown = calculateCountdown(nextDate);
                 nextSessionDiv.innerHTML = `<strong>Nächste Förderung:</strong> ${nextSession.fach} am ${wochentage[nextSession.day]} (${nextSession.stunde}), Raum: ${nextSession.raum}`;
                 countdownDiv.textContent = `Countdown: ${countdown}`;
@@ -174,58 +176,55 @@
             }
         }
 
-        // Starte den Countdown-Update-Intervall
-        const intervalId = setInterval(updateStatus, 1000);
-        updateStatus();
-
-        function jumpToNextSession() {
-            // Stoppe den Countdown
-            clearInterval(intervalId);
-
-            const now = new Date();
-            let nextSession = null;
-            let smallestDiff = Infinity;
-
-            foerderzeiten.forEach(zeit => {
-                let dayDiff = (zeit.day - now.getDay() + 7) % 7;
-                const [startHour, startMinute] = zeit.start.split(":").map(Number);
-                if (dayDiff === 0 && (now.getHours() > startHour || (now.getHours() === startHour && now.getMinutes() >= startMinute))) {
-                    dayDiff = 7;
+        // Toggle-Funktion: Beim Klick wird entweder in den Simulationsmodus gewechselt oder zurück in den Live-Modus.
+        function toggleSimulation() {
+            if (!isSimulationMode) {
+                // SIMULATIONS-MODUS: Countdown stoppen und Anzeige auf den nächsten Termin umstellen
+                clearInterval(intervalId);
+                const { session: nextSession } = getNextSession();
+                if (nextSession) {
+                    let schuelerListe = "";
+                    for (const klasse in schueler) {
+                        schuelerListe += `<h2>${klasse}</h2><ul>`;
+                        schueler[klasse].forEach(name => {
+                            schuelerListe += `<li>${name}</li>`;
+                        });
+                        schuelerListe += `</ul>`;
+                    }
+                    const statusContainer = document.getElementById("status-container");
+                    statusContainer.innerHTML = `
+                        <h1>⚠️ Anschlussförderung aktiv</h1>
+                        <p><strong>Fach:</strong> ${nextSession.fach}</p>
+                        <p><strong>Zeitraum:</strong> ${nextSession.stunde}</p>
+                        <p><strong>Raum:</strong> ${nextSession.raum}</p>
+                        ${schuelerListe}
+                    `;
                 }
-                const nextDate = new Date(now);
-                nextDate.setDate(now.getDate() + dayDiff);
-                nextDate.setHours(startHour, startMinute, 0, 0);
-
-                const diff = nextDate - now;
-                if (diff < smallestDiff) {
-                    smallestDiff = diff;
-                    nextSession = zeit;
-                }
-            });
-
-            if (nextSession) {
-                let schuelerListe = "";
-                for (const klasse in schueler) {
-                    schuelerListe += `<h2>${klasse}</h2><ul>`;
-                    schueler[klasse].forEach(name => {
-                        schuelerListe += `<li>${name}</li>`;
-                    });
-                    schuelerListe += `</ul>`;
-                }
-
-                const statusContainer = document.getElementById("status-container");
-                statusContainer.innerHTML = `
-                    <h1>⚠️ Anschlussförderung aktiv</h1>
-                    <p><strong>Fach:</strong> ${nextSession.fach}</p>
-                    <p><strong>Zeitraum:</strong> ${nextSession.stunde}</p>
-                    <p><strong>Raum:</strong> ${nextSession.raum}</p>
-                    ${schuelerListe}
-                `;
-                // Ändere den Hintergrund in Rot mit Puls-Animation
                 document.body.style.backgroundColor = "#dc3545";
                 document.body.style.animation = "pulseBackgroundRed 3s infinite";
+                document.getElementById("toggle-button").textContent = "🔘 Live Modus";
+                isSimulationMode = true;
+            } else {
+                // LIVE-MODUS: Zurückschalten, Countdown wieder starten und Standardanzeige wiederherstellen
+                document.body.style.backgroundColor = "#28a745";
+                document.body.style.animation = "none";
+                const statusContainer = document.getElementById("status-container");
+                statusContainer.innerHTML = `
+                    <div id="status-icon" class="status-icon">✅</div>
+                    <h1 id="status-title">Keine Anschlussförderung</h1>
+                    <div class="next-session" id="next-session">
+                        <strong>Nächste Förderung:</strong> Wird geladen...
+                        <div id="countdown"></div>
+                    </div>
+                `;
+                document.getElementById("toggle-button").textContent = "🔘 Nächste Anschlussförderung";
+                isSimulationMode = false;
+                intervalId = setInterval(updateStatus, 1000);
+                updateStatus();
             }
         }
+
+        updateStatus();
     </script>
 </body>
 </html>
