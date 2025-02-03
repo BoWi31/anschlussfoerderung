@@ -133,15 +133,25 @@
             if (isSimulationMode) return; // Im Simulationsmodus wird nichts aktualisiert
 
             const now = new Date();
-            const currentDay = now.getDay();
-            const currentTime = `${now.getHours().toString().padStart(2, "0")}:${now.getMinutes().toString().padStart(2, "0")}`;
             let nextSession = null;
+            let smallestDiff = Infinity;
 
+            // Gehe alle Förderzeiten durch und berechne für jeden die nächste Vorkommnis (Berücksichtigung von Datum und Uhrzeit)
             foerderzeiten.forEach(zeit => {
-                const sessionDayDiff = (zeit.day - currentDay + 7) % 7;
-                const isSameDay = sessionDayDiff === 0 && currentTime < zeit.start;
+                let dayDiff = (zeit.day - now.getDay() + 7) % 7;
+                const [startHour, startMinute] = zeit.start.split(":").map(Number);
+                // Falls der Termin heute ist, aber die Startzeit bereits überschritten wurde,
+                // wird er erst in 7 Tagen wieder stattfinden.
+                if (dayDiff === 0 && (now.getHours() > startHour || (now.getHours() === startHour && now.getMinutes() >= startMinute))) {
+                    dayDiff = 7;
+                }
+                const nextDate = new Date(now);
+                nextDate.setDate(now.getDate() + dayDiff);
+                nextDate.setHours(startHour, startMinute, 0, 0);
 
-                if (!nextSession || sessionDayDiff < ((nextSession.day - currentDay + 7) % 7) || isSameDay) {
+                const diff = nextDate - now;
+                if (diff < smallestDiff) {
+                    smallestDiff = diff;
                     nextSession = zeit;
                 }
             });
@@ -150,10 +160,15 @@
             const countdownDiv = document.getElementById("countdown");
 
             if (nextSession) {
-                const nextDate = new Date();
-                nextDate.setDate(nextDate.getDate() + ((nextSession.day - currentDay + 7) % 7));
-                nextDate.setHours(nextSession.start.split(":")[0]);
-                nextDate.setMinutes(nextSession.start.split(":")[1]);
+                // Erneut das nächste Datum für die ausgewählte Session berechnen
+                let dayDiff = (nextSession.day - now.getDay() + 7) % 7;
+                const [startHour, startMinute] = nextSession.start.split(":").map(Number);
+                if (dayDiff === 0 && (now.getHours() > startHour || (now.getHours() === startHour && now.getMinutes() >= startMinute))) {
+                    dayDiff = 7;
+                }
+                const nextDate = new Date(now);
+                nextDate.setDate(now.getDate() + dayDiff);
+                nextDate.setHours(startHour, startMinute, 0, 0);
 
                 const countdown = calculateCountdown(nextDate);
                 nextSessionDiv.innerHTML = `<strong>Nächste Förderung:</strong> ${nextSession.fach} am ${wochentage[nextSession.day]} (${nextSession.stunde}), Raum: ${nextSession.raum}`;
