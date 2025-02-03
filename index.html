@@ -133,11 +133,10 @@
       return days;
     }
 
-    // Diese Funktion wandelt sowohl Zahlen als auch Text (z. B. "Montag") in einen numerischen Tag um.
+    // Wandelt sowohl numerische als auch Textangaben (z.B. "Montag") in eine Zahl um.
     function processFoerderzeiten(data) {
       let times = [];
       if (!data || !data.table || !data.table.rows) return times;
-      // Mapping: "Montag" = 1, "Dienstag" = 2, ..., "Sonntag" = 0
       const dayMapping = {
         "Montag": 1,
         "Dienstag": 2,
@@ -158,7 +157,6 @@
         const raum = row.c[3] ? row.c[3].v : '';
         const start = row.c[4] ? row.c[4].v : '';
         const end = row.c[5] ? row.c[5].v : '';
-        // Hier wird nur dann ein Termin übernommen, wenn alle Felder gültig sind.
         if (fach && day !== -1 && stunde && raum && start && end) {
           times.push({ fach, day, stunde, raum, start, end });
         }
@@ -211,7 +209,7 @@
       foerderzeiten.forEach(zeit => {
         let dayDiff = (zeit.day - now.getDay() + 7) % 7;
         const [startHour, startMinute] = zeit.start.split(":").map(Number);
-        // Falls der Termin heute liegt, aber die Startzeit schon vorbei ist, wird der Termin erst in 7 Tagen wieder aktiv.
+        // Falls der Termin heute liegt, aber die Startzeit bereits vorbei ist, wird er erst in 7 Tagen aktiv.
         if (dayDiff === 0 && (now.getHours() > startHour || (now.getHours() === startHour && now.getMinutes() >= startMinute))) {
           dayDiff = 7;
         }
@@ -233,7 +231,7 @@
       const { session: nextSession, nextDate } = getNextSession();
       const nextSessionDiv = document.getElementById("next-session");
       const countdownDiv = document.getElementById("countdown");
-      if (foerderzeiten.length === 0) {
+      if (foerderzeiten.length === 0 || !nextSession) {
         nextSessionDiv.innerHTML = `<strong>Nächste Förderung:</strong> Keine Termine vorhanden.`;
         countdownDiv.textContent = "";
       } else {
@@ -288,6 +286,9 @@
       }
     }
 
+    /************************************
+     * Start: Alle Daten laden und Live-Modus starten
+     ************************************/
     loadAllData().then(() => {
       intervalId = setInterval(updateStatus, 1000);
       updateStatus();
