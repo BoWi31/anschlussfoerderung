@@ -33,16 +33,14 @@
       color: #212529;
       padding: 1.5em;
       border-radius: 10px;
-      box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
+      box-shadow: 0 8px 15px rgba(0,0,0,0.2);
       max-width: 600px;
       width: 90%;
       text-align: center;
       transition: all 0.3s ease;
     }
     h1 { font-size: 2em; margin-bottom: 1em; }
-    h2 { font-size: 1.5em; margin-bottom: 0.5em; }
-    ul { list-style: none; padding: 0; margin: 0; }
-    ul li { font-size: 1em; margin: 5px 0; }
+    p { font-size: 1em; margin: 0.5em 0; }
     button {
       background-color: #007bff;
       color: white;
@@ -51,7 +49,7 @@
       border-radius: 5px;
       cursor: pointer;
       font-size: 0.9em;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
       position: fixed;
       bottom: 20px;
       right: 20px;
@@ -71,9 +69,9 @@
   <button id="toggle-button" onclick="toggleSimulation()">🔘 Nächste Anschlussförderung</button>
   <script>
     /************************************
-     * Hardcodierte Daten (basierend auf deinen Eingaben im Google Sheet)
+     * Hardcodierte Daten (basierend auf deinen Eingaben)
      ************************************/
-    // Förderzeiten: 
+    // Förderzeiten:
     // Für Deutsch: Montag 1./2. Stunde, Dienstag 3./4. Stunde, Donnerstag 3./4. Stunde und Freitag 5./6. Stunde.
     const foerderzeiten = [
       { fach: "Deutsch", day: 1, stunde: "1./2. Stunde", raum: "W204", start: "07:40", end: "09:30" },
@@ -85,12 +83,20 @@
     ];
     
     // Schülerdaten:
+    // Standardmäßig nehmen Schüler an allen Fächern teil.
+    // Krisztian (in 6.1) nimmt nur an Englisch und Mathe teil.
+    // Emma (in 7.2) nimmt nur an Deutsch teil.
     const schueler = {
       "5a": ["Anastasia"],
       "5.1": ["Alina", "Vojdan"],
-      "6.1": ["Daniil", "Mohammed"],
+      "6.1": [
+        "Daniil",
+        "Mohammed",
+        { name: "Krisztian", subjects: ["Englisch", "Mathe"] }
+      ],
       "7.1": ["Marin", "Evelina"],
-      "7.2": ["Ili", "Ilyas", "Beyar", "Emma", "Artur"]
+      "7.2": ["Ili", "Ilyas", "Beyar", { name: "Emma", subjects: ["Deutsch"] }, "Artur"],
+      "7a": ["Bahar"]
     };
     
     // Wochentage (Index 0 = Sonntag, 1 = Montag usw.)
@@ -117,11 +123,11 @@
       let nextSession = null;
       let smallestDiff = Infinity;
       let nextDate = null;
-    
+      
       foerderzeiten.forEach(zeit => {
         let dayDiff = (zeit.day - now.getDay() + 7) % 7;
         const [startHour, startMinute] = zeit.start.split(":").map(Number);
-        // Wenn der Termin heute liegt, aber die Startzeit bereits vorbei ist, wird der Termin erst in 7 Tagen erfasst.
+        // Falls der Termin heute liegt, aber die Startzeit bereits vorbei ist, wird der Termin erst in 7 Tagen erfasst.
         if (dayDiff === 0 && (now.getHours() > startHour || (now.getHours() === startHour && now.getMinutes() >= startMinute))) {
           dayDiff = 7;
         }
@@ -138,7 +144,28 @@
       return { session: nextSession, nextDate: nextDate, diff: smallestDiff };
     }
     
-    // Aktualisiert die Anzeige im Live-Modus
+    // Rendert eine kompakte Übersicht der SuS, gefiltert nach dem aktuellen Fach
+    function renderSchuelerListe(subject) {
+      let result = "";
+      for (const klasse in schueler) {
+        // Wenn der Eintrag ein String ist, nehmen wir an, der Schüler nimmt an allen Fächern teil.
+        // Falls es ein Objekt ist, prüfen wir, ob das aktuelle Fach in der Liste der Fächer enthalten ist.
+        let eligibleStudents = schueler[klasse].filter(s => {
+          if (typeof s === "string") return true;
+          if (typeof s === "object" && s.subjects) {
+            return s.subjects.includes(subject);
+          }
+          return false;
+        });
+        if (eligibleStudents.length > 0) {
+          let names = eligibleStudents.map(s => typeof s === "string" ? s : s.name).join(", ");
+          result += `<p><strong>${klasse}:</strong> ${names}</p>`;
+        }
+      }
+      return result;
+    }
+    
+    // Aktualisiert die Live-Anzeige
     function updateStatus() {
       const { session: nextSession, nextDate } = getNextSession();
       const nextSessionDiv = document.getElementById("next-session");
@@ -156,21 +183,14 @@
         clearInterval(intervalId);
         const { session: nextSession } = getNextSession();
         if (nextSession) {
-          let schuelerListe = "";
-          for (const klasse in schueler) {
-            schuelerListe += `<h2>${klasse}</h2><ul>`;
-            schueler[klasse].forEach(name => {
-              schuelerListe += `<li>${name}</li>`;
-            });
-            schuelerListe += `</ul>`;
-          }
+          let studentOverview = renderSchuelerListe(nextSession.fach);
           const statusContainer = document.getElementById("status-container");
           statusContainer.innerHTML = `
             <h1>⚠️ Anschlussförderung aktiv</h1>
             <p><strong>Fach:</strong> ${nextSession.fach}</p>
             <p><strong>Zeitraum:</strong> ${nextSession.stunde}</p>
             <p><strong>Raum:</strong> ${nextSession.raum}</p>
-            ${schuelerListe}
+            ${studentOverview}
           `;
         }
         document.body.style.backgroundColor = "var(--color-simulation-bg)";
