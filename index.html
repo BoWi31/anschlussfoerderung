@@ -1,230 +1,294 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="robots" content="noindex, nofollow">
-    <title>Anschlussförderung</title>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Anschlussförderung</title>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
 
-    <style>
-        body {
-            font-family: 'Roboto', sans-serif;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            flex-direction: column;
-            min-height: 100vh;
-            color: #212529;
-            background-color: #28a745; /* Standard: Grün */
-            transition: background-color 0.5s ease;
-        }
+  <style>
+    /* Konfigurierbare Farben */
+    :root {
+      --color-live-bg: #28a745;
+      --color-simulation-bg: #dc3545;
+    }
 
-        @keyframes pulseBackgroundRed {
-            0%, 100% {
-                background-color: #dc3545;
-            }
-            50% {
-                background-color: #ff4d4d;
-            }
-        }
+    body {
+      font-family: 'Roboto', sans-serif;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      min-height: 100vh;
+      color: #212529;
+      background-color: var(--color-live-bg);
+      transition: background-color 0.5s ease;
+    }
 
-        .status-container {
-            background: white;
-            color: #212529;
-            padding: 1.5em;
-            border-radius: 10px;
-            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
-            max-width: 600px;
-            width: 90%;
-            text-align: center;
-            transition: all 0.3s ease;
-        }
+    @keyframes pulseBackgroundRed {
+      0%, 100% { background-color: var(--color-simulation-bg); }
+      50% { background-color: #ff4d4d; }
+    }
 
-        h1 {
-            font-size: 2em;
-            margin-bottom: 1em;
-        }
+    .status-container {
+      background: white;
+      color: #212529;
+      padding: 1.5em;
+      border-radius: 10px;
+      box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
+      max-width: 600px;
+      width: 90%;
+      text-align: center;
+      transition: all 0.3s ease;
+    }
 
-        h2 {
-            font-size: 1.5em;
-            margin-bottom: 0.5em;
-        }
-
-        ul {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-        }
-
-        ul li {
-            font-size: 1em;
-            margin: 5px 0;
-        }
-
-        button {
-            background-color: #007bff;
-            color: white;
-            border: none;
-            padding: 10px 15px;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 0.9em;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-        }
-
-        button:hover {
-            background-color: #0056b3;
-        }
-    </style>
+    h1 { font-size: 2em; margin-bottom: 1em; }
+    h2 { font-size: 1.5em; margin-bottom: 0.5em; }
+    ul { list-style: none; padding: 0; margin: 0; }
+    ul li { font-size: 1em; margin: 5px 0; }
+    
+    button {
+      background-color: #007bff;
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 0.9em;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+    }
+    button:hover { background-color: #0056b3; }
+  </style>
 </head>
 <body>
-    <div class="status-container" id="status-container">
-        <div id="status-icon" class="status-icon">✅</div>
-        <h1 id="status-title">Keine Anschlussförderung</h1>
-        <div class="next-session" id="next-session">
+  <div class="status-container" id="status-container">
+    <div id="status-icon" class="status-icon">✅</div>
+    <h1 id="status-title">Keine Anschlussförderung</h1>
+    <div class="next-session" id="next-session">
+      <strong>Nächste Förderung:</strong> Wird geladen...
+      <div id="countdown"></div>
+    </div>
+  </div>
+  <button id="toggle-button" onclick="toggleSimulation()">🔘 Nächste Anschlussförderung</button>
+
+  <script>
+    /************************************
+     * Konfiguration
+     ************************************/
+    const config = {
+      // Hier die Google Sheet-ID aus deinem Link einfügen:
+      googleSheetId: "1PNrExfS3oPrCau91A8b_7mpqnq_DxEyOAzTjY11vYco",
+      sheetNames: {
+        schueler: "Schueler",
+        wochentage: "Wochentage",
+        foerderzeiten: "Foerderzeiten"
+      }
+    };
+
+    /************************************
+     * Globale Variablen für die geladenen Daten
+     ************************************/
+    let foerderzeiten = [];
+    let schueler = {};
+    let wochentage = [];
+    let isSimulationMode = false;
+    let intervalId;
+
+    /************************************
+     * Funktionen zum Laden der Google Sheet-Daten
+     ************************************/
+    function loadSheetData(sheetName, callback) {
+      const url = `https://docs.google.com/spreadsheets/d/${config.googleSheetId}/gviz/tq?tqx=out:json&sheet=${sheetName}`;
+      fetch(url)
+        .then(response => response.text())
+        .then(text => {
+          // Entferne den JavaScript-Wrapper und parse das JSON
+          const jsonText = text.substring(text.indexOf('{'), text.lastIndexOf('}') + 1);
+          const data = JSON.parse(jsonText);
+          callback(data);
+        })
+        .catch(err => {
+          console.error(`Fehler beim Laden des Sheets ${sheetName}:`, err);
+          callback(null);
+        });
+    }
+
+    function processSchueler(data) {
+      let loadedSchueler = {};
+      if (!data || !data.table || !data.table.rows) return loadedSchueler;
+      data.table.rows.forEach(row => {
+        const klasse = row.c[0] ? row.c[0].v : '';
+        const name = row.c[1] ? row.c[1].v : '';
+        if (klasse && name) {
+          if (!loadedSchueler[klasse]) { loadedSchueler[klasse] = []; }
+          loadedSchueler[klasse].push(name);
+        }
+      });
+      return loadedSchueler;
+    }
+
+    function processWochentage(data) {
+      let days = [];
+      if (!data || !data.table || !data.table.rows) return days;
+      data.table.rows.forEach(row => {
+        const day = row.c[0] ? row.c[0].v : '';
+        if (day) { days.push(day); }
+      });
+      return days;
+    }
+
+    function processFoerderzeiten(data) {
+      let times = [];
+      if (!data || !data.table || !data.table.rows) return times;
+      data.table.rows.forEach(row => {
+        const fach = row.c[0] ? row.c[0].v : '';
+        const day = row.c[1] ? Number(row.c[1].v) : 0;
+        const stunde = row.c[2] ? row.c[2].v : '';
+        const raum = row.c[3] ? row.c[3].v : '';
+        const start = row.c[4] ? row.c[4].v : '';
+        const end = row.c[5] ? row.c[5].v : '';
+        if (fach && day !== 0 && stunde && raum && start && end) {
+          times.push({ fach, day, stunde, raum, start, end });
+        }
+      });
+      return times;
+    }
+
+    function loadAllData() {
+      return Promise.all([
+        new Promise(resolve => {
+          loadSheetData(config.sheetNames.schueler, data => {
+            schueler = processSchueler(data);
+            resolve();
+          });
+        }),
+        new Promise(resolve => {
+          loadSheetData(config.sheetNames.wochentage, data => {
+            wochentage = processWochentage(data);
+            resolve();
+          });
+        }),
+        new Promise(resolve => {
+          loadSheetData(config.sheetNames.foerderzeiten, data => {
+            foerderzeiten = processFoerderzeiten(data);
+            resolve();
+          });
+        })
+      ]);
+    }
+
+    /************************************
+     * Funktionen zur Anzeige und Berechnung
+     ************************************/
+    function calculateCountdown(targetDate) {
+      const now = new Date();
+      const diff = targetDate - now;
+      if (diff <= 0) return null;
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+      return `${days}d ${hours}h ${minutes}m ${seconds}s`;
+    }
+
+    function getNextSession() {
+      const now = new Date();
+      let nextSession = null;
+      let smallestDiff = Infinity;
+      let nextDate = null;
+
+      foerderzeiten.forEach(zeit => {
+        let dayDiff = (zeit.day - now.getDay() + 7) % 7;
+        const [startHour, startMinute] = zeit.start.split(":").map(Number);
+        if (dayDiff === 0 && (now.getHours() > startHour || (now.getHours() === startHour && now.getMinutes() >= startMinute))) {
+          dayDiff = 7;
+        }
+        const candidateDate = new Date(now);
+        candidateDate.setDate(now.getDate() + dayDiff);
+        candidateDate.setHours(startHour, startMinute, 0, 0);
+        const diff = candidateDate - now;
+        if (diff < smallestDiff) {
+          smallestDiff = diff;
+          nextSession = zeit;
+          nextDate = candidateDate;
+        }
+      });
+      return { session: nextSession, nextDate: nextDate, diff: smallestDiff };
+    }
+
+    function updateStatus() {
+      if (isSimulationMode) return;
+      const { session: nextSession, nextDate } = getNextSession();
+      const nextSessionDiv = document.getElementById("next-session");
+      const countdownDiv = document.getElementById("countdown");
+      if (nextSession) {
+        const countdown = calculateCountdown(nextDate);
+        nextSessionDiv.innerHTML = `<strong>Nächste Förderung:</strong> ${nextSession.fach} am ${wochentage[nextSession.day]} (${nextSession.stunde}), Raum: ${nextSession.raum}`;
+        countdownDiv.textContent = `Countdown: ${countdown}`;
+      } else {
+        nextSessionDiv.innerHTML = `<strong>Nächste Förderung:</strong> Keine weiteren Termine geplant.`;
+        countdownDiv.textContent = "";
+      }
+    }
+
+    function toggleSimulation() {
+      if (!isSimulationMode) {
+        clearInterval(intervalId);
+        const { session: nextSession } = getNextSession();
+        if (nextSession) {
+          let schuelerListe = "";
+          for (const klasse in schueler) {
+            schuelerListe += `<h2>${klasse}</h2><ul>`;
+            schueler[klasse].forEach(name => {
+              schuelerListe += `<li>${name}</li>`;
+            });
+            schuelerListe += `</ul>`;
+          }
+          const statusContainer = document.getElementById("status-container");
+          statusContainer.innerHTML = `
+            <h1>⚠️ Anschlussförderung aktiv</h1>
+            <p><strong>Fach:</strong> ${nextSession.fach}</p>
+            <p><strong>Zeitraum:</strong> ${nextSession.stunde}</p>
+            <p><strong>Raum:</strong> ${nextSession.raum}</p>
+            ${schuelerListe}
+          `;
+        }
+        document.body.style.backgroundColor = "var(--color-simulation-bg)";
+        document.body.style.animation = "pulseBackgroundRed 3s infinite";
+        document.getElementById("toggle-button").textContent = "🔘 Live Modus";
+        isSimulationMode = true;
+      } else {
+        document.body.style.backgroundColor = "var(--color-live-bg)";
+        document.body.style.animation = "none";
+        const statusContainer = document.getElementById("status-container");
+        statusContainer.innerHTML = `
+          <div id="status-icon" class="status-icon">✅</div>
+          <h1 id="status-title">Keine Anschlussförderung</h1>
+          <div class="next-session" id="next-session">
             <strong>Nächste Förderung:</strong> Wird geladen...
             <div id="countdown"></div>
-        </div>
-    </div>
-    <button id="toggle-button" onclick="toggleSimulation()">🔘 Nächste Anschlussförderung</button>
-
-    <script>
-        let isSimulationMode = false;
-        let intervalId = setInterval(updateStatus, 1000);
-
-        const foerderzeiten = [
-            { fach: "Deutsch", day: 1, stunde: "1./2. Stunde", raum: "W204", start: "07:40", end: "09:30" },
-            { fach: "Deutsch", day: 2, stunde: "3./4. Stunde", raum: "W204", start: "09:30", end: "11:20" },
-            { fach: "Deutsch", day: 4, stunde: "3./4. Stunde", raum: "W204", start: "09:30", end: "11:20" },
-            { fach: "Deutsch", day: 5, stunde: "5./6. Stunde", raum: "W204", start: "11:20", end: "13:10" },
-            { fach: "Mathe", day: 2, stunde: "3./4. Stunde", raum: "W005", start: "09:30", end: "11:20" },
-            { fach: "Englisch", day: 3, stunde: "5./6. Stunde", raum: "W204", start: "11:20", end: "13:10" }
-        ];
-
-        const schueler = {
-            "5a": ["Anastasia"],
-            "5.1": ["Alina", "Vojdan"],
-            "6.1": ["Daniil", "Mohammed"],
-            "7.1": ["Marin", "Evelina"],
-            "7.2": ["Ili", "Ilyas", "Beyar", "Emma", "Artur"]
-        };
-
-        const wochentage = ["Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"];
-
-        function calculateCountdown(targetDate) {
-            const now = new Date();
-            const diff = targetDate - now;
-            if (diff <= 0) return null;
-
-            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-            const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-            const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-
-            return `${days}d ${hours}h ${minutes}m ${seconds}s`;
-        }
-
-        // Hilfsfunktion zur Ermittlung des nächsten Termins und dessen Datum
-        function getNextSession() {
-            const now = new Date();
-            let nextSession = null;
-            let smallestDiff = Infinity;
-            let nextDate = null;
-
-            foerderzeiten.forEach(zeit => {
-                let dayDiff = (zeit.day - now.getDay() + 7) % 7;
-                const [startHour, startMinute] = zeit.start.split(":").map(Number);
-                // Liegt der Termin heute, aber ist die Startzeit bereits vorbei, wird er erst in 7 Tagen wieder aktiv.
-                if (dayDiff === 0 && (now.getHours() > startHour || (now.getHours() === startHour && now.getMinutes() >= startMinute))) {
-                    dayDiff = 7;
-                }
-                const candidateDate = new Date(now);
-                candidateDate.setDate(now.getDate() + dayDiff);
-                candidateDate.setHours(startHour, startMinute, 0, 0);
-
-                const diff = candidateDate - now;
-                if (diff < smallestDiff) {
-                    smallestDiff = diff;
-                    nextSession = zeit;
-                    nextDate = candidateDate;
-                }
-            });
-            return { session: nextSession, nextDate: nextDate, diff: smallestDiff };
-        }
-
-        // Aktualisiert im Live-Modus den Countdown und die Anzeige des nächsten Termins.
-        function updateStatus() {
-            if (isSimulationMode) return; // Live-Update nur, wenn nicht im Simulationsmodus
-            const now = new Date();
-            const { session: nextSession, nextDate } = getNextSession();
-            const nextSessionDiv = document.getElementById("next-session");
-            const countdownDiv = document.getElementById("countdown");
-
-            if (nextSession) {
-                const countdown = calculateCountdown(nextDate);
-                nextSessionDiv.innerHTML = `<strong>Nächste Förderung:</strong> ${nextSession.fach} am ${wochentage[nextSession.day]} (${nextSession.stunde}), Raum: ${nextSession.raum}`;
-                countdownDiv.textContent = `Countdown: ${countdown}`;
-            } else {
-                nextSessionDiv.innerHTML = `<strong>Nächste Förderung:</strong> Keine weiteren Termine geplant.`;
-                countdownDiv.textContent = "";
-            }
-        }
-
-        // Toggle-Funktion: Beim Klick wird entweder in den Simulationsmodus gewechselt oder zurück in den Live-Modus.
-        function toggleSimulation() {
-            if (!isSimulationMode) {
-                // SIMULATIONS-MODUS: Countdown stoppen und Anzeige auf den nächsten Termin umstellen
-                clearInterval(intervalId);
-                const { session: nextSession } = getNextSession();
-                if (nextSession) {
-                    let schuelerListe = "";
-                    for (const klasse in schueler) {
-                        schuelerListe += `<h2>${klasse}</h2><ul>`;
-                        schueler[klasse].forEach(name => {
-                            schuelerListe += `<li>${name}</li>`;
-                        });
-                        schuelerListe += `</ul>`;
-                    }
-                    const statusContainer = document.getElementById("status-container");
-                    statusContainer.innerHTML = `
-                        <h1>⚠️ Anschlussförderung aktiv</h1>
-                        <p><strong>Fach:</strong> ${nextSession.fach}</p>
-                        <p><strong>Zeitraum:</strong> ${nextSession.stunde}</p>
-                        <p><strong>Raum:</strong> ${nextSession.raum}</p>
-                        ${schuelerListe}
-                    `;
-                }
-                document.body.style.backgroundColor = "#dc3545";
-                document.body.style.animation = "pulseBackgroundRed 3s infinite";
-                document.getElementById("toggle-button").textContent = "🔘 Live Modus";
-                isSimulationMode = true;
-            } else {
-                // LIVE-MODUS: Zurückschalten, Countdown wieder starten und Standardanzeige wiederherstellen
-                document.body.style.backgroundColor = "#28a745";
-                document.body.style.animation = "none";
-                const statusContainer = document.getElementById("status-container");
-                statusContainer.innerHTML = `
-                    <div id="status-icon" class="status-icon">✅</div>
-                    <h1 id="status-title">Keine Anschlussförderung</h1>
-                    <div class="next-session" id="next-session">
-                        <strong>Nächste Förderung:</strong> Wird geladen...
-                        <div id="countdown"></div>
-                    </div>
-                `;
-                document.getElementById("toggle-button").textContent = "🔘 Nächste Anschlussförderung";
-                isSimulationMode = false;
-                intervalId = setInterval(updateStatus, 1000);
-                updateStatus();
-            }
-        }
-
+          </div>
+        `;
+        document.getElementById("toggle-button").textContent = "🔘 Nächste Anschlussförderung";
+        isSimulationMode = false;
+        intervalId = setInterval(updateStatus, 1000);
         updateStatus();
-    </script>
+      }
+    }
+
+    /************************************
+     * Start: Alle Daten laden und Live-Modus starten
+     ************************************/
+    loadAllData().then(() => {
+      intervalId = setInterval(updateStatus, 1000);
+      updateStatus();
+    });
+  </script>
 </body>
 </html>
