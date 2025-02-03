@@ -6,14 +6,11 @@
   <meta name="robots" content="noindex, nofollow">
   <title>Anschlussförderung</title>
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
-
   <style>
-    /* Konfigurierbare Farben */
     :root {
       --color-live-bg: #28a745;
       --color-simulation-bg: #dc3545;
     }
-
     body {
       font-family: 'Roboto', sans-serif;
       margin: 0;
@@ -27,29 +24,25 @@
       background-color: var(--color-live-bg);
       transition: background-color 0.5s ease;
     }
-
     @keyframes pulseBackgroundRed {
       0%, 100% { background-color: var(--color-simulation-bg); }
       50% { background-color: #ff4d4d; }
     }
-
     .status-container {
       background: white;
       color: #212529;
       padding: 1.5em;
       border-radius: 10px;
-      box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
+      box-shadow: 0 8px 15px rgba(0,0,0,0.2);
       max-width: 600px;
       width: 90%;
       text-align: center;
       transition: all 0.3s ease;
     }
-
     h1 { font-size: 2em; margin-bottom: 1em; }
     h2 { font-size: 1.5em; margin-bottom: 0.5em; }
     ul { list-style: none; padding: 0; margin: 0; }
     ul li { font-size: 1em; margin: 5px 0; }
-    
     button {
       background-color: #007bff;
       color: white;
@@ -58,7 +51,7 @@
       border-radius: 5px;
       cursor: pointer;
       font-size: 0.9em;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
       position: fixed;
       bottom: 20px;
       right: 20px;
@@ -76,13 +69,11 @@
     </div>
   </div>
   <button id="toggle-button" onclick="toggleSimulation()">🔘 Nächste Anschlussförderung</button>
-
   <script>
     /************************************
      * Konfiguration
      ************************************/
     const config = {
-      // Google Sheet-ID aus deinem Link:
       googleSheetId: "1PNrExfS3oPrCau91A8b_7mpqnq_DxEyOAzTjY11vYco",
       sheetNames: {
         schueler: "Schueler",
@@ -108,7 +99,6 @@
       fetch(url)
         .then(response => response.text())
         .then(text => {
-          // Entferne den JavaScript-Wrapper und parse das JSON
           const jsonText = text.substring(text.indexOf('{'), text.lastIndexOf('}') + 1);
           const data = JSON.parse(jsonText);
           callback(data);
@@ -143,17 +133,33 @@
       return days;
     }
 
+    // Diese Funktion wandelt sowohl Zahlen als auch Text (z. B. "Montag") in einen numerischen Tag um.
     function processFoerderzeiten(data) {
       let times = [];
       if (!data || !data.table || !data.table.rows) return times;
+      // Mapping: "Montag" = 1, "Dienstag" = 2, ..., "Sonntag" = 0
+      const dayMapping = {
+        "Montag": 1,
+        "Dienstag": 2,
+        "Mittwoch": 3,
+        "Donnerstag": 4,
+        "Freitag": 5,
+        "Samstag": 6,
+        "Sonntag": 0
+      };
       data.table.rows.forEach(row => {
         const fach = row.c[0] ? row.c[0].v : '';
-        const day = row.c[1] ? Number(row.c[1].v) : 0;
+        let dayValue = row.c[1] ? row.c[1].v : '';
+        let day = Number(dayValue);
+        if (isNaN(day)) {
+          day = dayMapping[dayValue] !== undefined ? dayMapping[dayValue] : -1;
+        }
         const stunde = row.c[2] ? row.c[2].v : '';
         const raum = row.c[3] ? row.c[3].v : '';
         const start = row.c[4] ? row.c[4].v : '';
         const end = row.c[5] ? row.c[5].v : '';
-        if (fach && day !== 0 && stunde && raum && start && end) {
+        // Hier wird nur dann ein Termin übernommen, wenn alle Felder gültig sind.
+        if (fach && day !== -1 && stunde && raum && start && end) {
           times.push({ fach, day, stunde, raum, start, end });
         }
       });
@@ -202,11 +208,10 @@
       let nextSession = null;
       let smallestDiff = Infinity;
       let nextDate = null;
-
       foerderzeiten.forEach(zeit => {
         let dayDiff = (zeit.day - now.getDay() + 7) % 7;
         const [startHour, startMinute] = zeit.start.split(":").map(Number);
-        // Liegt der Termin heute, aber ist die Startzeit bereits vorbei, nimm den Termin in 7 Tagen
+        // Falls der Termin heute liegt, aber die Startzeit schon vorbei ist, wird der Termin erst in 7 Tagen wieder aktiv.
         if (dayDiff === 0 && (now.getHours() > startHour || (now.getHours() === startHour && now.getMinutes() >= startMinute))) {
           dayDiff = 7;
         }
@@ -228,12 +233,10 @@
       const { session: nextSession, nextDate } = getNextSession();
       const nextSessionDiv = document.getElementById("next-session");
       const countdownDiv = document.getElementById("countdown");
-      
       if (foerderzeiten.length === 0) {
         nextSessionDiv.innerHTML = `<strong>Nächste Förderung:</strong> Keine Termine vorhanden.`;
         countdownDiv.textContent = "";
       } else {
-        // Falls der Countdown bereits 0 erreicht hat, kann alternativ "Aktuell aktiv" angezeigt werden.
         const countdown = calculateCountdown(nextDate) || "Aktuell aktiv";
         nextSessionDiv.innerHTML = `<strong>Nächste Förderung:</strong> ${nextSession.fach} am ${wochentage[nextSession.day]} (${nextSession.stunde}), Raum: ${nextSession.raum}`;
         countdownDiv.textContent = `Countdown: ${countdown}`;
@@ -285,9 +288,6 @@
       }
     }
 
-    /************************************
-     * Start: Alle Daten laden und Live-Modus starten
-     ************************************/
     loadAllData().then(() => {
       intervalId = setInterval(updateStatus, 1000);
       updateStatus();
