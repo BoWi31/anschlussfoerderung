@@ -39,6 +39,11 @@
       text-align: center;
       transition: all 0.3s ease;
     }
+    /* Schülerübersicht linksbündig */
+    .student-overview {
+      text-align: left;
+      margin-top: 1em;
+    }
     h1 { font-size: 2em; margin-bottom: 1em; }
     p { font-size: 1em; margin: 0.5em 0; }
     button {
@@ -148,8 +153,6 @@
     function renderSchuelerListe(subject) {
       let result = "";
       for (const klasse in schueler) {
-        // Wenn der Eintrag ein String ist, nehmen wir an, der Schüler nimmt an allen Fächern teil.
-        // Falls es ein Objekt ist, prüfen wir, ob das aktuelle Fach in der Liste der Fächer enthalten ist.
         let eligibleStudents = schueler[klasse].filter(s => {
           if (typeof s === "string") return true;
           if (typeof s === "object" && s.subjects) {
@@ -190,7 +193,7 @@
             <p><strong>Fach:</strong> ${nextSession.fach}</p>
             <p><strong>Zeitraum:</strong> ${nextSession.stunde}</p>
             <p><strong>Raum:</strong> ${nextSession.raum}</p>
-            ${studentOverview}
+            <div class="student-overview">${studentOverview}</div>
           `;
         }
         document.body.style.backgroundColor = "var(--color-simulation-bg)";
