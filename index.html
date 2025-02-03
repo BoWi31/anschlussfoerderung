@@ -33,7 +33,7 @@
       color: #212529;
       padding: 1.5em;
       border-radius: 10px;
-      box-shadow: 0 8px 15px rgba(0,0,0,0.2);
+      box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
       max-width: 600px;
       width: 90%;
       text-align: center;
@@ -51,7 +51,7 @@
       border-radius: 5px;
       cursor: pointer;
       font-size: 0.9em;
-      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
       position: fixed;
       bottom: 20px;
       right: 20px;
@@ -65,129 +65,41 @@
     <h1 id="status-title">Keine Anschlussförderung</h1>
     <div class="next-session" id="next-session">
       <strong>Nächste Förderung:</strong> Wird geladen...
+      <div id="countdown"></div>
     </div>
   </div>
   <button id="toggle-button" onclick="toggleSimulation()">🔘 Nächste Anschlussförderung</button>
   <script>
     /************************************
-     * Konfiguration
+     * Hardcodierte Daten (basierend auf deinen Eingaben im Google Sheet)
      ************************************/
-    const config = {
-      googleSheetId: "1PNrExfS3oPrCau91A8b_7mpqnq_DxEyOAzTjY11vYco",
-      sheetNames: {
-        schueler: "Schueler",
-        wochentage: "Wochentage",
-        foerderzeiten: "Foerderzeiten"
-      }
+    // Förderzeiten: 
+    // Für Deutsch: Montag 1./2. Stunde, Dienstag 3./4. Stunde, Donnerstag 3./4. Stunde und Freitag 5./6. Stunde.
+    const foerderzeiten = [
+      { fach: "Deutsch", day: 1, stunde: "1./2. Stunde", raum: "W204", start: "07:40", end: "09:30" },
+      { fach: "Deutsch", day: 2, stunde: "3./4. Stunde", raum: "W204", start: "09:30", end: "11:20" },
+      { fach: "Deutsch", day: 4, stunde: "3./4. Stunde", raum: "W204", start: "09:30", end: "11:20" },
+      { fach: "Deutsch", day: 5, stunde: "5./6. Stunde", raum: "W204", start: "11:20", end: "13:10" },
+      { fach: "Mathe", day: 2, stunde: "3./4. Stunde", raum: "W005", start: "09:30", end: "11:20" },
+      { fach: "Englisch", day: 3, stunde: "5./6. Stunde", raum: "W204", start: "11:20", end: "13:10" }
+    ];
+    
+    // Schülerdaten:
+    const schueler = {
+      "5a": ["Anastasia"],
+      "5.1": ["Alina", "Vojdan"],
+      "6.1": ["Daniil", "Mohammed"],
+      "7.1": ["Marin", "Evelina"],
+      "7.2": ["Ili", "Ilyas", "Beyar", "Emma", "Artur"]
     };
-
-    /************************************
-     * Globale Variablen für die geladenen Daten
-     ************************************/
-    let foerderzeiten = [];
-    let schueler = {};
-    let wochentage = [];
+    
+    // Wochentage (Index 0 = Sonntag, 1 = Montag usw.)
+    const wochentage = ["Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"];
+    
     let isSimulationMode = false;
-    let intervalId;
-
-    /************************************
-     * Funktionen zum Laden der Google Sheet-Daten
-     ************************************/
-    function loadSheetData(sheetName, callback) {
-      const url = `https://docs.google.com/spreadsheets/d/${config.googleSheetId}/gviz/tq?tqx=out:json&sheet=${sheetName}`;
-      fetch(url)
-        .then(response => response.text())
-        .then(text => {
-          const jsonText = text.substring(text.indexOf('{'), text.lastIndexOf('}') + 1);
-          const data = JSON.parse(jsonText);
-          callback(data);
-        })
-        .catch(err => {
-          console.error(`Fehler beim Laden des Sheets ${sheetName}:`, err);
-          callback(null);
-        });
-    }
-
-    function processSchueler(data) {
-      let loadedSchueler = {};
-      if (!data || !data.table || !data.table.rows) return loadedSchueler;
-      data.table.rows.forEach(row => {
-        const klasse = row.c[0] ? row.c[0].v : '';
-        const name = row.c[1] ? row.c[1].v : '';
-        if (klasse && name) {
-          if (!loadedSchueler[klasse]) { loadedSchueler[klasse] = []; }
-          loadedSchueler[klasse].push(name);
-        }
-      });
-      return loadedSchueler;
-    }
-
-    function processWochentage(data) {
-      let days = [];
-      if (!data || !data.table || !data.table.rows) return days;
-      data.table.rows.forEach(row => {
-        const day = row.c[0] ? row.c[0].v : '';
-        if (day) { days.push(day); }
-      });
-      return days;
-    }
-
-    function processFoerderzeiten(data) {
-      let times = [];
-      if (!data || !data.table || !data.table.rows) return times;
-      const dayMapping = {
-        "Montag": 1,
-        "Dienstag": 2,
-        "Mittwoch": 3,
-        "Donnerstag": 4,
-        "Freitag": 5,
-        "Samstag": 6,
-        "Sonntag": 0
-      };
-      data.table.rows.forEach(row => {
-        const fach = row.c[0] ? row.c[0].v : '';
-        let dayValue = row.c[1] ? row.c[1].v : '';
-        let day = Number(dayValue);
-        if (isNaN(day)) {
-          day = dayMapping[dayValue] !== undefined ? dayMapping[dayValue] : -1;
-        }
-        const stunde = row.c[2] ? row.c[2].v : '';
-        const raum = row.c[3] ? row.c[3].v : '';
-        const start = row.c[4] ? row.c[4].v : '';
-        const end = row.c[5] ? row.c[5].v : '';
-        if (fach && day !== -1 && stunde && raum && start && end) {
-          times.push({ fach, day, stunde, raum, start, end });
-        }
-      });
-      return times;
-    }
-
-    function loadAllData() {
-      return Promise.all([
-        new Promise(resolve => {
-          loadSheetData(config.sheetNames.schueler, data => {
-            schueler = processSchueler(data);
-            resolve();
-          });
-        }),
-        new Promise(resolve => {
-          loadSheetData(config.sheetNames.wochentage, data => {
-            wochentage = processWochentage(data);
-            resolve();
-          });
-        }),
-        new Promise(resolve => {
-          loadSheetData(config.sheetNames.foerderzeiten, data => {
-            foerderzeiten = processFoerderzeiten(data);
-            resolve();
-          });
-        })
-      ]);
-    }
-
-    /************************************
-     * Funktionen zur Anzeige und Berechnung
-     ************************************/
+    let intervalId = setInterval(updateStatus, 1000);
+    
+    // Berechnet den Countdown bis zu einem Ziel-Datum
     function calculateCountdown(targetDate) {
       const now = new Date();
       const diff = targetDate - now;
@@ -198,15 +110,18 @@
       const seconds = Math.floor((diff % (1000 * 60)) / 1000);
       return `${days}d ${hours}h ${minutes}m ${seconds}s`;
     }
-
+    
+    // Ermittelt den nächsten Termin basierend auf der aktuellen Zeit
     function getNextSession() {
       const now = new Date();
       let nextSession = null;
       let smallestDiff = Infinity;
       let nextDate = null;
+    
       foerderzeiten.forEach(zeit => {
         let dayDiff = (zeit.day - now.getDay() + 7) % 7;
         const [startHour, startMinute] = zeit.start.split(":").map(Number);
+        // Wenn der Termin heute liegt, aber die Startzeit bereits vorbei ist, wird der Termin erst in 7 Tagen erfasst.
         if (dayDiff === 0 && (now.getHours() > startHour || (now.getHours() === startHour && now.getMinutes() >= startMinute))) {
           dayDiff = 7;
         }
@@ -222,20 +137,20 @@
       });
       return { session: nextSession, nextDate: nextDate, diff: smallestDiff };
     }
-
+    
+    // Aktualisiert die Anzeige im Live-Modus
     function updateStatus() {
-      if (isSimulationMode) return;
       const { session: nextSession, nextDate } = getNextSession();
       const nextSessionDiv = document.getElementById("next-session");
-      if (!nextSessionDiv) return;
-      if (foerderzeiten.length === 0 || !nextSession) {
+      if (!nextSession) {
         nextSessionDiv.innerHTML = `<strong>Nächste Förderung:</strong> Keine Termine vorhanden.<div id="countdown"></div>`;
       } else {
         const countdown = calculateCountdown(nextDate) || "Aktuell aktiv";
         nextSessionDiv.innerHTML = `<strong>Nächste Förderung:</strong> ${nextSession.fach} am ${wochentage[nextSession.day]} (${nextSession.stunde}), Raum: ${nextSession.raum}<br><div id="countdown">Countdown: ${countdown}</div>`;
       }
     }
-
+    
+    // Schaltet zwischen Live- und Simulationsmodus um
     function toggleSimulation() {
       if (!isSimulationMode) {
         clearInterval(intervalId);
@@ -280,11 +195,6 @@
         updateStatus();
       }
     }
-
-    loadAllData().then(() => {
-      intervalId = setInterval(updateStatus, 1000);
-      updateStatus();
-    });
   </script>
 </body>
 </html>
