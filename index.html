@@ -82,7 +82,7 @@
      * Konfiguration
      ************************************/
     const config = {
-      // Hier die Google Sheet-ID aus deinem Link einfügen:
+      // Google Sheet-ID aus deinem Link:
       googleSheetId: "1PNrExfS3oPrCau91A8b_7mpqnq_DxEyOAzTjY11vYco",
       sheetNames: {
         schueler: "Schueler",
@@ -206,6 +206,7 @@
       foerderzeiten.forEach(zeit => {
         let dayDiff = (zeit.day - now.getDay() + 7) % 7;
         const [startHour, startMinute] = zeit.start.split(":").map(Number);
+        // Liegt der Termin heute, aber ist die Startzeit bereits vorbei, nimm den Termin in 7 Tagen
         if (dayDiff === 0 && (now.getHours() > startHour || (now.getHours() === startHour && now.getMinutes() >= startMinute))) {
           dayDiff = 7;
         }
@@ -227,13 +228,15 @@
       const { session: nextSession, nextDate } = getNextSession();
       const nextSessionDiv = document.getElementById("next-session");
       const countdownDiv = document.getElementById("countdown");
-      if (nextSession) {
-        const countdown = calculateCountdown(nextDate);
+      
+      if (foerderzeiten.length === 0) {
+        nextSessionDiv.innerHTML = `<strong>Nächste Förderung:</strong> Keine Termine vorhanden.`;
+        countdownDiv.textContent = "";
+      } else {
+        // Falls der Countdown bereits 0 erreicht hat, kann alternativ "Aktuell aktiv" angezeigt werden.
+        const countdown = calculateCountdown(nextDate) || "Aktuell aktiv";
         nextSessionDiv.innerHTML = `<strong>Nächste Förderung:</strong> ${nextSession.fach} am ${wochentage[nextSession.day]} (${nextSession.stunde}), Raum: ${nextSession.raum}`;
         countdownDiv.textContent = `Countdown: ${countdown}`;
-      } else {
-        nextSessionDiv.innerHTML = `<strong>Nächste Förderung:</strong> Keine weiteren Termine geplant.`;
-        countdownDiv.textContent = "";
       }
     }
 
