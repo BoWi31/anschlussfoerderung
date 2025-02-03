@@ -91,6 +91,7 @@
     // Standardmäßig nehmen Schüler an allen Fächern teil.
     // Krisztian (in 6.1) nimmt nur an Englisch und Mathe teil.
     // Emma (in 7.2) nimmt nur an Deutsch teil.
+    // Es gibt einen Mohammed in 6.1 und einen in 7.1.
     const schueler = {
       "5a": ["Anastasia"],
       "5.1": ["Alina", "Vojdan"],
@@ -99,7 +100,7 @@
         "Mohammed",
         { name: "Krisztian", subjects: ["Englisch", "Mathe"] }
       ],
-      "7.1": ["Marin", "Evelina"],
+      "7.1": ["Marin", "Evelina", "Mohammed"],
       "7.2": ["Ili", "Ilyas", "Beyar", { name: "Emma", subjects: ["Deutsch"] }, "Artur"],
       "7a": ["Bahar"]
     };
@@ -149,7 +150,7 @@
       return { session: nextSession, nextDate: nextDate, diff: smallestDiff };
     }
     
-    // Rendert eine kompakte Übersicht der SuS, gefiltert nach dem aktuellen Fach
+    // Rendert eine kompakte, linksbündige Übersicht der SuS, gefiltert nach dem aktuellen Fach
     function renderSchuelerListe(subject) {
       let result = "";
       for (const klasse in schueler) {
