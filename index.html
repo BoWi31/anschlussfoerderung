@@ -2,7 +2,6 @@
 <html lang="de">
 <head>
   <meta charset="UTF-8">
-  <!-- Wichtig: Viewport-Einstellung für responsives Design -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="robots" content="noindex, nofollow">
   <title>Anschlussförderung</title>
@@ -32,29 +31,28 @@
     .status-container {
       background: white;
       color: #212529;
-      padding: 1.5em;
+      padding: 2em; /* Mehr Padding für besseren Abstand */
       border-radius: 10px;
       box-shadow: 0 8px 15px rgba(0,0,0,0.2);
-      max-width: 600px;
+      max-width: 650px; /* Größere maximale Breite */
       width: 90%;
       text-align: center;
       transition: all 0.3s ease;
     }
-    /* Schülerübersicht linksbündig */
     .student-overview {
       text-align: left;
-      margin-top: 1em;
+      margin-top: 1.5em; /* Etwas mehr Abstand nach oben */
     }
-    h1 { font-size: 2em; margin-bottom: 1em; }
-    p { font-size: 1em; margin: 0.5em 0; }
+    h1 { font-size: 2.2em; margin-bottom: 1em; }
+    p { font-size: 1.1em; margin: 0.8em 0; }
     button {
       background-color: #007bff;
       color: white;
       border: none;
-      padding: 10px 15px;
+      padding: 12px 18px; /* Größere Buttons für Mobilgeräte */
       border-radius: 5px;
       cursor: pointer;
-      font-size: 0.9em;
+      font-size: 1em;
       box-shadow: 0 4px 6px rgba(0,0,0,0.1);
       position: fixed;
       bottom: 20px;
@@ -66,17 +64,17 @@
     @media (max-width: 600px) {
       .status-container {
         width: 95%;
-        padding: 1em;
+        padding: 1.5em; /* Weniger Padding auf Smartphones */
       }
       h1 {
-        font-size: 1.5em;
+        font-size: 1.8em; /* Kleinere Schriftgröße für Überschriften */
       }
       p {
-        font-size: 0.9em;
+        font-size: 1em; /* Kleinere Schriftgröße für Texte */
       }
       button {
-        font-size: 0.8em;
-        padding: 8px 12px;
+        font-size: 0.9em;
+        padding: 10px 15px; /* Etwas kleinere Buttons */
         bottom: 10px;
         right: 10px;
       }
@@ -95,44 +93,29 @@
   <button id="toggle-button" onclick="toggleSimulation()">🔘 Nächste Anschlussförderung</button>
   <script>
     /************************************
-     * Hardcodierte Daten (basierend auf deinen Eingaben)
+     * Hardcodierte Daten
      ************************************/
-    // Förderzeiten:
-    // Für Deutsch: Montag 1./2. Stunde, Dienstag 3./4. Stunde, Donnerstag 3./4. Stunde und Freitag 5./6. Stunde.
     const foerderzeiten = [
       { fach: "Deutsch", day: 1, stunde: "1./2. Stunde", raum: "W204", start: "07:40", end: "09:30" },
       { fach: "Deutsch", day: 2, stunde: "3./4. Stunde", raum: "W204", start: "09:30", end: "11:20" },
-      { fach: "Deutsch", day: 4, stunde: "3./4. Stunde", raum: "W204", start: "09:30", end: "11:20" },
-      { fach: "Deutsch", day: 5, stunde: "5./6. Stunde", raum: "W204", start: "11:20", end: "13:10" },
       { fach: "Mathe", day: 2, stunde: "3./4. Stunde", raum: "W005", start: "09:30", end: "11:20" },
       { fach: "Englisch", day: 3, stunde: "5./6. Stunde", raum: "W204", start: "11:20", end: "13:10" }
     ];
-    
-    // Schülerdaten:
-    // Standardmäßig nehmen Schüler an allen Fächern teil.
-    // Krisztian (in 6.1) nimmt nur an Englisch und Mathe teil.
-    // Emma (in 7.2) nimmt nur an Deutsch teil.
-    // Es gibt einen Mohammed in 6.1 und einen in 7.1.
+
     const schueler = {
       "5a": ["Anastasia"],
       "5.1": ["Alina", "Vojdan"],
-      "6.1": [
-        "Daniil",
-        "Mohammed",
-        { name: "Krisztian", subjects: ["Englisch", "Mathe"] }
-      ],
+      "6.1": ["Daniil", "Mohammed", { name: "Krisztian", subjects: ["Englisch", "Mathe"] }],
       "7.1": ["Marin", "Evelina", "Mohammed"],
       "7.2": ["Ili", "Ilyas", "Beyar", { name: "Emma", subjects: ["Deutsch"] }, "Artur"],
       "7a": ["Bahar"]
     };
-    
-    // Wochentage (Index 0 = Sonntag, 1 = Montag usw.)
+
     const wochentage = ["Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"];
-    
+
     let isSimulationMode = false;
     let intervalId = setInterval(updateStatus, 1000);
-    
-    // Berechnet den Countdown bis zu einem Ziel-Datum
+
     function calculateCountdown(targetDate) {
       const now = new Date();
       const diff = targetDate - now;
@@ -143,18 +126,16 @@
       const seconds = Math.floor((diff % (1000 * 60)) / 1000);
       return `${days}d ${hours}h ${minutes}m ${seconds}s`;
     }
-    
-    // Ermittelt den nächsten Termin basierend auf der aktuellen Zeit
+
     function getNextSession() {
       const now = new Date();
       let nextSession = null;
       let smallestDiff = Infinity;
       let nextDate = null;
-      
+
       foerderzeiten.forEach(zeit => {
         let dayDiff = (zeit.day - now.getDay() + 7) % 7;
         const [startHour, startMinute] = zeit.start.split(":").map(Number);
-        // Falls der Termin heute liegt, aber die Startzeit bereits vorbei ist, wird der Termin erst in 7 Tagen erfasst.
         if (dayDiff === 0 && (now.getHours() > startHour || (now.getHours() === startHour && now.getMinutes() >= startMinute))) {
           dayDiff = 7;
         }
@@ -170,16 +151,13 @@
       });
       return { session: nextSession, nextDate: nextDate, diff: smallestDiff };
     }
-    
-    // Rendert eine kompakte, linksbündige Übersicht der SuS, gefiltert nach dem aktuellen Fach
+
     function renderSchuelerListe(subject) {
       let result = "";
       for (const klasse in schueler) {
         let eligibleStudents = schueler[klasse].filter(s => {
           if (typeof s === "string") return true;
-          if (typeof s === "object" && s.subjects) {
-            return s.subjects.includes(subject);
-          }
+          if (typeof s === "object" && s.subjects) return s.subjects.includes(subject);
           return false;
         });
         if (eligibleStudents.length > 0) {
@@ -189,8 +167,7 @@
       }
       return result;
     }
-    
-    // Aktualisiert die Live-Anzeige
+
     function updateStatus() {
       const { session: nextSession, nextDate } = getNextSession();
       const nextSessionDiv = document.getElementById("next-session");
@@ -201,8 +178,7 @@
         nextSessionDiv.innerHTML = `<strong>Nächste Förderung:</strong> ${nextSession.fach} am ${wochentage[nextSession.day]} (${nextSession.stunde}), Raum: ${nextSession.raum}<br><div id="countdown">Countdown: ${countdown}</div>`;
       }
     }
-    
-    // Schaltet zwischen Live- und Simulationsmodus um
+
     function toggleSimulation() {
       if (!isSimulationMode) {
         clearInterval(intervalId);
