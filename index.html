@@ -2,6 +2,7 @@
 <html lang="de">
 <head>
   <meta charset="UTF-8">
+  <!-- Wichtig: Viewport-Einstellung für responsives Design -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="robots" content="noindex, nofollow">
   <title>Anschlussförderung</title>
@@ -60,6 +61,26 @@
       right: 20px;
     }
     button:hover { background-color: #0056b3; }
+
+    /* Responsive Anpassungen für kleinere Geräte */
+    @media (max-width: 600px) {
+      .status-container {
+        width: 95%;
+        padding: 1em;
+      }
+      h1 {
+        font-size: 1.5em;
+      }
+      p {
+        font-size: 0.9em;
+      }
+      button {
+        font-size: 0.8em;
+        padding: 8px 12px;
+        bottom: 10px;
+        right: 10px;
+      }
+    }
   </style>
 </head>
 <body>
