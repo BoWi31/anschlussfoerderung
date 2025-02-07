@@ -10,6 +10,7 @@
     :root {
       --color-live-bg: #28a745;
       --color-simulation-bg: #dc3545;
+      --color-group-bg: #6c757d;
     }
     body {
       font-family: 'Roboto', sans-serif;
@@ -95,9 +96,6 @@
   <button id="toggle-button" onclick="toggleSimulation()">🔘 Nächste Anschlussförderung</button>
   <button id="view-groups-button" class="top-right-button" onclick="toggleGroupView()">🔘 Alle Gruppen anzeigen</button>
   <script>
-    /************************************
-     * 📌 HARDCODIERTE DATEN
-     ************************************/
     const foerderzeiten = [
       { gruppe: "C", lehrkraft: "Woi", fach: "Deutsch", day: 1, stunde: "1./2. Stunde", raum: "W204", start: "07:40", end: "09:30" },
       { gruppe: "A", lehrkraft: "Can", fach: "Deutsch", day: 1, stunde: "3./4. Stunde", raum: "W204", start: "09:30", end: "11:20" },
@@ -156,58 +154,27 @@
     }
 
     function updateStatus() {
-      const now = new Date();
-      const currentDay = now.getDay();
-      let nextSession = null;
-
-      foerderzeiten.forEach(zeit => {
-        const dayDiff = (zeit.day - currentDay + 7) % 7;
-        if (!nextSession || dayDiff < (nextSession.day - currentDay + 7) % 7) {
-          nextSession = zeit;
-        }
-      });
-
       const nextSessionDiv = document.getElementById("next-session");
       if (isGroupView) {
+        document.body.style.backgroundColor = "var(--color-group-bg)";
         let groupOverview = "<h2>Alle Gruppen:</h2>";
         for (const gruppe in schuelerGruppen) {
           groupOverview += getSchuelerForGruppe(gruppe) + "<br>";
         }
         nextSessionDiv.innerHTML = groupOverview;
         document.getElementById("view-groups-button").textContent = "🔘 Zurück zum Live-Modus";
-      } else if (isSimulationMode && nextSession) {
-        const schuelerListe = getSchuelerForGruppe(nextSession.gruppe);
-        nextSessionDiv.innerHTML = `
-          <strong>Nächste Förderung:</strong> ${nextSession.fach} (Gruppe ${nextSession.gruppe}) am ${wochentage[nextSession.day]} (${nextSession.stunde}), Raum: ${nextSession.raum}<br>
-          ${schuelerListe}
-        `;
-        document.getElementById("toggle-button").textContent = "🔘 Live-Modus";
-      } else if (nextSession) {
-        nextSessionDiv.innerHTML = `
-          <strong>Nächste Förderung:</strong> ${nextSession.fach} (Gruppe ${nextSession.gruppe}) am ${wochentage[nextSession.day]} (${nextSession.stunde}), Raum: ${nextSession.raum}
-        `;
-        document.getElementById("toggle-button").textContent = "🔘 Nächste Anschlussförderung";
       } else {
-        nextSessionDiv.innerHTML = `<strong>Nächste Förderung:</strong> Keine weiteren Termine.`;
+        document.body.style.backgroundColor = isSimulationMode ? "var(--color-simulation-bg)" : "var(--color-live-bg)";
+        document.getElementById("view-groups-button").textContent = "🔘 Alle Gruppen anzeigen";
       }
-    }
-
-    function toggleSimulation() {
-      isSimulationMode = !isSimulationMode;
-      isGroupView = false;
-      document.body.style.backgroundColor = isSimulationMode ? "var(--color-simulation-bg)" : "var(--color-live-bg)";
-      updateStatus();
     }
 
     function toggleGroupView() {
       isGroupView = !isGroupView;
-      isSimulationMode = false;
-      document.body.style.backgroundColor = "var(--color-live-bg)";
       updateStatus();
     }
 
     updateStatus();
-    setInterval(updateStatus, 60000);
   </script>
 </body>
 </html>
