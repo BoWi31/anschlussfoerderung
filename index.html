@@ -10,7 +10,6 @@
     :root {
       --color-live-bg: #28a745;
       --color-simulation-bg: #dc3545;
-      --color-group-bg: #6c757d;
     }
     body {
       font-family: 'Roboto', sans-serif;
@@ -24,6 +23,10 @@
       color: #212529;
       background-color: var(--color-live-bg);
       transition: background-color 0.5s ease;
+    }
+    @keyframes pulseBackgroundRed {
+      0%, 100% { background-color: var(--color-simulation-bg); }
+      50% { background-color: #ff4d4d; }
     }
     .status-container {
       background: white;
@@ -55,12 +58,6 @@
       bottom: 20px;
       right: 20px;
     }
-    .top-right-button {
-      top: 20px;
-      right: 20px;
-      bottom: auto;
-      position: fixed;
-    }
     button:hover { background-color: #0056b3; }
     @media (max-width: 600px) {
       .status-container {
@@ -76,6 +73,8 @@
       button {
         font-size: 0.9em;
         padding: 10px 15px;
+        bottom: 10px;
+        right: 10px;
       }
     }
   </style>
@@ -90,10 +89,8 @@
     </div>
   </div>
   <button id="toggle-button" onclick="toggleSimulation()">🔘 Nächste Anschlussförderung</button>
-  <button id="view-groups-button" class="top-right-button" onclick="toggleGroupView()">🔘 Alle Gruppen anzeigen</button>
   <script>
     let isSimulationMode = false;
-    let isGroupView = false;
 
     const foerderzeiten = [
       { gruppe: "C", fach: "Deutsch", day: 1, stunde: "1./2. Stunde", raum: "W204" },
@@ -101,63 +98,15 @@
       { gruppe: "B", fach: "Deutsch", day: 2, stunde: "3./4. Stunde", raum: "W204" }
     ];
 
-    const schuelerGruppen = {
-      "A": [
-        { name: "Alina", klasse: "5.1" },
-        { name: "Daniil", klasse: "6.1" }
-      ],
-      "B": [
-        { name: "Anastasia", klasse: "5a" },
-        { name: "Krisztian", klasse: "6.1" }
-      ],
-      "C": [
-        { name: "Maja", klasse: "6a" },
-        { name: "Melina Sopa", klasse: "6a" }
-      ]
-    };
-
-    function getSchuelerForGruppe(gruppe) {
-      if (!schuelerGruppen[gruppe]) return "Keine Schüler zugeordnet.";
-      const groupedByClass = schuelerGruppen[gruppe].reduce((acc, schueler) => {
-        if (!acc[schueler.klasse]) acc[schueler.klasse] = [];
-        acc[schueler.klasse].push(schueler.name);
-        return acc;
-      }, {});
-
-      let output = `<h2>Gruppe ${gruppe}</h2>`;
-      for (const [klasse, schueler] of Object.entries(groupedByClass)) {
-        output += `<strong>Klasse ${klasse}:</strong><br>`;
-        schueler.forEach(name => output += `- ${name}<br>`);
-      }
-      return output;
-    }
-
     function updateStatus() {
       const nextSessionDiv = document.getElementById("next-session");
-      if (isGroupView) {
-        document.body.style.backgroundColor = "var(--color-group-bg)";
-        let groupOverview = "<h2>Alle Gruppen:</h2>";
-        for (const gruppe in schuelerGruppen) {
-          groupOverview += getSchuelerForGruppe(gruppe) + "<br>";
-        }
-        nextSessionDiv.innerHTML = groupOverview;
-        document.getElementById("view-groups-button").textContent = "🔘 Zurück zum Live-Modus";
-      } else {
-        document.body.style.backgroundColor = isSimulationMode ? "var(--color-simulation-bg)" : "var(--color-live-bg)";
-        const nextSession = foerderzeiten.find(zeit => zeit.day === new Date().getDay());
-        nextSessionDiv.innerHTML = nextSession ? `<strong>Nächste Förderung:</strong> ${nextSession.fach} (Gruppe ${nextSession.gruppe}), ${nextSession.stunde}, Raum: ${nextSession.raum}` : "<strong>Nächste Förderung:</strong> Keine weiteren Termine.";
-        document.getElementById("view-groups-button").textContent = "🔘 Alle Gruppen anzeigen";
-      }
-    }
-
-    function toggleGroupView() {
-      isGroupView = !isGroupView;
-      updateStatus();
+      document.body.style.backgroundColor = isSimulationMode ? "var(--color-simulation-bg)" : "var(--color-live-bg)";
+      const nextSession = foerderzeiten.find(zeit => zeit.day === new Date().getDay());
+      nextSessionDiv.innerHTML = nextSession ? `<strong>Nächste Förderung:</strong> ${nextSession.fach} (Gruppe ${nextSession.gruppe}), ${nextSession.stunde}, Raum: ${nextSession.raum}` : "<strong>Nächste Förderung:</strong> Keine weiteren Termine.";
     }
 
     function toggleSimulation() {
       isSimulationMode = !isSimulationMode;
-      isGroupView = false;
       updateStatus();
     }
 
