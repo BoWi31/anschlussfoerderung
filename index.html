@@ -94,132 +94,32 @@
      * Hardcodierte Daten
      ************************************/
     const foerderzeiten = [
-      // Deutsch
-      { fach: "Deutsch", day: 1, stunde: "1./2. Stunde", raum: "W204", start: "07:40", end: "09:30" },
-      { fach: "Deutsch", day: 1, stunde: "3./4. Stunde", raum: "W204", start: "09:30", end: "11:20" },
-      { fach: "Deutsch", day: 2, stunde: "3./4. Stunde", raum: "W204", start: "09:30", end: "11:20" },
-      { fach: "Deutsch", day: 3, stunde: "3./4. Stunde", raum: "W204", start: "09:30", end: "11:20" },
-      { fach: "Deutsch", day: 4, stunde: "1./2. Stunde", raum: "W204", start: "07:40", end: "09:30" },
-      { fach: "Deutsch", day: 4, stunde: "3./4. Stunde", raum: "W204", start: "09:30", end: "11:20" },
-      { fach: "Deutsch", day: 5, stunde: "3./4. Stunde", raum: "W204", start: "09:30", end: "11:20" },
-      { fach: "Deutsch", day: 5, stunde: "5./6. Stunde", raum: "W204", start: "11:20", end: "13:10" },
-      // Mathe
-      { fach: "Mathe", day: 2, stunde: "3./4. Stunde", raum: "W005", start: "09:30", end: "11:20" }
-      // Englisch: Noch nicht vorgesehen
+      { gruppe: "A", lehrkraft: "Can", fach: "Deutsch", day: 1, stunde: "3./4. Stunde", raum: "W204", start: "09:30", end: "11:20" },
+      { gruppe: "A", lehrkraft: "Can", fach: "Deutsch", day: 3, stunde: "5./6. Stunde", raum: "W204", start: "11:20", end: "13:10" },
+      { gruppe: "A", lehrkraft: "Can", fach: "Deutsch", day: 4, stunde: "3./4. Stunde", raum: "W204", start: "09:30", end: "11:20" },
+      { gruppe: "B", lehrkraft: "Tun", fach: "Deutsch", day: 2, stunde: "3./4. Stunde", raum: "W204", start: "09:30", end: "11:20" },
+      { gruppe: "B", lehrkraft: "Tun", fach: "Deutsch", day: 4, stunde: "1./2. Stunde", raum: "W204", start: "07:40", end: "09:30" },
+      { gruppe: "B", lehrkraft: "Tun", fach: "Deutsch", day: 5, stunde: "1./2. Stunde", raum: "W204", start: "07:40", end: "09:30" },
+      { gruppe: "C", lehrkraft: "Woi", fach: "Deutsch", day: 1, stunde: "1./2. Stunde", raum: "W204", start: "07:40", end: "09:30" },
+      { gruppe: "C", lehrkraft: "Woi", fach: "Deutsch", day: 3, stunde: "3./4. Stunde", raum: "W204", start: "09:30", end: "11:20" },
+      { gruppe: "C", lehrkraft: "Woi", fach: "Deutsch", day: 5, stunde: "3./4. Stunde", raum: "W204", start: "09:30", end: "11:20" },
+      { fach: "Mathe", day: 2, stunde: "5./6. Stunde", raum: "W005", start: "11:20", end: "13:10" }
     ];
 
-    const schueler = {
-      "5a": ["Anastasia"],
-      "5.1": ["Alina", "Vojdan"],
-      "6.1": ["Daniil", "Mohammed", { name: "Krisztian", subjects: ["Mathe"] }],
-      "7.1": ["Marin", "Evelina", "Mohammed"],
-      "7.2": ["Ili", "Ilyas", "Beyar", { name: "Emma", subjects: ["Deutsch"] }, "Artur"],
-      "7a": ["Bahar"]
+    const schuelerGruppen = {
+      "A": ["Alina", "Daniil", "Mohammed L.", "Evelina", "Beyar", "Artur", "Bahar"],
+      "B": ["Anastasia", "Krisztian", "Selena", "Arzoo", "Marin", "Mohammed H.", "Ili", "Neijla"],
+      "C": ["Maja", "Melina Sopa", "Arina", "Tymofii", "Emma", "Ilyas", "Sofia"]
     };
 
-    const wochentage = ["Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"];
-
-    let isSimulationMode = false;
-    let intervalId = setInterval(updateStatus, 1000);
-
-    function calculateCountdown(targetDate) {
-      const now = new Date();
-      const diff = targetDate - now;
-      if (diff <= 0) return null;
-      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-      const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-      const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-      return `${days}d ${hours}h ${minutes}m ${seconds}s`;
-    }
-
-    function getNextSession() {
-      const now = new Date();
-      let nextSession = null;
-      let smallestDiff = Infinity;
-      let nextDate = null;
-
-      foerderzeiten.forEach(zeit => {
-        let dayDiff = (zeit.day - now.getDay() + 7) % 7;
-        const [startHour, startMinute] = zeit.start.split(":").map(Number);
-        if (dayDiff === 0 && (now.getHours() > startHour || (now.getHours() === startHour && now.getMinutes() >= startMinute))) {
-          dayDiff = 7;
-        }
-        const candidateDate = new Date(now);
-        candidateDate.setDate(now.getDate() + dayDiff);
-        candidateDate.setHours(startHour, startMinute, 0, 0);
-        const diff = candidateDate - now;
-        if (diff < smallestDiff) {
-          smallestDiff = diff;
-          nextSession = zeit;
-          nextDate = candidateDate;
-        }
-      });
-      return { session: nextSession, nextDate: nextDate, diff: smallestDiff };
-    }
-
-    function renderSchuelerListe(subject) {
-      let result = "";
-      for (const klasse in schueler) {
-        let eligibleStudents = schueler[klasse].filter(s => {
-          if (typeof s === "string") return true;
-          if (typeof s === "object" && s.subjects) return s.subjects.includes(subject);
-          return false;
-        });
-        if (eligibleStudents.length > 0) {
-          let names = eligibleStudents.map(s => typeof s === "string" ? s : s.name).join(", ");
-          result += `<p><strong>${klasse}:</strong> ${names}</p>`;
-        }
-      }
-      return result;
+    function getSchuelerForGruppe(gruppe) {
+      return schuelerGruppen[gruppe] ? schuelerGruppen[gruppe].join(", ") : "Keine Schüler eingetragen.";
     }
 
     function updateStatus() {
-      const { session: nextSession, nextDate } = getNextSession();
-      const nextSessionDiv = document.getElementById("next-session");
-      if (!nextSession) {
-        nextSessionDiv.innerHTML = `<strong>Nächste Förderung:</strong> Keine Termine vorhanden.<div id="countdown"></div>`;
-      } else {
-        const countdown = calculateCountdown(nextDate) || "Aktuell aktiv";
-        nextSessionDiv.innerHTML = `<strong>Nächste Förderung:</strong> ${nextSession.fach} am ${wochentage[nextSession.day]} (${nextSession.stunde}), Raum: ${nextSession.raum}<br><div id="countdown">Countdown: ${countdown}</div>`;
-      }
-    }
-
-    function toggleSimulation() {
-      if (!isSimulationMode) {
-        clearInterval(intervalId);
-        const { session: nextSession } = getNextSession();
-        if (nextSession) {
-          let studentOverview = renderSchuelerListe(nextSession.fach);
-          const statusContainer = document.getElementById("status-container");
-          statusContainer.innerHTML = `
-            <h1>⚠️ Anschlussförderung aktiv</h1>
-            <p><strong>Fach:</strong> ${nextSession.fach}</p>
-            <p><strong>Zeitraum:</strong> ${nextSession.stunde}</p>
-            <p><strong>Raum:</strong> ${nextSession.raum}</p>
-            <div class="student-overview">${studentOverview}</div>
-          `;
-        }
-        document.body.style.backgroundColor = "var(--color-simulation-bg)";
-        document.body.style.animation = "pulseBackgroundRed 3s infinite";
-        document.getElementById("toggle-button").textContent = "🔘 Live Modus";
-        isSimulationMode = true;
-      } else {
-        document.body.style.backgroundColor = "var(--color-live-bg)";
-        document.body.style.animation = "none";
-        const statusContainer = document.getElementById("status-container");
-        statusContainer.innerHTML = `
-          <div id="status-icon" class="status-icon">✅</div>
-          <h1 id="status-title">Keine Anschlussförderung</h1>
-          <div id="next-session">
-            <strong>Nächste Förderung:</strong> Wird geladen...
-            <div id="countdown"></div>
-          </div>
-        `;
-        document.getElementById("toggle-button").textContent = "🔘 Nächste Anschlussförderung";
-        isSimulationMode = false;
-        intervalId = setInterval(updateStatus, 1000);
-        updateStatus();
+      const { session: nextSession } = getNextSession();
+      if (nextSession) {
+        document.getElementById("next-session").innerHTML = `<strong>Nächste Förderung:</strong> ${nextSession.fach} (Gruppe ${nextSession.gruppe}) am ${wochentage[nextSession.day]} (${nextSession.stunde}), Raum: ${nextSession.raum}<br><div>Schüler: ${getSchuelerForGruppe(nextSession.gruppe)}</div>`;
       }
     }
   </script>
