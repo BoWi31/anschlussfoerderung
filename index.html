@@ -58,6 +58,12 @@
       bottom: 20px;
       right: 20px;
     }
+    .top-right-button {
+      top: 20px;
+      right: 20px;
+      bottom: auto;
+      position: fixed;
+    }
     button:hover { background-color: #0056b3; }
     @media (max-width: 600px) {
       .status-container {
@@ -73,8 +79,6 @@
       button {
         font-size: 0.9em;
         padding: 10px 15px;
-        bottom: 10px;
-        right: 10px;
       }
     }
   </style>
@@ -89,6 +93,7 @@
     </div>
   </div>
   <button id="toggle-button" onclick="toggleSimulation()">🔘 Nächste Anschlussförderung</button>
+  <button id="view-groups-button" class="top-right-button" onclick="toggleGroupView()">🔘 Alle Gruppen anzeigen</button>
   <script>
     /************************************
      * 📌 HARDCODIERTE DATEN
@@ -132,6 +137,7 @@
 
     const wochentage = ["Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"];
     let isSimulationMode = false;
+    let isGroupView = false;
 
     function getSchuelerForGruppe(gruppe) {
       if (!schuelerGruppen[gruppe]) return "Keine Schüler zugeordnet.";
@@ -162,7 +168,14 @@
       });
 
       const nextSessionDiv = document.getElementById("next-session");
-      if (isSimulationMode && nextSession) {
+      if (isGroupView) {
+        let groupOverview = "<h2>Alle Gruppen:</h2>";
+        for (const gruppe in schuelerGruppen) {
+          groupOverview += getSchuelerForGruppe(gruppe) + "<br>";
+        }
+        nextSessionDiv.innerHTML = groupOverview;
+        document.getElementById("view-groups-button").textContent = "🔘 Zurück zum Live-Modus";
+      } else if (isSimulationMode && nextSession) {
         const schuelerListe = getSchuelerForGruppe(nextSession.gruppe);
         nextSessionDiv.innerHTML = `
           <strong>Nächste Förderung:</strong> ${nextSession.fach} (Gruppe ${nextSession.gruppe}) am ${wochentage[nextSession.day]} (${nextSession.stunde}), Raum: ${nextSession.raum}<br>
@@ -181,7 +194,15 @@
 
     function toggleSimulation() {
       isSimulationMode = !isSimulationMode;
+      isGroupView = false;
       document.body.style.backgroundColor = isSimulationMode ? "var(--color-simulation-bg)" : "var(--color-live-bg)";
+      updateStatus();
+    }
+
+    function toggleGroupView() {
+      isGroupView = !isGroupView;
+      isSimulationMode = false;
+      document.body.style.backgroundColor = "var(--color-live-bg)";
       updateStatus();
     }
 
