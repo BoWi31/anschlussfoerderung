@@ -24,10 +24,6 @@
       background-color: var(--color-live-bg);
       transition: background-color 0.5s ease;
     }
-    @keyframes pulseBackgroundRed {
-      0%, 100% { background-color: var(--color-simulation-bg); }
-      50% { background-color: #ff4d4d; }
-    }
     .status-container {
       background: white;
       color: #212529;
@@ -38,10 +34,6 @@
       width: 90%;
       text-align: center;
       transition: all 0.3s ease;
-    }
-    .student-overview {
-      text-align: left;
-      margin-top: 1.5em;
     }
     h1 { font-size: 2.2em; margin-bottom: 1em; }
     p { font-size: 1.1em; margin: 0.8em 0; }
@@ -59,24 +51,6 @@
       right: 20px;
     }
     button:hover { background-color: #0056b3; }
-    @media (max-width: 600px) {
-      .status-container {
-        width: 95%;
-        padding: 1.5em;
-      }
-      h1 {
-        font-size: 1.8em;
-      }
-      p {
-        font-size: 1em;
-      }
-      button {
-        font-size: 0.9em;
-        padding: 10px 15px;
-        bottom: 10px;
-        right: 10px;
-      }
-    }
   </style>
 </head>
 <body>
@@ -85,7 +59,6 @@
     <h1 id="status-title">Keine Anschlussförderung</h1>
     <div class="next-session" id="next-session">
       <strong>Nächste Förderung:</strong> Wird geladen...
-      <div id="countdown"></div>
     </div>
   </div>
   <button id="toggle-button" onclick="toggleSimulation()">🔘 Nächste Anschlussförderung</button>
@@ -98,11 +71,35 @@
       { gruppe: "B", fach: "Deutsch", day: 2, stunde: "3./4. Stunde", raum: "W204" }
     ];
 
+    function getNextSession() {
+      const now = new Date();
+      const currentDay = now.getDay();
+      let nextSession = null;
+      let minDayDiff = 7; // Maximale Differenz von 7 Tagen
+
+      foerderzeiten.forEach(session => {
+        let dayDiff = (session.day - currentDay + 7) % 7;
+        if (dayDiff === 0) dayDiff = 7; // Falls heute ein Termin war, überspringen
+
+        if (dayDiff < minDayDiff) {
+          minDayDiff = dayDiff;
+          nextSession = session;
+        }
+      });
+
+      return nextSession;
+    }
+
     function updateStatus() {
       const nextSessionDiv = document.getElementById("next-session");
       document.body.style.backgroundColor = isSimulationMode ? "var(--color-simulation-bg)" : "var(--color-live-bg)";
-      const nextSession = foerderzeiten.find(zeit => zeit.day === new Date().getDay());
-      nextSessionDiv.innerHTML = nextSession ? `<strong>Nächste Förderung:</strong> ${nextSession.fach} (Gruppe ${nextSession.gruppe}), ${nextSession.stunde}, Raum: ${nextSession.raum}` : "<strong>Nächste Förderung:</strong> Keine weiteren Termine.";
+      const nextSession = getNextSession();
+
+      if (nextSession) {
+        nextSessionDiv.innerHTML = `<strong>Nächste Förderung:</strong> ${nextSession.fach} (Gruppe ${nextSession.gruppe}), ${nextSession.stunde}, Raum: ${nextSession.raum}`;
+      } else {
+        nextSessionDiv.innerHTML = "<strong>Nächste Förderung:</strong> Keine weiteren Termine.";
+      }
     }
 
     function toggleSimulation() {
