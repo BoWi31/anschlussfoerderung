@@ -24,6 +24,10 @@
       background-color: var(--color-live-bg);
       transition: background-color 0.5s ease;
     }
+    @keyframes pulseBackgroundRed {
+      0%, 100% { background-color: var(--color-simulation-bg); }
+      50% { background-color: #ff4d4d; }
+    }
     .status-container {
       background: white;
       color: #212529;
@@ -34,6 +38,10 @@
       width: 90%;
       text-align: center;
       transition: all 0.3s ease;
+    }
+    .student-overview {
+      text-align: left;
+      margin-top: 1.5em;
     }
     h1 { font-size: 2.2em; margin-bottom: 1em; }
     p { font-size: 1.1em; margin: 0.8em 0; }
@@ -51,6 +59,24 @@
       right: 20px;
     }
     button:hover { background-color: #0056b3; }
+    @media (max-width: 600px) {
+      .status-container {
+        width: 95%;
+        padding: 1.5em;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+      p {
+        font-size: 1em;
+      }
+      button {
+        font-size: 0.9em;
+        padding: 10px 15px;
+        bottom: 10px;
+        right: 10px;
+      }
+    }
   </style>
 </head>
 <body>
@@ -59,55 +85,108 @@
     <h1 id="status-title">Keine Anschlussförderung</h1>
     <div class="next-session" id="next-session">
       <strong>Nächste Förderung:</strong> Wird geladen...
+      <div id="countdown"></div>
     </div>
   </div>
   <button id="toggle-button" onclick="toggleSimulation()">🔘 Nächste Anschlussförderung</button>
   <script>
-    let isSimulationMode = false;
-
+    /************************************
+     * 📌 HARDCODIERTE DATEN
+     ************************************/
     const foerderzeiten = [
-      { gruppe: "C", fach: "Deutsch", day: 1, stunde: "1./2. Stunde", raum: "W204" },
-      { gruppe: "A", fach: "Deutsch", day: 1, stunde: "3./4. Stunde", raum: "W204" },
-      { gruppe: "B", fach: "Deutsch", day: 2, stunde: "3./4. Stunde", raum: "W204" }
+      { gruppe: "C", lehrkraft: "Woi", fach: "Deutsch", day: 1, stunde: "1./2. Stunde", raum: "W204", start: "07:40", end: "09:30" },
+      { gruppe: "A", lehrkraft: "Can", fach: "Deutsch", day: 1, stunde: "3./4. Stunde", raum: "W204", start: "09:30", end: "11:20" },
+      { gruppe: "B", lehrkraft: "Tun", fach: "Deutsch", day: 2, stunde: "3./4. Stunde", raum: "W204", start: "09:30", end: "11:20" }
     ];
 
-    function getNextSession() {
-      const now = new Date();
-      const currentDay = now.getDay();
-      let nextSession = null;
-      let minDayDiff = 7; // Maximale Differenz von 7 Tagen
+    const schuelerGruppen = {
+      "A": [
+        { name: "Alina", klasse: "5.1" },
+        { name: "Daniil", klasse: "6.1" },
+        { name: "Mohammed L.", klasse: "6.1" },
+        { name: "Evelina", klasse: "7.1" },
+        { name: "Beyar", klasse: "7.2" },
+        { name: "Artur", klasse: "7.2" },
+        { name: "Bahar", klasse: "7a" }
+      ],
+      "B": [
+        { name: "Anastasia", klasse: "5a" },
+        { name: "Krisztian", klasse: "6.1" },
+        { name: "Selena", klasse: "6a" },
+        { name: "Arzoo", klasse: "7.1" },
+        { name: "Marin", klasse: "7.1" },
+        { name: "Mohammed H.", klasse: "7.1" },
+        { name: "Ili", klasse: "7.2" },
+        { name: "Neijla", klasse: "7a" }
+      ],
+      "C": [
+        { name: "Maja", klasse: "6a" },
+        { name: "Melina Sopa", klasse: "6a" },
+        { name: "Arina", klasse: "6a" },
+        { name: "Tymofii", klasse: "7.2" },
+        { name: "Emma", klasse: "7.2" },
+        { name: "Ilyas", klasse: "7.2" },
+        { name: "Sofia", klasse: "7a" }
+      ]
+    };
 
-      foerderzeiten.forEach(session => {
-        let dayDiff = (session.day - currentDay + 7) % 7;
-        if (dayDiff === 0) dayDiff = 7; // Falls heute ein Termin war, überspringen
+    const wochentage = ["Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"];
+    let isSimulationMode = false;
 
-        if (dayDiff < minDayDiff) {
-          minDayDiff = dayDiff;
-          nextSession = session;
-        }
-      });
+    function getSchuelerForGruppe(gruppe) {
+      if (!schuelerGruppen[gruppe]) return "Keine Schüler zugeordnet.";
+      const groupedByClass = schuelerGruppen[gruppe].reduce((acc, schueler) => {
+        if (!acc[schueler.klasse]) acc[schueler.klasse] = [];
+        acc[schueler.klasse].push(schueler.name);
+        return acc;
+      }, {});
 
-      return nextSession;
+      let output = `Gruppe ${gruppe}<br>`;
+      for (const [klasse, schueler] of Object.entries(groupedByClass)) {
+        output += `<strong>Klasse ${klasse}:</strong><br>`;
+        schueler.forEach(name => output += `- ${name}<br>`);
+      }
+      return output;
     }
 
     function updateStatus() {
-      const nextSessionDiv = document.getElementById("next-session");
-      document.body.style.backgroundColor = isSimulationMode ? "var(--color-simulation-bg)" : "var(--color-live-bg)";
-      const nextSession = getNextSession();
+      const now = new Date();
+      const currentDay = now.getDay();
+      let nextSession = null;
 
-      if (nextSession) {
-        nextSessionDiv.innerHTML = `<strong>Nächste Förderung:</strong> ${nextSession.fach} (Gruppe ${nextSession.gruppe}), ${nextSession.stunde}, Raum: ${nextSession.raum}`;
+      foerderzeiten.forEach(zeit => {
+        const dayDiff = (zeit.day - currentDay + 7) % 7;
+        if (!nextSession || dayDiff < (nextSession.day - currentDay + 7) % 7) {
+          nextSession = zeit;
+        }
+      });
+
+      const nextSessionDiv = document.getElementById("next-session");
+      if (isSimulationMode && nextSession) {
+        const schuelerListe = getSchuelerForGruppe(nextSession.gruppe);
+        nextSessionDiv.innerHTML = `
+          <strong>Nächste Förderung:</strong> ${nextSession.fach} (Gruppe ${nextSession.gruppe}) am ${wochentage[nextSession.day]} (${nextSession.stunde}), Raum: ${nextSession.raum}<br>
+          ${schuelerListe}
+        `;
+        document.getElementById("toggle-button").textContent = "🔘 Live-Modus";
+      } else if (nextSession) {
+        nextSessionDiv.innerHTML = `
+          <strong>Nächste Förderung:</strong> ${nextSession.fach} (Gruppe ${nextSession.gruppe}) am ${wochentage[nextSession.day]} (${nextSession.stunde}), Raum: ${nextSession.raum}
+        `;
+        document.getElementById("toggle-button").textContent = "🔘 Nächste Anschlussförderung";
       } else {
-        nextSessionDiv.innerHTML = "<strong>Nächste Förderung:</strong> Keine weiteren Termine.";
+        nextSessionDiv.innerHTML = `<strong>Nächste Förderung:</strong> Keine weiteren Termine.`;
       }
     }
 
     function toggleSimulation() {
       isSimulationMode = !isSimulationMode;
+      document.body.style.backgroundColor = isSimulationMode ? "var(--color-simulation-bg)" : "var(--color-live-bg)";
       updateStatus();
     }
 
     updateStatus();
+    setInterval(updateStatus, 60000);
   </script>
 </body>
 </html>
