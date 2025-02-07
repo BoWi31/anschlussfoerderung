@@ -94,43 +94,28 @@
      * 📌 HARDCODIERTE DATEN
      ************************************/
     const foerderzeiten = [
+      { gruppe: "C", lehrkraft: "Woi", fach: "Deutsch", day: 1, stunde: "1./2. Stunde", raum: "W204", start: "07:40", end: "09:30" },
       { gruppe: "A", lehrkraft: "Can", fach: "Deutsch", day: 1, stunde: "3./4. Stunde", raum: "W204", start: "09:30", end: "11:20" },
-      { gruppe: "B", lehrkraft: "Tun", fach: "Deutsch", day: 2, stunde: "3./4. Stunde", raum: "W204", start: "09:30", end: "11:20" },
-      { gruppe: "C", lehrkraft: "Woi", fach: "Deutsch", day: 5, stunde: "3./4. Stunde", raum: "W204", start: "09:30", end: "11:20" }
+      { gruppe: "B", lehrkraft: "Tun", fach: "Deutsch", day: 2, stunde: "3./4. Stunde", raum: "W204", start: "09:30", end: "11:20" }
     ];
 
     const schuelerGruppen = {
       "A": [
         { name: "Alina", klasse: "5.1" },
-        { name: "Daniil", klasse: "6.1" },
-        { name: "Mohammed L.", klasse: "6.1" },
-        { name: "Evelina", klasse: "7.1" },
-        { name: "Beyar", klasse: "7.2" },
-        { name: "Artur", klasse: "7.2" },
-        { name: "Bahar", klasse: "7a" }
+        { name: "Daniil", klasse: "6.1" }
       ],
       "B": [
         { name: "Anastasia", klasse: "5a" },
-        { name: "Krisztian", klasse: "6.1" },
-        { name: "Selena", klasse: "6a" },
-        { name: "Arzoo", klasse: "7.1" },
-        { name: "Marin", klasse: "7.1" },
-        { name: "Mohammed H.", klasse: "7.1" },
-        { name: "Ili", klasse: "7.2" },
-        { name: "Neijla", klasse: "7a" }
+        { name: "Krisztian", klasse: "6.1" }
       ],
       "C": [
         { name: "Maja", klasse: "6a" },
-        { name: "Melina Sopa", klasse: "6a" },
-        { name: "Arina", klasse: "6a" },
-        { name: "Tymofii", klasse: "7.2" },
-        { name: "Emma", klasse: "7.2" },
-        { name: "Ilyas", klasse: "7.2" },
-        { name: "Sofia", klasse: "7a" }
+        { name: "Melina Sopa", klasse: "6a" }
       ]
     };
 
     const wochentage = ["Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"];
+    let isSimulationMode = false;
 
     function getSchuelerForGruppe(gruppe) {
       if (!schuelerGruppen[gruppe]) return "Keine Schüler zugeordnet.";
@@ -151,7 +136,6 @@
     function updateStatus() {
       const now = new Date();
       const currentDay = now.getDay();
-      const currentTime = `${now.getHours().toString().padStart(2, "0")}:${now.getMinutes().toString().padStart(2, "0")}`;
       let nextSession = null;
 
       foerderzeiten.forEach(zeit => {
@@ -161,13 +145,28 @@
         }
       });
 
-      if (nextSession) {
+      const nextSessionDiv = document.getElementById("next-session");
+      if (isSimulationMode && nextSession) {
         const schuelerListe = getSchuelerForGruppe(nextSession.gruppe);
-        document.getElementById("next-session").innerHTML = `
+        nextSessionDiv.innerHTML = `
           <strong>Nächste Förderung:</strong> ${nextSession.fach} (Gruppe ${nextSession.gruppe}) am ${wochentage[nextSession.day]} (${nextSession.stunde}), Raum: ${nextSession.raum}<br>
           ${schuelerListe}
         `;
+        document.getElementById("toggle-button").textContent = "🔘 Live-Modus";
+      } else if (nextSession) {
+        nextSessionDiv.innerHTML = `
+          <strong>Nächste Förderung:</strong> ${nextSession.fach} (Gruppe ${nextSession.gruppe}) am ${wochentage[nextSession.day]} (${nextSession.stunde}), Raum: ${nextSession.raum}
+        `;
+        document.getElementById("toggle-button").textContent = "🔘 Nächste Anschlussförderung";
+      } else {
+        nextSessionDiv.innerHTML = `<strong>Nächste Förderung:</strong> Keine weiteren Termine.`;
       }
+    }
+
+    function toggleSimulation() {
+      isSimulationMode = !isSimulationMode;
+      document.body.style.backgroundColor = isSimulationMode ? "var(--color-simulation-bg)" : "var(--color-live-bg)";
+      updateStatus();
     }
 
     updateStatus();
