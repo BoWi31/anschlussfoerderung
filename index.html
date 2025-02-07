@@ -95,6 +95,43 @@
     let isSimulationMode = false;
     let isGroupView = false;
 
+    const foerderzeiten = [
+      { gruppe: "C", fach: "Deutsch", day: 1, stunde: "1./2. Stunde", raum: "W204" },
+      { gruppe: "A", fach: "Deutsch", day: 1, stunde: "3./4. Stunde", raum: "W204" },
+      { gruppe: "B", fach: "Deutsch", day: 2, stunde: "3./4. Stunde", raum: "W204" }
+    ];
+
+    const schuelerGruppen = {
+      "A": [
+        { name: "Alina", klasse: "5.1" },
+        { name: "Daniil", klasse: "6.1" }
+      ],
+      "B": [
+        { name: "Anastasia", klasse: "5a" },
+        { name: "Krisztian", klasse: "6.1" }
+      ],
+      "C": [
+        { name: "Maja", klasse: "6a" },
+        { name: "Melina Sopa", klasse: "6a" }
+      ]
+    };
+
+    function getSchuelerForGruppe(gruppe) {
+      if (!schuelerGruppen[gruppe]) return "Keine Schüler zugeordnet.";
+      const groupedByClass = schuelerGruppen[gruppe].reduce((acc, schueler) => {
+        if (!acc[schueler.klasse]) acc[schueler.klasse] = [];
+        acc[schueler.klasse].push(schueler.name);
+        return acc;
+      }, {});
+
+      let output = `<h2>Gruppe ${gruppe}</h2>`;
+      for (const [klasse, schueler] of Object.entries(groupedByClass)) {
+        output += `<strong>Klasse ${klasse}:</strong><br>`;
+        schueler.forEach(name => output += `- ${name}<br>`);
+      }
+      return output;
+    }
+
     function updateStatus() {
       const nextSessionDiv = document.getElementById("next-session");
       if (isGroupView) {
@@ -107,7 +144,8 @@
         document.getElementById("view-groups-button").textContent = "🔘 Zurück zum Live-Modus";
       } else {
         document.body.style.backgroundColor = isSimulationMode ? "var(--color-simulation-bg)" : "var(--color-live-bg)";
-        nextSessionDiv.innerHTML = "<strong>Nächste Förderung:</strong> Wird geladen...";
+        const nextSession = foerderzeiten.find(zeit => zeit.day === new Date().getDay());
+        nextSessionDiv.innerHTML = nextSession ? `<strong>Nächste Förderung:</strong> ${nextSession.fach} (Gruppe ${nextSession.gruppe}), ${nextSession.stunde}, Raum: ${nextSession.raum}` : "<strong>Nächste Förderung:</strong> Keine weiteren Termine.";
         document.getElementById("view-groups-button").textContent = "🔘 Alle Gruppen anzeigen";
       }
     }
