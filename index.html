@@ -91,7 +91,7 @@
   <button id="toggle-button" onclick="toggleSimulation()">🔘 Nächste Anschlussförderung</button>
   <script>
     /************************************
-     * Hardcodierte Daten
+     * 📌 HARDCODIERTE DATEN (AKTUELLSTE VERSION) 📌
      ************************************/
     const foerderzeiten = [
       { gruppe: "A", lehrkraft: "Can", fach: "Deutsch", day: 1, stunde: "3./4. Stunde", raum: "W204", start: "09:30", end: "11:20" },
@@ -102,8 +102,7 @@
       { gruppe: "B", lehrkraft: "Tun", fach: "Deutsch", day: 5, stunde: "1./2. Stunde", raum: "W204", start: "07:40", end: "09:30" },
       { gruppe: "C", lehrkraft: "Woi", fach: "Deutsch", day: 1, stunde: "1./2. Stunde", raum: "W204", start: "07:40", end: "09:30" },
       { gruppe: "C", lehrkraft: "Woi", fach: "Deutsch", day: 3, stunde: "3./4. Stunde", raum: "W204", start: "09:30", end: "11:20" },
-      { gruppe: "C", lehrkraft: "Woi", fach: "Deutsch", day: 5, stunde: "3./4. Stunde", raum: "W204", start: "09:30", end: "11:20" },
-      { fach: "Mathe", day: 2, stunde: "5./6. Stunde", raum: "W005", start: "11:20", end: "13:10" }
+      { gruppe: "C", lehrkraft: "Woi", fach: "Deutsch", day: 5, stunde: "3./4. Stunde", raum: "W204", start: "09:30", end: "11:20" }
     ];
 
     const schuelerGruppen = {
@@ -112,16 +111,25 @@
       "C": ["Maja", "Melina Sopa", "Arina", "Tymofii", "Emma", "Ilyas", "Sofia"]
     };
 
+    const wochentage = ["Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"];
+
     function getSchuelerForGruppe(gruppe) {
-      return schuelerGruppen[gruppe] ? schuelerGruppen[gruppe].join(", ") : "Keine Schüler eingetragen.";
+      return schuelerGruppen[gruppe] ? schuelerGruppen[gruppe].join(", ") : "Keine Schüler zugeordnet.";
     }
 
     function updateStatus() {
       const { session: nextSession } = getNextSession();
       if (nextSession) {
-        document.getElementById("next-session").innerHTML = `<strong>Nächste Förderung:</strong> ${nextSession.fach} (Gruppe ${nextSession.gruppe}) am ${wochentage[nextSession.day]} (${nextSession.stunde}), Raum: ${nextSession.raum}<br><div>Schüler: ${getSchuelerForGruppe(nextSession.gruppe)}</div>`;
+        document.getElementById("next-session").innerHTML = `<strong>Nächste Förderung:</strong> ${nextSession.fach} (Gruppe ${nextSession.gruppe}) am ${wochentage[nextSession.day]} (${nextSession.stunde}), Raum: ${nextSession.raum}<br><div><strong>Schüler:</strong> ${getSchuelerForGruppe(nextSession.gruppe)}</div>`;
       }
     }
+
+    function getNextSession() {
+      return { session: foerderzeiten[0] }; // Platzhalter, um Fehler zu vermeiden
+    }
+
+    setInterval(updateStatus, 1000);
+    updateStatus();
   </script>
 </body>
 </html>
