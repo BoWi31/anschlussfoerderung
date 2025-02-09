@@ -98,27 +98,19 @@
       ]
     };
 
-   function getNextSession() {
-  const now = new Date();
-  let upcomingSessions = foerderzeiten.map(session => {
-    const sessionDate = new Date();
-    sessionDate.setDate(now.getDate() + ((session.day - now.getDay() + 7) % 7));
-    sessionDate.setHours(parseInt(session.start.split(":")[0]), parseInt(session.start.split(":")[1]), 0);
-    session.sessionTime = sessionDate;
-    return session;
-  }).filter(session => session.sessionTime > now);
+    function getNextSession() {
+      const now = new Date();
+      let upcomingSessions = foerderzeiten.map(session => {
+        const sessionDate = new Date();
+        sessionDate.setDate(now.getDate() + ((session.day - now.getDay() + 7) % 7));
+        sessionDate.setHours(parseInt(session.start.split(":")[0]), parseInt(session.start.split(":")[1]), 0);
+        session.sessionTime = sessionDate;
+        return session;
+      }).filter(session => session.sessionTime > now);
 
-  upcomingSessions.sort((a, b) => a.sessionTime - b.sessionTime);
-
-  // Fehlerbehebung: Rückgabe von null, wenn keine Sitzungen gefunden werden
-  if (upcomingSessions.length === 0) {
-    console.warn("Keine nächste Sitzung gefunden.");
-    return null;
-  }
-
-  return upcomingSessions[0];
-}
- 
+      upcomingSessions.sort((a, b) => a.sessionTime - b.sessionTime);
+      return upcomingSessions.length > 0 ? upcomingSessions[0] : null;
+    }
 
     function updateCountdown(targetTime) {
       const countdownDiv = document.getElementById("countdown");
@@ -137,62 +129,59 @@
       countdownDiv.textContent = `Startet in: ${hours}h ${minutes}m ${seconds}s`;
     }
 
-function updateStatus() {
-  const nextSession = getNextSession();
-  const nextSessionDiv = document.getElementById("next-session");
-  const schuelerListeDiv = document.getElementById("schueler-liste");
+    function updateStatus() {
+      const nextSession = getNextSession();
+      const nextSessionDiv = document.getElementById("next-session");
+      const schuelerListeDiv = document.getElementById("schueler-liste");
 
-  if (nextSession) {
-    document.getElementById("status-title").textContent = isSimulationMode || nextSession.sessionTime <= new Date()
-      ? "Anschlussförderung aktiv 🔴"
-      : "Keine Anschlussförderung ✅";
+      if (nextSession) {
+        document.getElementById("status-title").textContent = isSimulationMode || nextSession.sessionTime <= new Date()
+          ? "Anschlussförderung aktiv 🔴"
+          : "Keine Anschlussförderung ✅";
 
-    const schuelerListe = schuelerGruppen[nextSession.gruppe]
-      ?.reduce((acc, s) => {
-        if (!acc[s.klasse]) acc[s.klasse] = [];
-        acc[s.klasse].push(s.name);
-        return acc;
-      }, {});
+        const schuelerListe = schuelerGruppen[nextSession.gruppe]
+          ?.reduce((acc, s) => {
+            if (!acc[s.klasse]) acc[s.klasse] = [];
+            acc[s.klasse].push(s.name);
+            return acc;
+          }, {});
 
-    let formattedSchuelerListe = "";
-    for (const [klasse, names] of Object.entries(schuelerListe || {})) {
-      formattedSchuelerListe += `<strong>Klasse ${klasse}:</strong><br>${names.join("<br>")}<br><br>`;
-    }
+        let formattedSchuelerListe = "";
+        for (const [klasse, names] of Object.entries(schuelerListe || {})) {
+          formattedSchuelerListe += `<strong>Klasse ${klasse}:</strong><br>${names.join("<br>")}<br><br>`;
+        }
 
-    nextSessionDiv.innerHTML = `
-      <strong>Nächste Förderung:</strong> ${nextSession.fach} (Gruppe ${nextSession.gruppe})<br>
-      Zeit: ${nextSession.stunde}, Raum: ${nextSession.raum}<br>
-      <div id="countdown"></div>
-    `;
+        nextSessionDiv.innerHTML = `
+          <strong>Nächste Förderung:</strong> ${nextSession.fach} (Gruppe ${nextSession.gruppe})<br>
+          Zeit: ${nextSession.stunde}, Raum: ${nextSession.raum}<br>
+          <div id="countdown"></div>
+        `;
 
-    schuelerListeDiv.style.display = isSimulationMode || nextSession.sessionTime <= new Date() ? "block" : "none";
-    schuelerListeDiv.innerHTML = isSimulationMode || nextSession.sessionTime <= new Date()
-      ? `<strong>Schüler:</strong><br>${formattedSchuelerListe}`
-      : "";
+        schuelerListeDiv.style.display = isSimulationMode || nextSession.sessionTime <= new Date() ? "block" : "none";
+        schuelerListeDiv.innerHTML = isSimulationMode || nextSession.sessionTime <= new Date()
+          ? `<strong>Schüler:</strong><br>${formattedSchuelerListe}`
+          : "";
 
-    updateCountdown(nextSession.sessionTime);
-    setInterval(() => updateCountdown(nextSession.sessionTime), 1000);
-  } else {
-    nextSessionDiv.innerHTML = `<strong>Nächste Förderung:</strong> Keine weiteren Termine.`;
-    document.getElementById("status-title").textContent = "Keine Anschlussförderung ✅";
-    schuelerListeDiv.style.display = "none";
-  }
-}
-
+        updateCountdown(nextSession.sessionTime);
+        setInterval(() => updateCountdown(nextSession.sessionTime), 1000);
+      } else {
+        nextSessionDiv.innerHTML = `<strong>Nächste Förderung:</strong> Keine weiteren Termine.`;
+        document.getElementById("status-title").textContent = "Keine Anschlussförderung ✅";
+        schuelerListeDiv.style.display = "none";
       }
     }
 
-   function toggleSimulation() {
-  isSimulationMode = !isSimulationMode; // Umschalten des Modus
-  document.body.style.animation = isSimulationMode ? "pulseRed 3s infinite alternate" : "pulseGreen 3s infinite alternate";
+    function toggleSimulation() {
+      isSimulationMode = !isSimulationMode;
+      document.body.style.animation = isSimulationMode ? "pulseRed 3s infinite alternate" : "pulseGreen 3s infinite alternate";
 
-  // Aktualisiere den Button-Text
-  const toggleButton = document.getElementById("toggle-button");
-  toggleButton.textContent = isSimulationMode ? "🔘 Live-Modus" : "🔘 Nächste Anschlussförderung";
+      const toggleButton = document.getElementById("toggle-button");
+      toggleButton.textContent = isSimulationMode ? "🔘 Live-Modus" : "🔘 Nächste Anschlussförderung";
 
-  updateStatus(); // Aktualisiere den Status
-}
+      updateStatus();
+    }
 
+    updateStatus();
   </script>
 </body>
 </html>
