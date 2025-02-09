@@ -113,19 +113,20 @@
     let isSimulationMode = false;
 
     function getNextSession() {
-      const now = new Date();
-      let upcomingSessions = foerderzeiten
-        .map(session => {
-          const sessionTime = new Date();
-          sessionTime.setHours(parseInt(session.start.split(":")[0]));
-          sessionTime.setMinutes(parseInt(session.start.split(":")[1]));
-          return { ...session, sessionTime };
-        })
-        .filter(session => session.sessionTime > now)
-        .sort((a, b) => a.sessionTime - b.sessionTime);
+  const now = new Date();
+  let upcomingSessions = foerderzeiten
+    .map(session => {
+      const sessionTime = new Date();
+      sessionTime.setDate(now.getDate() + ((session.day - now.getDay() + 7) % 7));
+      sessionTime.setHours(parseInt(session.start.split(":")[0]), parseInt(session.start.split(":")[1]), 0);
+      session.sessionTime = sessionTime;
+      return session;
+    })
+    .filter(session => session.sessionTime > now)
+    .sort((a, b) => a.sessionTime - b.sessionTime);
 
-      return upcomingSessions.length > 0 ? upcomingSessions[0] : null;
-    }
+  return upcomingSessions.length > 0 ? upcomingSessions[0] : null;
+}
 
     function updateCountdown(targetTime) {
       const countdownDiv = document.getElementById("countdown");
