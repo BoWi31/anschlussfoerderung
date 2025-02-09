@@ -155,13 +155,17 @@
       }
     }
 
-    function toggleSimulation() {
-      isSimulationMode = !isSimulationMode;
-      document.body.style.animation = isSimulationMode ? "pulseRed 3s infinite alternate" : "pulseGreen 3s infinite alternate";
-      updateStatus();
-    }
+   function toggleSimulation() {
+  isSimulationMode = !isSimulationMode; // Umschalten des Modus
+  document.body.style.animation = isSimulationMode ? "pulseRed 3s infinite alternate" : "pulseGreen 3s infinite alternate";
 
-    updateStatus();
+  // Aktualisiere den Button-Text
+  const toggleButton = document.getElementById("toggle-button");
+  toggleButton.textContent = isSimulationMode ? "🔘 Live-Modus" : "🔘 Nächste Anschlussförderung";
+
+  updateStatus(); // Aktualisiere den Status
+}
+
   </script>
 </body>
 </html>
