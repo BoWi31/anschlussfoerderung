@@ -144,7 +144,7 @@
           <div id="countdown"></div>
         `;
 
-        schuelerListeDiv.style.display = "block";
+        schuelerListeDiv.style.display = isSimulationMode ? "block" : "none";
         schuelerListeDiv.innerHTML = `<strong>Schüler:</strong><br>${schuelerListe}`;
 
         updateCountdown(nextSession.sessionTime);
