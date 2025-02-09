@@ -69,16 +69,46 @@
   <button id="toggle-button" onclick="toggleSimulation()">🔘 Nächste Anschlussförderung</button>
   <script>
     const foerderzeiten = [
-      { gruppe: "A", lehrkraft: "Can", fach: "Deutsch", day: 1, stunde: "3./4. Stunde", raum: "W204", start: "09:30" },
-      { gruppe: "A", lehrkraft: "Can", fach: "Deutsch", day: 3, stunde: "5./6. Stunde", raum: "W204", start: "11:20" },
-      { gruppe: "B", lehrkraft: "Tun", fach: "Deutsch", day: 2, stunde: "3./4. Stunde", raum: "W204", start: "09:30" }
-    ];
+  // Gruppe A - Can
+  { gruppe: "A", lehrkraft: "Can", fach: "Deutsch", day: 1, stunde: "3./4. Stunde", raum: "W204", start: "09:30", end: "11:20" },
+  { gruppe: "A", lehrkraft: "Can", fach: "Deutsch", day: 3, stunde: "5./6. Stunde", raum: "W204", start: "11:20", end: "13:10" },
+  { gruppe: "A", lehrkraft: "Can", fach: "Deutsch", day: 4, stunde: "3./4. Stunde", raum: "W204", start: "09:30", end: "11:20" },
+
+  // Gruppe B - Tun
+  { gruppe: "B", lehrkraft: "Tun", fach: "Deutsch", day: 2, stunde: "3./4. Stunde", raum: "W204", start: "09:30", end: "11:20" },
+  { gruppe: "B", lehrkraft: "Tun", fach: "Deutsch", day: 4, stunde: "1./2. Stunde", raum: "W204", start: "07:40", end: "09:30" },
+  { gruppe: "B", lehrkraft: "Tun", fach: "Deutsch", day: 5, stunde: "1./2. Stunde", raum: "W204", start: "07:40", end: "09:30" },
+
+  // Gruppe C - Woi
+  { gruppe: "C", lehrkraft: "Woi", fach: "Deutsch", day: 1, stunde: "1./2. Stunde", raum: "W204", start: "07:40", end: "09:30" },
+  { gruppe: "C", lehrkraft: "Woi", fach: "Deutsch", day: 3, stunde: "3./4. Stunde", raum: "W204", start: "09:30", end: "11:20" },
+  { gruppe: "C", lehrkraft: "Woi", fach: "Deutsch", day: 5, stunde: "3./4. Stunde", raum: "W204", start: "09:30", end: "11:20" },
+
+  // Gruppe D - Mathe (noch keine SuS zugewiesen)
+  { gruppe: "D", lehrkraft: "Beu", fach: "Mathe", day: 2, stunde: "5./6. Stunde", raum: "W005", start: "11:20", end: "13:10" }
+];
+
+
 
     const schuelerGruppen = {
-      "A": [{ name: "Alina", klasse: "5.1" }, { name: "Daniil", klasse: "6.1" }],
-      "B": [{ name: "Anastasia", klasse: "5a" }, { name: "Krisztian", klasse: "6.1" }],
-      "C": [{ name: "Maja", klasse: "6a" }, { name: "Melina", klasse: "6a" }, { name: "Ili", klasse: "7.2" }]
-    };
+  "A": [
+    { name: "Alina", klasse: "5.1" }, { name: "Daniil", klasse: "6.1" }, { name: "Mohammed L.", klasse: "6.1" },
+    { name: "Evelina", klasse: "7.1" }, { name: "Beyar", klasse: "7.2" }, { name: "Artur", klasse: "7.2" },
+    { name: "Bahar", klasse: "7a" }
+  ],
+  "B": [
+    { name: "Anastasia", klasse: "5a" }, { name: "Krisztian", klasse: "6.1" }, { name: "Selena", klasse: "6a" },
+    { name: "Arzoo", klasse: "7.1" }, { name: "Marin", klasse: "7.1" }, { name: "Mohammed H.", klasse: "7.1" },
+    { name: "Neijla", klasse: "7a" }
+  ],
+  "C": [
+    { name: "Maja", klasse: "6a" }, { name: "Melina", klasse: "6a" }, { name: "Arina", klasse: "6a" },
+    { name: "Tymofii", klasse: "7.2" }, { name: "Emma", klasse: "7.2" }, { name: "Ilyas", klasse: "7.2" },
+    { name: "Ili", klasse: "7.2" }, { name: "Sofia", klasse: "7a" }
+  ],
+  "D": [] // Noch keine SuS zugewiesen
+};
+
 
     let isSimulationMode = false;
 
