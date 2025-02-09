@@ -143,14 +143,31 @@
       const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
       countdownDiv.textContent = `Startet in: ${hours}h ${minutes}m ${seconds}s`;
     }
+function getSchuelerListe(gruppe) {
+  const schueler = schuelerGruppen[gruppe] || [];
+  if (schueler.length === 0) return "Keine Schüler zugeordnet";
+
+  const groupedByClass = schueler.reduce((acc, s) => {
+    if (!acc[s.klasse]) acc[s.klasse] = [];
+    acc[s.klasse].push(s.name);
+    return acc;
+  }, {});
+
+  let output = "";
+  for (const [klasse, names] of Object.entries(groupedByClass)) {
+    output += `<strong>Klasse ${klasse}:</strong><br>${names.join("<br>")}<br><br>`;
+  }
+
+  return output;
+}
 
     function updateStatus() {
       const nextSession = getNextSession();
       const nextSessionDiv = document.getElementById("next-session");
-      const schuelerListeDiv = document.getElementById("schueler-liste");
+     const schuelerListe = getSchuelerListe(nextSession.gruppe);
 
       if (nextSession) {
-        document.getElementById("status-title").textContent = isSimulationMode ? "Anschlussförderung aktiv 🔴" : "Keine Anschlussförderung ❌";
+       document.getElementById("status-title").textContent = isSimulationMode ? "Anschlussförderung aktiv 🔴" : "Keine Anschlussförderung ✅";
         const schuelerListe = schuelerGruppen[nextSession.gruppe]
           ?.map(s => `<strong>Klasse ${s.klasse}:</strong> ${s.name}`)
           .join("<br>") || "Keine Schüler zugeordnet";
