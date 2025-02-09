@@ -69,9 +69,9 @@
   <button id="toggle-button" onclick="toggleSimulation()">🔘 Nächste Anschlussförderung</button>
   <script>
     const foerderzeiten = [
-      { gruppe: "A", lehrkraft: "Can", fach: "Deutsch", day: 1, stunde: "3./4. Stunde", raum: "W204", start: "09:30" },
-      { gruppe: "A", lehrkraft: "Can", fach: "Deutsch", day: 3, stunde: "5./6. Stunde", raum: "W204", start: "11:20" },
-      { gruppe: "B", lehrkraft: "Tun", fach: "Deutsch", day: 2, stunde: "3./4. Stunde", raum: "W204", start: "09:30" }
+      { gruppe: "A", lehrkraft: "Can", fach: "Deutsch", day: 1, stunde: "3./4. Stunde", raum: "W204", start: "09:30", end: "11:20" },
+      { gruppe: "B", lehrkraft: "Tun", fach: "Deutsch", day: 2, stunde: "3./4. Stunde", raum: "W204", start: "09:30", end: "11:20" },
+      { gruppe: "C", lehrkraft: "Woi", fach: "Deutsch", day: 3, stunde: "3./4. Stunde", raum: "W204", start: "09:30", end: "11:20" }
     ];
 
     const schuelerGruppen = {
@@ -87,9 +87,11 @@
       let upcomingSessions = foerderzeiten
         .map(session => {
           const sessionTime = new Date();
+          sessionTime.setDate(now.getDate() + ((session.day - now.getDay() + 7) % 7));
           sessionTime.setHours(parseInt(session.start.split(":")[0]));
           sessionTime.setMinutes(parseInt(session.start.split(":")[1]));
-          return { ...session, sessionTime };
+          session.sessionTime = sessionTime;
+          return session;
         })
         .filter(session => session.sessionTime > now)
         .sort((a, b) => a.sessionTime - b.sessionTime);
@@ -131,12 +133,10 @@
         `;
 
         schuelerListeDiv.style.display = isSimulationMode ? "block" : "none";
-        schuelerListeDiv.innerHTML = isSimulationMode ? `<strong>Schüler:</strong><br> ${schuelerListe}` : "";
+        schuelerListeDiv.innerHTML = `<strong>Schüler:</strong><br> ${schuelerListe}`;
 
         updateCountdown(nextSession.sessionTime);
         setInterval(() => updateCountdown(nextSession.sessionTime), 1000);
-      } else {
-        nextSessionDiv.innerHTML = `<strong>Nächste Förderung:</strong> Keine weiteren Termine.`;
       }
     }
 
