@@ -98,22 +98,18 @@
       ]
     };
 
-    function getSchuelerListe(gruppe) {
-      const schueler = schuelerGruppen[gruppe] || [];
-      if (schueler.length === 0) return "Keine Schüler zugeordnet";
+    function getNextSession() {
+      const now = new Date();
+      let upcomingSessions = foerderzeiten.map(session => {
+        const sessionDate = new Date();
+        sessionDate.setDate(now.getDate() + ((session.day - now.getDay() + 7) % 7));
+        sessionDate.setHours(parseInt(session.start.split(":")[0]), parseInt(session.start.split(":")[1]), 0);
+        session.sessionTime = sessionDate;
+        return session;
+      }).filter(session => session.sessionTime > now);
 
-      const groupedByClass = schueler.reduce((acc, s) => {
-        if (!acc[s.klasse]) acc[s.klasse] = [];
-        acc[s.klasse].push(s.name);
-        return acc;
-      }, {});
-
-      let output = "";
-      for (const [klasse, names] of Object.entries(groupedByClass)) {
-        output += `<strong>Klasse ${klasse}:</strong><br>${names.join("<br>")}<br><br>`;
-      }
-
-      return output;
+      upcomingSessions.sort((a, b) => a.sessionTime - b.sessionTime);
+      return upcomingSessions.length > 0 ? upcomingSessions[0] : null;
     }
 
     function updateCountdown(targetTime) {
@@ -140,7 +136,7 @@
 
       if (nextSession) {
         document.getElementById("status-title").textContent = "Keine Anschlussförderung ✅";
-        const schuelerListe = getSchuelerListe(nextSession.gruppe);
+        const schuelerListe = schuelerGruppen[nextSession.gruppe]?.map(s => `${s.name} (${s.klasse})`).join("<br>") || "Keine Schüler zugeordnet";
 
         nextSessionDiv.innerHTML = `
           <strong>Nächste Förderung:</strong> ${nextSession.fach} (Gruppe ${nextSession.gruppe})<br>
