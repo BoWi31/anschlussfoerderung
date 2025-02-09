@@ -61,13 +61,29 @@
     const foerderzeiten = [
       { gruppe: "A", lehrkraft: "Can", fach: "Deutsch", day: 1, stunde: "3./4. Stunde", raum: "W204", start: "09:30", end: "11:20" },
       { gruppe: "A", lehrkraft: "Can", fach: "Deutsch", day: 3, stunde: "5./6. Stunde", raum: "W204", start: "11:20", end: "13:10" },
-      { gruppe: "B", lehrkraft: "Tun", fach: "Deutsch", day: 2, stunde: "3./4. Stunde", raum: "W204", start: "09:30", end: "11:20" }
+      { gruppe: "A", lehrkraft: "Can", fach: "Deutsch", day: 4, stunde: "3./4. Stunde", raum: "W204", start: "09:30", end: "11:20" },
+
+      { gruppe: "B", lehrkraft: "Tun", fach: "Deutsch", day: 2, stunde: "3./4. Stunde", raum: "W204", start: "09:30", end: "11:20" },
+      { gruppe: "B", lehrkraft: "Tun", fach: "Deutsch", day: 4, stunde: "1./2. Stunde", raum: "W204", start: "07:40", end: "09:30" },
+      { gruppe: "B", lehrkraft: "Tun", fach: "Deutsch", day: 5, stunde: "1./2. Stunde", raum: "W204", start: "07:40", end: "09:30" },
+
+      { gruppe: "C", lehrkraft: "Woi", fach: "Deutsch", day: 1, stunde: "1./2. Stunde", raum: "W204", start: "07:40", end: "09:30" },
+      { gruppe: "C", lehrkraft: "Woi", fach: "Deutsch", day: 3, stunde: "3./4. Stunde", raum: "W204", start: "09:30", end: "11:20" },
+      { gruppe: "C", lehrkraft: "Woi", fach: "Deutsch", day: 5, stunde: "3./4. Stunde", raum: "W204", start: "09:30", end: "11:20" },
+
+      { gruppe: "D", lehrkraft: "Mathe-Lehrer", fach: "Mathe", day: 2, stunde: "5./6. Stunde", raum: "W005", start: "11:20", end: "13:10" }
     ];
 
     const schuelerGruppen = {
-      "A": [{ name: "Alina", klasse: "5.1" }, { name: "Daniil", klasse: "6.1" }, { name: "Mohammed L.", klasse: "6.1" }, { name: "Evelina", klasse: "7.1" }],
-      "B": [{ name: "Anastasia", klasse: "5a" }, { name: "Krisztian", klasse: "6.1" }, { name: "Selena", klasse: "6a" }, { name: "Arzoo", klasse: "7.1" }],
-      "C": [{ name: "Maja", klasse: "6a" }, { name: "Melina", klasse: "6a" }, { name: "Arina", klasse: "6a" }, { name: "Tymofii", klasse: "7.2" }, { name: "Emma", klasse: "7.2" }],
+      "A": [
+        { name: "Alina", klasse: "5.1" }, { name: "Daniil", klasse: "6.1" }, { name: "Mohammed L.", klasse: "6.1" }, { name: "Evelina", klasse: "7.1" }
+      ],
+      "B": [
+        { name: "Anastasia", klasse: "5a" }, { name: "Krisztian", klasse: "6.1" }, { name: "Selena", klasse: "6a" }, { name: "Arzoo", klasse: "7.1" }
+      ],
+      "C": [
+        { name: "Maja", klasse: "6a" }, { name: "Melina", klasse: "6a" }, { name: "Arina", klasse: "6a" }, { name: "Tymofii", klasse: "7.2" }, { name: "Emma", klasse: "7.2" }
+      ],
       "D": [] // Gruppe D bleibt leer
     };
 
@@ -88,22 +104,6 @@
       return upcomingSessions.length > 0 ? upcomingSessions[0] : null;
     }
 
-    function updateCountdown(targetTime) {
-      const countdownDiv = document.getElementById("countdown");
-      const now = new Date();
-      const timeLeft = targetTime - now;
-
-      if (timeLeft <= 0) {
-        countdownDiv.textContent = "Die Förderung beginnt jetzt!";
-        return;
-      }
-
-      const hours = Math.floor(timeLeft / (1000 * 60 * 60));
-      const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
-      const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
-      countdownDiv.textContent = `Startet in: ${hours}h ${minutes}m ${seconds}s`;
-    }
-
     function updateStatus() {
       const nextSession = getNextSession();
       const nextSessionDiv = document.getElementById("next-session");
@@ -111,16 +111,12 @@
         const schuelerListe = schuelerGruppen[nextSession.gruppe]
           ?.map(s => `<strong>Klasse ${s.klasse}:</strong> ${s.name}`)
           .join("<br>") || "Keine Schüler zugeordnet";
-
+          
         nextSessionDiv.innerHTML = `
           <strong>Nächste Förderung:</strong> ${nextSession.fach} (Gruppe ${nextSession.gruppe})<br>
           Zeit: ${nextSession.stunde}, Raum: ${nextSession.raum}<br>
           <strong>Schüler:</strong><br> ${schuelerListe}
-          <div id="countdown"></div>
         `;
-
-        updateCountdown(nextSession.sessionTime);
-        setInterval(() => updateCountdown(nextSession.sessionTime), 1000);
       } else {
         nextSessionDiv.innerHTML = `<strong>Nächste Förderung:</strong> Keine weiteren Termine.`;
       }
