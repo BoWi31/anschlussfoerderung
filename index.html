@@ -22,7 +22,16 @@
       min-height: 100vh;
       color: #212529;
       background-color: var(--color-live-bg);
+      animation: pulseGreen 3s infinite alternate;
       transition: background-color 0.5s ease;
+    }
+    @keyframes pulseGreen {
+      0% { background-color: #28a745; }
+      100% { background-color: #34d058; }
+    }
+    @keyframes pulseRed {
+      0% { background-color: #dc3545; }
+      100% { background-color: #ff4d4d; }
     }
     .status-container {
       background: white;
@@ -50,71 +59,54 @@
 </head>
 <body>
   <div class="status-container" id="status-container">
-    <h1 id="status-title">Keine Anschlussförderung</h1>
+    <h1 id="status-title">Keine Anschlussförderung ❌</h1>
     <div id="next-session">
       <strong>Nächste Förderung:</strong> Wird geladen...
       <div id="countdown"></div>
     </div>
+    <div id="schueler-liste" style="display: none;"></div>
   </div>
   <button id="toggle-button" onclick="toggleSimulation()">🔘 Nächste Anschlussförderung</button>
   <script>
     const foerderzeiten = [
-      // Gruppe A
       { gruppe: "A", lehrkraft: "Can", fach: "Deutsch", day: 1, stunde: "3./4. Stunde", raum: "W204", start: "09:30", end: "11:20" },
       { gruppe: "A", lehrkraft: "Can", fach: "Deutsch", day: 3, stunde: "5./6. Stunde", raum: "W204", start: "11:20", end: "13:10" },
       { gruppe: "A", lehrkraft: "Can", fach: "Deutsch", day: 4, stunde: "3./4. Stunde", raum: "W204", start: "09:30", end: "11:20" },
 
-      // Gruppe B
       { gruppe: "B", lehrkraft: "Tun", fach: "Deutsch", day: 2, stunde: "3./4. Stunde", raum: "W204", start: "09:30", end: "11:20" },
       { gruppe: "B", lehrkraft: "Tun", fach: "Deutsch", day: 4, stunde: "1./2. Stunde", raum: "W204", start: "07:40", end: "09:30" },
       { gruppe: "B", lehrkraft: "Tun", fach: "Deutsch", day: 5, stunde: "1./2. Stunde", raum: "W204", start: "07:40", end: "09:30" },
 
-      // Gruppe C
       { gruppe: "C", lehrkraft: "Woi", fach: "Deutsch", day: 1, stunde: "1./2. Stunde", raum: "W204", start: "07:40", end: "09:30" },
       { gruppe: "C", lehrkraft: "Woi", fach: "Deutsch", day: 3, stunde: "3./4. Stunde", raum: "W204", start: "09:30", end: "11:20" },
-      { gruppe: "C", lehrkraft: "Woi", fach: "Deutsch", day: 5, stunde: "3./4. Stunde", raum: "W204", start: "09:30", end: "11:20" },
-
-      // Gruppe D (Mathe)
-      { gruppe: "D", lehrkraft: "Mathe-Lehrer", fach: "Mathe", day: 2, stunde: "5./6. Stunde", raum: "W005", start: "11:20", end: "13:10" }
+      { gruppe: "C", lehrkraft: "Woi", fach: "Deutsch", day: 5, stunde: "3./4. Stunde", raum: "W204", start: "09:30", end: "11:20" }
     ];
 
     const schuelerGruppen = {
-      "A": [
-        { name: "Alina", klasse: "5.1" }, { name: "Daniil", klasse: "6.1" }, { name: "Mohammed L.", klasse: "6.1" }, 
-        { name: "Evelina", klasse: "7.1" }, { name: "Beyar", klasse: "7.2" }, { name: "Artur", klasse: "7.2" }, { name: "Bahar", klasse: "7a" }
-      ],
-      "B": [
-        { name: "Anastasia", klasse: "5a" }, { name: "Krisztian", klasse: "6.1" }, { name: "Selena", klasse: "6a" }, 
-        { name: "Arzoo", klasse: "7.1" }, { name: "Marin", klasse: "7.1" }, { name: "Mohammed H.", klasse: "7.1" }, { name: "Neijla", klasse: "7a" }
-      ],
-      "C": [
-        { name: "Maja", klasse: "6a" }, { name: "Melina", klasse: "6a" }, { name: "Arina", klasse: "6a" }, { name: "Tymofii", klasse: "7.2" },
-        { name: "Emma", klasse: "7.2" }, { name: "Ilyas", klasse: "7.2" }, { name: "Ili", klasse: "7.2" }, { name: "Sofia", klasse: "7a" }
-      ],
-      "D": [] // Noch keine SuS zugewiesen
+      "A": [{ name: "Alina", klasse: "5.1" }, { name: "Daniil", klasse: "6.1" }, { name: "Mohammed L.", klasse: "6.1" }, { name: "Evelina", klasse: "7.1" }],
+      "B": [{ name: "Anastasia", klasse: "5a" }, { name: "Krisztian", klasse: "6.1" }, { name: "Selena", klasse: "6a" }, { name: "Arzoo", klasse: "7.1" }],
+      "C": [{ name: "Maja", klasse: "6a" }, { name: "Melina", klasse: "6a" }, { name: "Arina", klasse: "6a" }, { name: "Tymofii", klasse: "7.2" }, { name: "Emma", klasse: "7.2" }]
     };
+
+    let isSimulationMode = false;
 
     function getNextSession() {
       const now = new Date();
-      let upcomingSessions = foerderzeiten
-        .map(session => {
-          const sessionTime = new Date();
-          sessionTime.setDate(now.getDate() + ((session.day - now.getDay() + 7) % 7));
-          sessionTime.setHours(parseInt(session.start.split(":")[0]));
-          sessionTime.setMinutes(parseInt(session.start.split(":")[1]));
-          session.sessionTime = sessionTime;
-          return session;
-        })
-        .filter(session => session.sessionTime > now)
-        .sort((a, b) => a.sessionTime - b.sessionTime);
-
-      return upcomingSessions.length > 0 ? upcomingSessions[0] : null;
+      return foerderzeiten.find(session => {
+        const sessionTime = new Date();
+        sessionTime.setHours(parseInt(session.start.split(":")[0]));
+        sessionTime.setMinutes(parseInt(session.start.split(":")[1]));
+        return sessionTime > now;
+      }) || null;
     }
 
     function updateStatus() {
       const nextSession = getNextSession();
       const nextSessionDiv = document.getElementById("next-session");
+      const schuelerListeDiv = document.getElementById("schueler-liste");
+
       if (nextSession) {
+        document.getElementById("status-title").textContent = isSimulationMode ? "Anschlussförderung aktiv 🔴" : "Keine Anschlussförderung ❌";
         const schuelerListe = schuelerGruppen[nextSession.gruppe]
           ?.map(s => `<strong>Klasse ${s.klasse}:</strong> ${s.name}`)
           .join("<br>") || "Keine Schüler zugeordnet";
@@ -122,9 +114,18 @@
         nextSessionDiv.innerHTML = `
           <strong>Nächste Förderung:</strong> ${nextSession.fach} (Gruppe ${nextSession.gruppe})<br>
           Zeit: ${nextSession.stunde}, Raum: ${nextSession.raum}<br>
-          <strong>Schüler:</strong><br> ${schuelerListe}
+          <div id="countdown"></div>
         `;
+
+        schuelerListeDiv.style.display = isSimulationMode ? "block" : "none";
+        schuelerListeDiv.innerHTML = `<strong>Schüler:</strong><br> ${schuelerListe}`;
       }
+    }
+
+    function toggleSimulation() {
+      isSimulationMode = !isSimulationMode;
+      document.body.style.animation = isSimulationMode ? "pulseRed 3s infinite alternate" : "pulseGreen 3s infinite alternate";
+      updateStatus();
     }
 
     updateStatus();
