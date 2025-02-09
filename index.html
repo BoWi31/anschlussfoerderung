@@ -72,11 +72,9 @@
       { gruppe: "A", lehrkraft: "Can", fach: "Deutsch", day: 1, stunde: "3./4. Stunde", raum: "W204", start: "09:30", end: "11:20" },
       { gruppe: "A", lehrkraft: "Can", fach: "Deutsch", day: 3, stunde: "5./6. Stunde", raum: "W204", start: "11:20", end: "13:10" },
       { gruppe: "A", lehrkraft: "Can", fach: "Deutsch", day: 4, stunde: "3./4. Stunde", raum: "W204", start: "09:30", end: "11:20" },
-
       { gruppe: "B", lehrkraft: "Tun", fach: "Deutsch", day: 2, stunde: "3./4. Stunde", raum: "W204", start: "09:30", end: "11:20" },
       { gruppe: "B", lehrkraft: "Tun", fach: "Deutsch", day: 4, stunde: "1./2. Stunde", raum: "W204", start: "07:40", end: "09:30" },
       { gruppe: "B", lehrkraft: "Tun", fach: "Deutsch", day: 5, stunde: "1./2. Stunde", raum: "W204", start: "07:40", end: "09:30" },
-
       { gruppe: "C", lehrkraft: "Woi", fach: "Deutsch", day: 1, stunde: "1./2. Stunde", raum: "W204", start: "07:40", end: "09:30" },
       { gruppe: "C", lehrkraft: "Woi", fach: "Deutsch", day: 3, stunde: "3./4. Stunde", raum: "W204", start: "09:30", end: "11:20" },
       { gruppe: "C", lehrkraft: "Woi", fach: "Deutsch", day: 5, stunde: "3./4. Stunde", raum: "W204", start: "09:30", end: "11:20" }
@@ -100,22 +98,34 @@
       ]
     };
 
-    function getSchuelerListe(gruppe) {
-      const schueler = schuelerGruppen[gruppe] || [];
-      if (schueler.length === 0) return "Keine Schüler zugeordnet";
+    function getNextSession() {
+      const now = new Date();
+      let upcomingSessions = foerderzeiten.map(session => {
+        const sessionDate = new Date();
+        sessionDate.setDate(sessionDate.getDate() + ((session.day - sessionDate.getDay() + 7) % 7));
+        sessionDate.setHours(parseInt(session.start.split(":")[0]), parseInt(session.start.split(":")[1]), 0);
+        return { ...session, sessionTime: sessionDate };
+      }).filter(session => session.sessionTime > now);
 
-      const groupedByClass = schueler.reduce((acc, s) => {
-        if (!acc[s.klasse]) acc[s.klasse] = [];
-        acc[s.klasse].push(s.name);
-        return acc;
-      }, {});
+      upcomingSessions.sort((a, b) => a.sessionTime - b.sessionTime);
+      return upcomingSessions.length > 0 ? upcomingSessions[0] : null;
+    }
 
-      let output = "";
-      for (const [klasse, names] of Object.entries(groupedByClass)) {
-        output += `<strong>Klasse ${klasse}:</strong><br>${names.join("<br>")}<br><br>`;
+    function updateCountdown(targetTime) {
+      const countdownDiv = document.getElementById("countdown");
+      const now = new Date();
+      const timeLeft = targetTime - now;
+
+      if (timeLeft <= 0) {
+        countdownDiv.textContent = "Die Förderung beginnt jetzt!";
+        return;
       }
 
-      return output;
+      const hours = Math.floor(timeLeft / (1000 * 60 * 60));
+      const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
+
+      countdownDiv.textContent = `Startet in: ${hours}h ${minutes}m ${seconds}s`;
     }
 
     function updateStatus() {
@@ -124,10 +134,30 @@
       const schuelerListeDiv = document.getElementById("schueler-liste");
 
       if (nextSession) {
+        document.getElementById("status-title").textContent = isSimulationMode ? "Anschlussförderung aktiv 🔴" : "Keine Anschlussförderung ✅";
         const schuelerListe = getSchuelerListe(nextSession.gruppe);
-        schuelerListeDiv.innerHTML = isSimulationMode ? `<strong>Schüler:</strong><br>${schuelerListe}` : "";
+
+        nextSessionDiv.innerHTML = `
+          <strong>Nächste Förderung:</strong> ${nextSession.fach} (Gruppe ${nextSession.gruppe})<br>
+          Zeit: ${nextSession.stunde}, Raum: ${nextSession.raum}<br>
+          <div id="countdown"></div>
+        `;
+
         schuelerListeDiv.style.display = isSimulationMode ? "block" : "none";
+        schuelerListeDiv.innerHTML = isSimulationMode ? `<strong>Schüler:</strong><br>${schuelerListe}` : "";
+
+        updateCountdown(nextSession.sessionTime);
+        setInterval(() => updateCountdown(nextSession.sessionTime), 1000);
+      } else {
+        nextSessionDiv.innerHTML = `<strong>Nächste Förderung:</strong> Keine weiteren Termine.`;
+        document.getElementById("countdown").textContent = "";
       }
+    }
+
+    function toggleSimulation() {
+      isSimulationMode = !isSimulationMode;
+      document.body.style.animation = isSimulationMode ? "pulseRed 3s infinite alternate" : "pulseGreen 3s infinite alternate";
+      updateStatus();
     }
 
     updateStatus();
