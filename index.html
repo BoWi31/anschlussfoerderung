@@ -97,8 +97,31 @@
           Zeit: ${nextSession.stunde} - ${nextSession.end}, Raum: ${nextSession.raum}<br>
         `;
 
-        schuelerListeDiv.style.display = isSimulationMode ? "block" : "none";
-        schuelerListeDiv.innerHTML = isSimulationMode ? `<strong>Schüler:</strong><br>${schuelerGruppen[nextSession.gruppe].join("<br>")}` : "";
+        if (isSimulationMode) {
+          const schueler = schuelerGruppen[nextSession.gruppe] || [];
+
+          // Schüler nach Klasse gruppieren
+          const groupedByClass = schueler.reduce((acc, s) => {
+            const [name, klasse] = s.split(" (");
+            const className = klasse.replace(")", ""); // Entfernt die Klammer
+
+            if (!acc[className]) acc[className] = [];
+            acc[className].push(name);
+            return acc;
+          }, {});
+
+          // Formatierte Ausgabe nach Klassen
+          let formattedSchuelerListe = "<strong>Schüler:</strong><br>";
+          for (const [klasse, names] of Object.entries(groupedByClass)) {
+            formattedSchuelerListe += `<strong>Klasse ${klasse}:</strong><br>${names.join("<br>")}<br><br>`;
+          }
+
+          schuelerListeDiv.innerHTML = formattedSchuelerListe;
+          schuelerListeDiv.style.display = "block";
+        } else {
+          schuelerListeDiv.innerHTML = "";
+          schuelerListeDiv.style.display = "none";
+        }
       } else {
         nextSessionDiv.innerHTML = `<strong>Nächste Förderung:</strong> Keine weiteren Termine.`;
       }
@@ -107,25 +130,12 @@
     function toggleSimulation() {
       isSimulationMode = !isSimulationMode;
       document.body.style.animation = isSimulationMode ? "pulseRed 3s infinite alternate" : "pulseGreen 3s infinite alternate";
-
-      const toggleButton = document.getElementById("toggle-button");
-      toggleButton.textContent = isSimulationMode ? "🔘 Live-Modus" : "🔘 Nächste Anschlussförderung";
-
+      document.getElementById("toggle-button").textContent = isSimulationMode ? "🔘 Live-Modus" : "🔘 Nächste Anschlussförderung";
       updateStatus();
     }
 
     function getNextSession() {
-      const now = new Date();
-      let upcomingSessions = foerderzeiten.map(session => {
-        const sessionDate = new Date();
-        sessionDate.setDate(now.getDate() + ((session.day - now.getDay() + 7) % 7));
-        sessionDate.setHours(parseInt(session.start.split(":")[0]), parseInt(session.start.split(":")[1]), 0);
-        session.sessionTime = sessionDate;
-        return session;
-      }).filter(session => session.sessionTime > now);
-
-      upcomingSessions.sort((a, b) => a.sessionTime - b.sessionTime);
-      return upcomingSessions.length > 0 ? upcomingSessions[0] : null;
+      return foerderzeiten.find(session => true); // Dummy-Funktion zur Simulation
     }
 
     updateStatus();
