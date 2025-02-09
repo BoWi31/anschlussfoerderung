@@ -99,18 +99,26 @@
     };
 
     function getNextSession() {
-      const now = new Date();
-      let upcomingSessions = foerderzeiten.map(session => {
-        const sessionDate = new Date();
-        sessionDate.setDate(now.getDate() + ((session.day - now.getDay() + 7) % 7));
-        sessionDate.setHours(parseInt(session.start.split(":")[0]), parseInt(session.start.split(":")[1]), 0);
-        session.sessionTime = sessionDate;
-        return session;
-      }).filter(session => session.sessionTime > now);
+  const now = new Date();
+  let upcomingSessions = foerderzeiten.map(session => {
+    const sessionDate = new Date();
+    sessionDate.setDate(now.getDate() + ((session.day - now.getDay() + 7) % 7));
+    sessionDate.setHours(parseInt(session.start.split(":")[0]), parseInt(session.start.split(":")[1]), 0);
+    session.sessionTime = sessionDate;
+    return session;
+  }).filter(session => session.sessionTime > now);
 
-      upcomingSessions.sort((a, b) => a.sessionTime - b.sessionTime);
-      return upcomingSessions.length > 0 ? upcomingSessions[0] : null;
-    }
+  upcomingSessions.sort((a, b) => a.sessionTime - b.sessionTime);
+
+  // Fehlermeldung, wenn keine Sitzung gefunden wird
+  if (upcomingSessions.length === 0) {
+    console.error("Keine nächsten Sitzungen gefunden.");
+    return null;
+  }
+
+  return upcomingSessions[0];
+}
+
 
     function updateCountdown(targetTime) {
       const countdownDiv = document.getElementById("countdown");
