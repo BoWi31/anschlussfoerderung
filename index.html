@@ -67,21 +67,22 @@
   <button id="toggle-button" onclick="toggleSimulation()">🔘 Nächste Anschlussförderung</button>
   <script>
     const foerderzeiten = [
-      // Gruppe A (Can)
-      { gruppe: "A", lehrkraft: "Can", fach: "Deutsch", day: 1, stunde: "3./4. Stunde", raum: "W204", start: "09:30" },
-      { gruppe: "A", lehrkraft: "Can", fach: "Deutsch", day: 3, stunde: "5./6. Stunde", raum: "W204", start: "11:20" },
-      { gruppe: "A", lehrkraft: "Can", fach: "Deutsch", day: 4, stunde: "3./4. Stunde", raum: "W204", start: "09:30" },
+  // Gruppe A (Can)
+  { gruppe: "A", lehrkraft: "Can", fach: "Deutsch", day: 1, stunde: "3./4. Stunde", raum: "W204", start: "09:30", end: "11:20" },
+  { gruppe: "A", lehrkraft: "Can", fach: "Deutsch", day: 3, stunde: "5./6. Stunde", raum: "W204", start: "11:20", end: "13:10" },
+  { gruppe: "A", lehrkraft: "Can", fach: "Deutsch", day: 4, stunde: "3./4. Stunde", raum: "W204", start: "09:30", end: "11:20" },
 
-      // Gruppe B (Tun)
-      { gruppe: "B", lehrkraft: "Tun", fach: "Deutsch", day: 2, stunde: "3./4. Stunde", raum: "W204", start: "09:30" },
-      { gruppe: "B", lehrkraft: "Tun", fach: "Deutsch", day: 4, stunde: "1./2. Stunde", raum: "W204", start: "07:40" },
-      { gruppe: "B", lehrkraft: "Tun", fach: "Deutsch", day: 5, stunde: "1./2. Stunde", raum: "W204", start: "07:40" },
+  // Gruppe B (Tun)
+  { gruppe: "B", lehrkraft: "Tun", fach: "Deutsch", day: 2, stunde: "3./4. Stunde", raum: "W204", start: "09:30", end: "11:20" },
+  { gruppe: "B", lehrkraft: "Tun", fach: "Deutsch", day: 4, stunde: "1./2. Stunde", raum: "W204", start: "07:40", end: "09:30" },
+  { gruppe: "B", lehrkraft: "Tun", fach: "Deutsch", day: 5, stunde: "1./2. Stunde", raum: "W204", start: "07:40", end: "09:30" },
 
-      // Gruppe C (Woi)
-      { gruppe: "C", lehrkraft: "Woi", fach: "Deutsch", day: 1, stunde: "1./2. Stunde", raum: "W204", start: "07:40" },
-      { gruppe: "C", lehrkraft: "Woi", fach: "Deutsch", day: 3, stunde: "3./4. Stunde", raum: "W204", start: "09:30" },
-      { gruppe: "C", lehrkraft: "Woi", fach: "Deutsch", day: 5, stunde: "3./4. Stunde", raum: "W204", start: "09:30" }
-    ];
+  // Gruppe C (Woi)
+  { gruppe: "C", lehrkraft: "Woi", fach: "Deutsch", day: 1, stunde: "1./2. Stunde", raum: "W204", start: "07:40", end: "09:30" },
+  { gruppe: "C", lehrkraft: "Woi", fach: "Deutsch", day: 3, stunde: "3./4. Stunde", raum: "W204", start: "09:30", end: "11:20" },
+  { gruppe: "C", lehrkraft: "Woi", fach: "Deutsch", day: 5, stunde: "3./4. Stunde", raum: "W204", start: "09:30", end: "11:20" }
+];
+
 
     const schuelerGruppen = {
       "A": [
