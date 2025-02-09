@@ -98,18 +98,6 @@
       ]
     };
 
-    function getNextSession() {
-      const now = new Date();
-      const upcomingSessions = foerderzeiten.map(session => {
-        const sessionDate = new Date();
-        sessionDate.setDate(sessionDate.getDate() + ((session.day - now.getDay() + 7) % 7));
-        sessionDate.setHours(parseInt(session.start.split(":")[0]), parseInt(session.start.split(":")[1]), 0);
-        return { ...session, sessionTime: sessionDate };
-      }).filter(session => session.sessionTime > now);
-
-      return upcomingSessions.length > 0 ? upcomingSessions[0] : null;
-    }
-
     function getSchuelerListe(gruppe) {
       const schueler = schuelerGruppen[gruppe] || [];
       if (schueler.length === 0) return "Keine Schüler zugeordnet";
@@ -151,7 +139,7 @@
       const schuelerListeDiv = document.getElementById("schueler-liste");
 
       if (nextSession) {
-        document.getElementById("status-title").textContent = isSimulationMode ? "Anschlussförderung aktiv 🔴" : "Keine Anschlussförderung ✅";
+        document.getElementById("status-title").textContent = "Keine Anschlussförderung ✅";
         const schuelerListe = getSchuelerListe(nextSession.gruppe);
 
         nextSessionDiv.innerHTML = `
@@ -160,13 +148,14 @@
           <div id="countdown"></div>
         `;
 
-        schuelerListeDiv.style.display = isSimulationMode ? "block" : "none";
-        schuelerListeDiv.innerHTML = isSimulationMode ? `<strong>Schüler:</strong><br>${schuelerListe}` : "";
+        schuelerListeDiv.style.display = "block";
+        schuelerListeDiv.innerHTML = `<strong>Schüler:</strong><br>${schuelerListe}`;
 
         updateCountdown(nextSession.sessionTime);
         setInterval(() => updateCountdown(nextSession.sessionTime), 1000);
       } else {
         nextSessionDiv.innerHTML = `<strong>Nächste Förderung:</strong> Keine weiteren Termine.`;
+        schuelerListeDiv.style.display = "none";
       }
     }
 
