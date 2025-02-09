@@ -135,23 +135,40 @@
       const schuelerListeDiv = document.getElementById("schueler-liste");
 
       if (nextSession) {
-        document.getElementById("status-title").textContent = "Keine Anschlussförderung ✅";
-        const schuelerListe = schuelerGruppen[nextSession.gruppe]?.map(s => `${s.name} (${s.klasse})`).join("<br>") || "Keine Schüler zugeordnet";
+  document.getElementById("status-title").textContent = isSimulationMode || nextSession.sessionTime <= new Date()
+    ? "Anschlussförderung aktiv 🔴"
+    : "Keine Anschlussförderung ✅";
 
-        nextSessionDiv.innerHTML = `
-          <strong>Nächste Förderung:</strong> ${nextSession.fach} (Gruppe ${nextSession.gruppe})<br>
-          Zeit: ${nextSession.stunde}, Raum: ${nextSession.raum}<br>
-          <div id="countdown"></div>
-        `;
+  const schuelerListe = schuelerGruppen[nextSession.gruppe]
+    ?.reduce((acc, s) => {
+      if (!acc[s.klasse]) acc[s.klasse] = [];
+      acc[s.klasse].push(s.name);
+      return acc;
+    }, {});
 
-        schuelerListeDiv.style.display = isSimulationMode ? "block" : "none";
-        schuelerListeDiv.innerHTML = `<strong>Schüler:</strong><br>${schuelerListe}`;
+  let formattedSchuelerListe = "";
+  for (const [klasse, names] of Object.entries(schuelerListe || {})) {
+    formattedSchuelerListe += `<strong>Klasse ${klasse}:</strong><br>${names.join("<br>")}<br><br>`;
+  }
 
-        updateCountdown(nextSession.sessionTime);
-        setInterval(() => updateCountdown(nextSession.sessionTime), 1000);
-      } else {
-        nextSessionDiv.innerHTML = `<strong>Nächste Förderung:</strong> Keine weiteren Termine.`;
-        schuelerListeDiv.style.display = "none";
+  nextSessionDiv.innerHTML = `
+    <strong>Nächste Förderung:</strong> ${nextSession.fach} (Gruppe ${nextSession.gruppe})<br>
+    Zeit: ${nextSession.stunde}, Raum: ${nextSession.raum}<br>
+    <div id="countdown"></div>
+  `;
+
+  schuelerListeDiv.style.display = isSimulationMode || nextSession.sessionTime <= new Date() ? "block" : "none";
+  schuelerListeDiv.innerHTML = isSimulationMode || nextSession.sessionTime <= new Date()
+    ? `<strong>Schüler:</strong><br>${formattedSchuelerListe}`
+    : "";
+
+  updateCountdown(nextSession.sessionTime);
+  setInterval(() => updateCountdown(nextSession.sessionTime), 1000);
+} else {
+  nextSessionDiv.innerHTML = `<strong>Nächste Förderung:</strong> Keine weiteren Termine.`;
+  schuelerListeDiv.style.display = "none";
+}
+
       }
     }
 
