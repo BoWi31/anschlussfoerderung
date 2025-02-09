@@ -86,20 +86,6 @@
 
     let isSimulationMode = false;
 
-    function getNextSession() {
-      const now = new Date();
-      let upcomingSessions = foerderzeiten.map(session => {
-        const sessionDate = new Date();
-        sessionDate.setDate(now.getDate() + ((session.day - now.getDay() + 7) % 7));
-        sessionDate.setHours(parseInt(session.start.split(":")[0]), parseInt(session.start.split(":")[1]), 0);
-        session.sessionTime = sessionDate;
-        return session;
-      }).filter(session => session.sessionTime > now);
-
-      upcomingSessions.sort((a, b) => a.sessionTime - b.sessionTime);
-      return upcomingSessions.length > 0 ? upcomingSessions[0] : null;
-    }
-
     function updateStatus() {
       const nextSession = getNextSession();
       const nextSessionDiv = document.getElementById("next-session");
@@ -121,8 +107,25 @@
     function toggleSimulation() {
       isSimulationMode = !isSimulationMode;
       document.body.style.animation = isSimulationMode ? "pulseRed 3s infinite alternate" : "pulseGreen 3s infinite alternate";
-      document.getElementById("toggle-button").textContent = isSimulationMode ? "🔘 Live-Modus" : "🔘 Nächste Anschlussförderung";
+
+      const toggleButton = document.getElementById("toggle-button");
+      toggleButton.textContent = isSimulationMode ? "🔘 Live-Modus" : "🔘 Nächste Anschlussförderung";
+
       updateStatus();
+    }
+
+    function getNextSession() {
+      const now = new Date();
+      let upcomingSessions = foerderzeiten.map(session => {
+        const sessionDate = new Date();
+        sessionDate.setDate(now.getDate() + ((session.day - now.getDay() + 7) % 7));
+        sessionDate.setHours(parseInt(session.start.split(":")[0]), parseInt(session.start.split(":")[1]), 0);
+        session.sessionTime = sessionDate;
+        return session;
+      }).filter(session => session.sessionTime > now);
+
+      upcomingSessions.sort((a, b) => a.sessionTime - b.sessionTime);
+      return upcomingSessions.length > 0 ? upcomingSessions[0] : null;
     }
 
     updateStatus();
