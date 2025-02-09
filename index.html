@@ -67,14 +67,14 @@
   <button id="toggle-button" onclick="toggleSimulation()">🔘 Nächste Anschlussförderung</button>
   <script>
     const foerderzeiten = [
-      { gruppe: "A", lehrkraft: "Can", fach: "Deutsch", day: 1, stunde: "1./2. Stunde", raum: "W204", start: "07:40", end: "09:30" },
-      { gruppe: "A", lehrkraft: "Can", fach: "Deutsch", day: 3, stunde: "3./4. Stunde", raum: "W204", start: "09:30", end: "11:20" },
-      { gruppe: "A", lehrkraft: "Can", fach: "Deutsch", day: 4, stunde: "5./6. Stunde", raum: "W204", start: "11:20", end: "13:10" },
+      { gruppe: "A", lehrkraft: "Can", fach: "Deutsch", day: 1, stunde: "3./4. Stunde", raum: "W204", start: "09:30", end: "11:20" },
+      { gruppe: "A", lehrkraft: "Can", fach: "Deutsch", day: 3, stunde: "5./6. Stunde", raum: "W204", start: "11:20", end: "13:10" },
+      { gruppe: "A", lehrkraft: "Can", fach: "Deutsch", day: 4, stunde: "3./4. Stunde", raum: "W204", start: "09:30", end: "11:20" },
       { gruppe: "B", lehrkraft: "Tun", fach: "Deutsch", day: 2, stunde: "3./4. Stunde", raum: "W204", start: "09:30", end: "11:20" },
       { gruppe: "B", lehrkraft: "Tun", fach: "Deutsch", day: 4, stunde: "1./2. Stunde", raum: "W204", start: "07:40", end: "09:30" },
       { gruppe: "B", lehrkraft: "Tun", fach: "Deutsch", day: 5, stunde: "1./2. Stunde", raum: "W204", start: "07:40", end: "09:30" },
-      { gruppe: "C", lehrkraft: "Woi", fach: "Deutsch", day: 1, stunde: "3./4. Stunde", raum: "W204", start: "09:30", end: "11:20" },
-      { gruppe: "C", lehrkraft: "Woi", fach: "Deutsch", day: 3, stunde: "5./6. Stunde", raum: "W204", start: "11:20", end: "13:10" },
+      { gruppe: "C", lehrkraft: "Woi", fach: "Deutsch", day: 1, stunde: "1./2. Stunde", raum: "W204", start: "07:40", end: "09:30" },
+      { gruppe: "C", lehrkraft: "Woi", fach: "Deutsch", day: 3, stunde: "3./4. Stunde", raum: "W204", start: "09:30", end: "11:20" },
       { gruppe: "C", lehrkraft: "Woi", fach: "Deutsch", day: 5, stunde: "3./4. Stunde", raum: "W204", start: "09:30", end: "11:20" }
     ];
 
@@ -85,24 +85,6 @@
     };
 
     let isSimulationMode = false;
-
-    function getNextSession() {
-      const now = new Date();
-      let upcomingSessions = foerderzeiten.map(session => {
-        let sessionDate = new Date();
-        let daysUntilSession = (session.day - now.getDay() + 7) % 7;
-        if (daysUntilSession === 0 && now.getHours() >= parseInt(session.start.split(":")[0])) {
-          daysUntilSession = 7;
-        }
-        sessionDate.setDate(now.getDate() + daysUntilSession);
-        sessionDate.setHours(parseInt(session.start.split(":")[0]), parseInt(session.start.split(":")[1]), 0);
-        session.sessionTime = sessionDate;
-        return session;
-      }).filter(session => session.sessionTime > now);
-
-      upcomingSessions.sort((a, b) => a.sessionTime - b.sessionTime);
-      return upcomingSessions.length > 0 ? upcomingSessions[0] : null;
-    }
 
     function updateStatus() {
       const nextSession = getNextSession();
@@ -115,28 +97,35 @@
           Zeit: ${nextSession.stunde} - ${nextSession.end}, Raum: ${nextSession.raum}<br>
         `;
 
-        if (isSimulationMode) {
-          let groupedSchueler = schuelerGruppen[nextSession.gruppe]
-            .map(s => s.split(" ("))
-            .reduce((acc, [name, klasse]) => {
-              klasse = klasse.replace(")", "");
-              if (!acc[klasse]) acc[klasse] = [];
-              acc[klasse].push(name);
-              return acc;
-            }, {});
-
-          let formattedList = "<strong>Schüler:</strong><br>";
-          for (const [klasse, names] of Object.entries(groupedSchueler)) {
-            formattedList += `<strong>Klasse ${klasse}:</strong><br>${names.join("<br>")}<br><br>`;
-          }
-
-          schuelerListeDiv.innerHTML = formattedList;
-          schuelerListeDiv.style.display = "block";
-        } else {
-          schuelerListeDiv.innerHTML = "";
-          schuelerListeDiv.style.display = "none";
-        }
+        schuelerListeDiv.style.display = isSimulationMode ? "block" : "none";
+        schuelerListeDiv.innerHTML = isSimulationMode ? `<strong>Schüler:</strong><br>${schuelerGruppen[nextSession.gruppe].join("<br>")}` : "";
+      } else {
+        nextSessionDiv.innerHTML = `<strong>Nächste Förderung:</strong> Keine weiteren Termine.`;
       }
+    }
+
+    function toggleSimulation() {
+      isSimulationMode = !isSimulationMode;
+      document.body.style.animation = isSimulationMode ? "pulseRed 3s infinite alternate" : "pulseGreen 3s infinite alternate";
+
+      const toggleButton = document.getElementById("toggle-button");
+      toggleButton.textContent = isSimulationMode ? "🔘 Live-Modus" : "🔘 Nächste Anschlussförderung";
+
+      updateStatus();
+    }
+
+    function getNextSession() {
+      const now = new Date();
+      let upcomingSessions = foerderzeiten.map(session => {
+        const sessionDate = new Date();
+        sessionDate.setDate(now.getDate() + ((session.day - now.getDay() + 7) % 7));
+        sessionDate.setHours(parseInt(session.start.split(":")[0]), parseInt(session.start.split(":")[1]), 0);
+        session.sessionTime = sessionDate;
+        return session;
+      }).filter(session => session.sessionTime > now);
+
+      upcomingSessions.sort((a, b) => a.sessionTime - b.sessionTime);
+      return upcomingSessions.length > 0 ? upcomingSessions[0] : null;
     }
 
     updateStatus();
