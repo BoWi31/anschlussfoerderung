@@ -67,13 +67,13 @@
   <button id="toggle-button" onclick="toggleSimulation()">🔘 Nächste Anschlussförderung</button>
   <script>
     const foerderzeiten = [
-      { gruppe: "A", lehrkraft: "Can", fach: "Deutsch", day: 1, stunde: "1./2. Stunde", raum: "W204", start: "07:40", end: "09:30" },
+      { gruppe: "A", lehrkraft: "Can", fach: "Deutsch", day: 1, stunde: "3./4. Stunde", raum: "W204", start: "09:30", end: "11:20" },
       { gruppe: "A", lehrkraft: "Can", fach: "Deutsch", day: 3, stunde: "3./4. Stunde", raum: "W204", start: "09:30", end: "11:20" },
       { gruppe: "A", lehrkraft: "Can", fach: "Deutsch", day: 4, stunde: "5./6. Stunde", raum: "W204", start: "11:20", end: "13:10" },
       { gruppe: "B", lehrkraft: "Tun", fach: "Deutsch", day: 2, stunde: "3./4. Stunde", raum: "W204", start: "09:30", end: "11:20" },
       { gruppe: "B", lehrkraft: "Tun", fach: "Deutsch", day: 4, stunde: "1./2. Stunde", raum: "W204", start: "07:40", end: "09:30" },
       { gruppe: "B", lehrkraft: "Tun", fach: "Deutsch", day: 5, stunde: "1./2. Stunde", raum: "W204", start: "07:40", end: "09:30" },
-      { gruppe: "C", lehrkraft: "Woi", fach: "Deutsch", day: 1, stunde: "3./4. Stunde", raum: "W204", start: "09:30", end: "11:20" },
+      { gruppe: "C", lehrkraft: "Woi", fach: "Deutsch", day: 1, stunde: "1./2. Stunde", raum: "W204", start: "07:40", end: "09:30" },
       { gruppe: "C", lehrkraft: "Woi", fach: "Deutsch", day: 3, stunde: "5./6. Stunde", raum: "W204", start: "11:20", end: "13:10" },
       { gruppe: "C", lehrkraft: "Woi", fach: "Deutsch", day: 5, stunde: "3./4. Stunde", raum: "W204", start: "09:30", end: "11:20" }
     ];
@@ -87,23 +87,26 @@
 
         // Berechne das nächste richtige Datum der Sitzung
         let daysUntilSession = (session.day - now.getDay() + 7) % 7;
-
-        // Falls der Tag heute ist und die Zeit bereits vorbei ist, dann wähle nächste Woche
-        if (daysUntilSession === 0 && now.getHours() >= parseInt(session.end.split(":")[0])) {
-          daysUntilSession = 7;
-        }
-
         sessionDate.setDate(now.getDate() + daysUntilSession);
         sessionDate.setHours(parseInt(session.start.split(":")[0]), parseInt(session.start.split(":")[1]), 0);
-        
+
+        // Prüfe, ob die Sitzung HEUTE ist und gerade läuft oder bereits vorbei ist
+        const sessionEnd = new Date(sessionDate);
+        sessionEnd.setHours(parseInt(session.end.split(":")[0]), parseInt(session.end.split(":")[1]), 0);
+
+        if (daysUntilSession === 0) { 
+          if (now >= sessionDate && now <= sessionEnd) {
+            session.isActive = true;
+          } else if (now > sessionEnd) {
+            sessionDate.setDate(sessionDate.getDate() + 7);
+          }
+        }
+
         session.sessionTime = sessionDate;
         return session;
       });
 
-      // Filtern, damit nur zukünftige Sitzungen berücksichtigt werden
-      upcomingSessions = upcomingSessions.filter(session => session.sessionTime > now);
-
-      // Sortiere nach der nächsten Sitzung
+      upcomingSessions = upcomingSessions.filter(session => session.sessionTime > now || session.isActive);
       upcomingSessions.sort((a, b) => a.sessionTime - b.sessionTime);
 
       return upcomingSessions.length > 0 ? upcomingSessions[0] : null;
@@ -112,22 +115,32 @@
     function updateStatus() {
       const nextSession = getNextSession();
       const nextSessionDiv = document.getElementById("next-session");
+      const now = new Date();
 
       if (nextSession) {
+        const sessionStart = new Date(nextSession.sessionTime);
+        const sessionEnd = new Date(sessionStart);
+        sessionEnd.setHours(parseInt(nextSession.end.split(":")[0]), parseInt(nextSession.end.split(":")[1]), 0);
+
+        const isActiveSession = now >= sessionStart && now <= sessionEnd;
+        
+        if (isActiveSession) {
+          isSimulationMode = true;
+        }
+
+        document.getElementById("status-title").textContent = isSimulationMode ? "Anschlussförderung aktiv 🔴" : "Keine Anschlussförderung ✅";
+        document.body.style.animation = isSimulationMode ? "pulseRed 3s infinite alternate" : "pulseGreen 3s infinite alternate";
+        document.getElementById("toggle-button").textContent = isSimulationMode ? "🔘 Live-Modus" : "🔘 Nächste Anschlussförderung";
+
         nextSessionDiv.innerHTML = `
           <strong>Nächste Förderung:</strong> ${nextSession.fach} (Gruppe ${nextSession.gruppe})<br>
           Zeit: ${nextSession.stunde} - ${nextSession.end}, Raum: ${nextSession.raum}<br>
         `;
       } else {
         nextSessionDiv.innerHTML = `<strong>Nächste Förderung:</strong> Keine weiteren Termine.`;
+        document.getElementById("status-title").textContent = "Keine Anschlussförderung ✅";
+        document.body.style.animation = "pulseGreen 3s infinite alternate";
       }
-    }
-
-    function toggleSimulation() {
-      isSimulationMode = !isSimulationMode;
-      document.body.style.animation = isSimulationMode ? "pulseRed 3s infinite alternate" : "pulseGreen 3s infinite alternate";
-      document.getElementById("toggle-button").textContent = isSimulationMode ? "🔘 Live-Modus" : "🔘 Nächste Anschlussförderung";
-      updateStatus();
     }
 
     updateStatus();
