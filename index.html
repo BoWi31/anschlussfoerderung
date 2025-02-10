@@ -72,55 +72,69 @@
       "C": ["Maja (6a)", "Melina (6a)", "Arina (6a)", "Tymofii (7.2)", "Emma (7.2)", "Ilyas (7.2)", "Ili (7.2)", "Sofia (7a)"]
     };
 
-    function getNextSession() {
-      const now = new Date();
-      let upcomingSessions = foerderzeiten.map(session => {
-        let sessionDate = new Date();
-        let daysUntilSession = (session.day - now.getDay() + 7) % 7;
-        
-        sessionDate.setDate(now.getDate() + daysUntilSession);
-        sessionDate.setHours(parseInt(session.start.split(":")[0]), parseInt(session.start.split(":")[1]), 0);
+   function getNextSession() {
+  const now = new Date();
+  let upcomingSessions = foerderzeiten.map(session => {
+    let sessionDate = new Date();
+    let daysUntilSession = (session.day - now.getDay() + 7) % 7;
+    
+    sessionDate.setDate(now.getDate() + daysUntilSession);
+    sessionDate.setHours(parseInt(session.start.split(":")[0]), parseInt(session.start.split(":")[1]), 0);
 
-        const sessionEnd = new Date(sessionDate);
-        sessionEnd.setHours(parseInt(session.end.split(":")[0]), parseInt(session.end.split(":")[1]), 0);
+    const sessionEnd = new Date(sessionDate);
+    sessionEnd.setHours(parseInt(session.end.split(":")[0]), parseInt(session.end.split(":")[1]), 0);
 
-        if (daysUntilSession === 0 && now > sessionEnd) {
-          sessionDate.setDate(sessionDate.getDate() + 7);
-        }
-
-        session.sessionTime = sessionDate;
-        return session;
-      });
-
-      upcomingSessions = upcomingSessions.filter(session => session.sessionTime > now);
-      upcomingSessions.sort((a, b) => a.sessionTime - b.sessionTime);
-
-      return upcomingSessions.length > 0 ? upcomingSessions[0] : null;
+    // Prüfe, ob die Sitzung gerade aktiv ist
+    if (daysUntilSession === 0 && now >= sessionDate && now <= sessionEnd) {
+      session.isActive = true;
+    } else if (daysUntilSession === 0 && now > sessionEnd) {
+      // Sitzung ist vorbei → auf nächste Woche verschieben
+      sessionDate.setDate(sessionDate.getDate() + 7);
     }
 
+    session.sessionTime = sessionDate;
+    return session;
+  });
+
+  // Behalte nur zukünftige Sitzungen oder aktive Sitzungen
+  upcomingSessions = upcomingSessions.filter(session => session.sessionTime > now || session.isActive);
+  
+  // Sortiere nach der nächsten Sitzung
+  upcomingSessions.sort((a, b) => a.sessionTime - b.sessionTime);
+
+  return upcomingSessions.length > 0 ? upcomingSessions[0] : null;
+}
+
     function updateStatus() {
-      const nextSession = getNextSession();
-      const schuelerListeDiv = document.getElementById("schueler-liste");
-      const now = new Date();
+  const nextSession = getNextSession();
+  const schuelerListeDiv = document.getElementById("schueler-liste");
+  const now = new Date();
 
-      if (nextSession) {
-        const sessionStart = new Date(nextSession.sessionTime);
-        const sessionEnd = new Date(sessionStart);
-        sessionEnd.setHours(parseInt(nextSession.end.split(":")[0]), parseInt(nextSession.end.split(":")[1]), 0);
+  if (nextSession) {
+    const sessionStart = new Date(nextSession.sessionTime);
+    const sessionEnd = new Date(sessionStart);
+    sessionEnd.setHours(parseInt(nextSession.end.split(":")[0]), parseInt(nextSession.end.split(":")[1]), 0);
 
-        const isActiveSession = now >= sessionStart && now <= sessionEnd;
+    const isActiveSession = now >= sessionStart && now <= sessionEnd;
 
-        document.getElementById("status-title").textContent = isActiveSession ? "Anschlussförderung aktiv 🔴" : "Keine Anschlussförderung ✅";
-        document.body.style.animation = isActiveSession ? "pulseRed 3s infinite alternate" : "pulseGreen 3s infinite alternate";
+    if (isActiveSession) {
+      document.getElementById("status-title").textContent = "Anschlussförderung aktiv 🔴";
+      document.body.style.animation = "pulseRed 3s infinite alternate";
+      
+      // Zeige die Schülerliste der aktiven Gruppe an
+      let schuelerListe = schuelerGruppen[nextSession.gruppe] || [];
+      let formattedSchuelerListe = `<strong>Schüler:</strong><br>${schuelerListe.join("<br>")}<br><br>`;
+      schuelerListeDiv.innerHTML = formattedSchuelerListe;
+      schuelerListeDiv.style.display = "block";
+    } else {
+      document.getElementById("status-title").textContent = "Keine Anschlussförderung ✅";
+      document.body.style.animation = "pulseGreen 3s infinite alternate";
+      schuelerListeDiv.innerHTML = "";
+      schuelerListeDiv.style.display = "none";
+    }
+  }
+}
 
-        if (isActiveSession) {
-          let schuelerListe = schuelerGruppen[nextSession.gruppe] || [];
-          let formattedSchuelerListe = `<strong>Schüler:</strong><br>${schuelerListe.join("<br>")}<br><br>`;
-          schuelerListeDiv.innerHTML = formattedSchuelerListe;
-          schuelerListeDiv.style.display = "block";
-        } else {
-          schuelerListeDiv.innerHTML = "";
-          schuelerListeDiv.style.display = "none";
         }
       }
     }
