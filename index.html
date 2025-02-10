@@ -38,44 +38,39 @@
         .next-session {
             font-size: 20px;
             font-weight: bold;
-            background-color: #f3f3f3;
+            background: linear-gradient(135deg, #007bff, #0056b3);
+            color: white;
+            border: none;
             padding: 15px;
             margin: 20px auto;
             width: 50%;
             border-radius: 10px;
             box-shadow: 2px 2px 10px rgba(0,0,0,0.1);
             cursor: pointer;
+            transition: opacity 0.3s;
         }
+        .next-session:hover { opacity: 0.8; }
     </style>
 </head>
 <body>
-    <h1 id="mainTitle" style="font-size: 32px; font-weight: bold; color: #333; text-transform: uppercase; margin-bottom: 20px;">Keine Anschlussförderung ✅</h1>
+    <h1 id="mainTitle" style="font-size: 36px; font-weight: bold; color: black; text-transform: uppercase; background-color: white; padding: 15px; border-radius: 10px; display: inline-block; box-shadow: 2px 2px 10px rgba(0,0,0,0.1);">Keine Anschlussförderung ✅</h1>
     <div id="alertBox" class="alert">Anschlussförderung aktiv!</div>
     <div id="groupInfo"></div>
-    <button id="nextSession" class="next-session" style="background: linear-gradient(135deg, #007bff, #0056b3); color: white; border: none; padding: 15px; font-size: 18px; font-weight: bold; transition: 0.3s;" onmouseover="this.style.opacity=0.8" onmouseout="this.style.opacity=1" onclick="toggleSimulation()">Nächste Anschlussförderung: Wird geladen...</button>
+    <button id="nextSession" class="next-session">Nächste Anschlussförderung: Wird geladen...</button>
+    
     <script>
         const schedule = [
             { teacher: "Can", group: "A", times: [
-                { day: 1, start: "09:30", end: "11:20" },
-                { day: 3, start: "11:20", end: "13:10" },
-                { day: 4, start: "09:30", end: "11:20" }
+                { day: 1, start: "09:30" },
+                { day: 3, start: "11:20" },
+                { day: 4, start: "09:30" }
             ], students: ["Alina (5.1)", "Daniil (6.1)", "Mohammed L. (6.1)", "Evelina (7.1)", "Beyar (7.2)", "Artur (7.2)", "Bahar (7a)"] },
             
             { teacher: "Tun", group: "B", times: [
-                { day: 2, start: "09:30", end: "11:20" },
-                { day: 4, start: "07:40", end: "09:30" },
-                { day: 5, start: "07:40", end: "09:30" }
-            ], students: ["Anastasia (5a)", "Krisztian (6.1)", "Selena (6a)", "Arzoo (7.1)", "Marin (7.1)", "Mohammed H. (7.1)"] },
-            
-            { teacher: "Woi", group: "C", times: [
-                { day: 1, start: "07:40", end: "09:30" },
-                { day: 3, start: "09:30", end: "11:20" },
-                { day: 5, start: "09:30", end: "11:20" }
-            ], students: ["Maja (6a)", "Arina (6a)", "Tymofii (7.2)", "Emma (7.2)", "Ilyas (7.2)", "Ili (7.2)", "Sofia (7a)"] },
-            
-            { teacher: "Beu", group: "D", times: [
-                { day: 2, start: "11:20", end: "13:10" }
-            ], students: ["Felix (5b)", "Lena (6b)", "Jonas (6c)"] }
+                { day: 2, start: "09:30" },
+                { day: 4, start: "07:40" },
+                { day: 5, start: "07:40" }
+            ], students: ["Anastasia (5a)", "Krisztian (6.1)", "Selena (6a)", "Arzoo (7.1)", "Marin (7.1)", "Mohammed H. (7.1)"] }
         ];
 
         let nextSession = null;
@@ -87,52 +82,58 @@
 
             schedule.forEach(group => {
                 group.times.forEach(time => {
-                    const sessionTime = new Date(now);
+                    let sessionTime = new Date();
                     sessionTime.setDate(now.getDate() + ((time.day - now.getDay() + 7) % 7));
-                    const [hours, minutes] = time.start.split(":").map(Number);
-                    sessionTime.setHours(hours);
-                    sessionTime.setMinutes(minutes);
+                    [hours, minutes] = time.start.split(":").map(Number);
+                    sessionTime.setHours(hours, minutes, 0);
                     
-                    sessionTime.setSeconds(0);
-
-                    if (sessionTime > now && (!nextSession || sessionTime < nextSession.time) && group.group !== "D") {
+                    if (sessionTime > now && (!nextSession || sessionTime < nextSession.time)) {
                         nextSession = { teacher: group.teacher, time: sessionTime, group: group.group, students: group.students };
                     }
                 });
             });
 
+            const btn = document.getElementById("nextSession");
             if (nextSession) {
-                document.getElementById("nextSession").innerHTML = `Nächste Anschlussförderung: ${nextSession.time.toLocaleString("de-DE", { weekday: 'long', hour: '2-digit', minute: '2-digit' })} (Gruppe ${nextSession.group} - ${nextSession.teacher})`;
+                btn.innerHTML = `Nächste Anschlussförderung: ${nextSession.time.toLocaleString('de-DE', { weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })} (Gruppe ${nextSession.group} - ${nextSession.teacher})`;
             } else {
-                document.getElementById("nextSession").innerHTML = "Keine weiteren Anschlussförderungen geplant.";
+                btn.innerHTML = "Keine weiteren Anschlussförderungen geplant.";
             }
         }
 
         function toggleSimulation() {
             simulatedMode = !simulatedMode;
+            document.body.style.animation = simulatedMode ? "pulseRed 3s infinite" : "pulseGreen 3s infinite";
+            document.getElementById("alertBox").style.display = simulatedMode ? "block" : "none";
+            document.getElementById("mainTitle").style.display = simulatedMode ? "none" : "block";
+            document.getElementById("nextSession").textContent = simulatedMode ? "Simulation stoppen" : "Nächste Anschlussförderung";
+            
             if (simulatedMode && nextSession) {
-                document.body.style.animation = "pulseRed 3s infinite";
-                document.getElementById("alertBox").style.display = "block";
-                document.getElementById("mainTitle").style.display = "none";
-                let sortedStudents = nextSession.students.sort();
-                let studentTable = `<h2>Lehrkraft: ${nextSession.teacher}</h2>
-                <table style='width: 60%; margin: auto; border-collapse: collapse;'>
-                <tr><th style='border-bottom: 2px solid #333; padding: 10px;'>Klasse</th><th style='border-bottom: 2px solid #333; padding: 10px;'>Schüler:in</th></tr>`;
-                sortedStudents.forEach(s => {
+                let groupedStudents = {};
+                nextSession.students.forEach(s => {
                     let [name, klasse] = s.split(" (");
                     klasse = klasse.replace(")", "");
-                    studentTable += `<tr><td style='padding: 10px; border-bottom: 1px solid #ccc;'>${klasse}</td><td style='padding: 10px; border-bottom: 1px solid #ccc;'>${name}</td></tr>`;
+                    if (!groupedStudents[klasse]) groupedStudents[klasse] = [];
+                    groupedStudents[klasse].push(name);
+                });
+                let sortedClasses = Object.keys(groupedStudents).sort();
+                let studentTable = `<h2>Lehrkraft: ${nextSession.teacher}</h2>
+                <table style='width: 60%; margin: auto; border-collapse: collapse; border: 2px solid white; background-color: white; box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.2);'>
+                <tr><th>Klasse</th><th>Schüler:in</th></tr>`;
+                sortedClasses.forEach(klasse => {
+                    groupedStudents[klasse].sort().forEach(name => {
+                        studentTable += `<tr><td>${klasse}</td><td>${name}</td></tr>`;
+                    });
                 });
                 studentTable += "</table>";
                 document.getElementById("groupInfo").innerHTML = studentTable;
             } else {
-                document.body.style.animation = "pulseGreen 3s infinite";
-                document.getElementById("alertBox").style.display = "none";
-                document.getElementById("mainTitle").style.display = "block";
                 document.getElementById("groupInfo").innerHTML = "";
+                findNextSession();
             }
         }
 
+        document.getElementById("nextSession").addEventListener("click", toggleSimulation);
         findNextSession();
     </script>
 </body>
