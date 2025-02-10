@@ -41,18 +41,6 @@
       width: 90%;
       text-align: center;
     }
-    button {
-      background-color: #007bff;
-      color: white;
-      border: none;
-      padding: 12px 18px;
-      border-radius: 5px;
-      cursor: pointer;
-      font-size: 1em;
-      position: fixed;
-      bottom: 20px;
-      right: 20px;
-    }
   </style>
 </head>
 <body>
@@ -64,7 +52,7 @@
     </div>
     <div id="schueler-liste" style="display: none;"></div>
   </div>
-  <button id="toggle-button" onclick="toggleSimulation()">🔘 Nächste Anschlussförderung</button>
+
   <script>
     const foerderzeiten = [
       { gruppe: "A", lehrkraft: "Can", fach: "Deutsch", day: 1, stunde: "3./4. Stunde", raum: "W204", start: "09:30", end: "11:20" }, 
@@ -84,6 +72,32 @@
       "C": ["Maja (6a)", "Melina (6a)", "Arina (6a)", "Tymofii (7.2)", "Emma (7.2)", "Ilyas (7.2)", "Ili (7.2)", "Sofia (7a)"]
     };
 
+    function getNextSession() {
+      const now = new Date();
+      let upcomingSessions = foerderzeiten.map(session => {
+        let sessionDate = new Date();
+        let daysUntilSession = (session.day - now.getDay() + 7) % 7;
+        
+        sessionDate.setDate(now.getDate() + daysUntilSession);
+        sessionDate.setHours(parseInt(session.start.split(":")[0]), parseInt(session.start.split(":")[1]), 0);
+
+        const sessionEnd = new Date(sessionDate);
+        sessionEnd.setHours(parseInt(session.end.split(":")[0]), parseInt(session.end.split(":")[1]), 0);
+
+        if (daysUntilSession === 0 && now > sessionEnd) {
+          sessionDate.setDate(sessionDate.getDate() + 7);
+        }
+
+        session.sessionTime = sessionDate;
+        return session;
+      });
+
+      upcomingSessions = upcomingSessions.filter(session => session.sessionTime > now);
+      upcomingSessions.sort((a, b) => a.sessionTime - b.sessionTime);
+
+      return upcomingSessions.length > 0 ? upcomingSessions[0] : null;
+    }
+
     function updateStatus() {
       const nextSession = getNextSession();
       const schuelerListeDiv = document.getElementById("schueler-liste");
@@ -95,12 +109,11 @@
         sessionEnd.setHours(parseInt(nextSession.end.split(":")[0]), parseInt(nextSession.end.split(":")[1]), 0);
 
         const isActiveSession = now >= sessionStart && now <= sessionEnd;
-        
-        if (isActiveSession) {
-          isSimulationMode = true;
-        }
 
-        if (isSimulationMode) {
+        document.getElementById("status-title").textContent = isActiveSession ? "Anschlussförderung aktiv 🔴" : "Keine Anschlussförderung ✅";
+        document.body.style.animation = isActiveSession ? "pulseRed 3s infinite alternate" : "pulseGreen 3s infinite alternate";
+
+        if (isActiveSession) {
           let schuelerListe = schuelerGruppen[nextSession.gruppe] || [];
           let formattedSchuelerListe = `<strong>Schüler:</strong><br>${schuelerListe.join("<br>")}<br><br>`;
           schuelerListeDiv.innerHTML = formattedSchuelerListe;
@@ -109,8 +122,6 @@
           schuelerListeDiv.innerHTML = "";
           schuelerListeDiv.style.display = "none";
         }
-      } else {
-        schuelerListeDiv.style.display = "none";
       }
     }
 
