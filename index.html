@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Anschlussförderung</title>
-  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet"> 
   <style>
     :root {
       --color-live-bg: #28a745;
@@ -107,18 +107,24 @@
         schuelerListeDiv.style.display = isSimulationMode ? "block" : "none";
 
         if (isSimulationMode) {
-          let formattedList = `<strong>Schüler:</strong><br>`;
-          schuelerGruppen[nextSession.gruppe].forEach(s => {
-            formattedList += `${s}<br>`;
-          });
+          let groupedSchueler = schuelerGruppen[nextSession.gruppe]
+            .map(s => s.split(" ("))
+            .reduce((acc, [name, klasse]) => {
+              klasse = klasse.replace(")", "");
+              if (!acc[klasse]) acc[klasse] = [];
+              acc[klasse].push(name);
+              return acc;
+            }, {});
+
+          let formattedList = "<strong>Schüler:</strong><br>";
+          for (const [klasse, names] of Object.entries(groupedSchueler)) {
+            formattedList += `<strong>Klasse ${klasse}:</strong><br>${names.join("<br>")}<br><br>`;
+          }
+
           schuelerListeDiv.innerHTML = formattedList;
         } else {
           schuelerListeDiv.innerHTML = "";
         }
-      } else {
-        nextSessionDiv.innerHTML = `<strong>Nächste Förderung:</strong> Keine weiteren Termine.`;
-        document.getElementById("status-title").textContent = "Keine Anschlussförderung ✅";
-        schuelerListeDiv.style.display = "none";
       }
     }
 
