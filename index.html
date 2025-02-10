@@ -1,132 +1,139 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Anschlussförderung</title>
-  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet"> 
-  <style>
-    :root {
-      --color-live-bg: #28a745;
-      --color-simulation-bg: #dc3545;
-    }
-    body {
-      font-family: 'Roboto', sans-serif;
-      margin: 0;
-      padding: 0;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      flex-direction: column;
-      min-height: 100vh;
-      background-color: var(--color-live-bg);
-      animation: pulseGreen 3s infinite alternate;
-      transition: background-color 0.5s ease;
-    }
-    @keyframes pulseGreen {
-      0% { background-color: #28a745; }
-      100% { background-color: #34d058; }
-    }
-    @keyframes pulseRed {
-      0% { background-color: #dc3545; }
-      100% { background-color: #ff4d4d; }
-    }
-    .status-container {
-      background: white;
-      color: #212529;
-      padding: 2em;
-      border-radius: 10px;
-      box-shadow: 0 8px 15px rgba(0,0,0,0.2);
-      max-width: 650px;
-      width: 90%;
-      text-align: center;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Keine Anschlussförderung</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            transition: background-color 1s ease-in-out;
+            animation: pulseGreen 3s infinite;
+        }
+
+        @keyframes pulseGreen {
+            0% { background-color: #5cb85c; }
+            50% { background-color: #4cae4c; }
+            100% { background-color: #5cb85c; }
+        }
+
+        @keyframes pulseRed {
+            0% { background-color: #ff6961; }
+            50% { background-color: #ff8782; }
+            100% { background-color: #ff6961; }
+        }
+
+        .alert {
+            display: none;
+            font-size: 24px;
+            font-weight: bold;
+            color: white;
+            background-color: red;
+            padding: 20px;
+            margin: 20px;
+            border-radius: 10px;
+        }
+
+        .next-session {
+            font-size: 20px;
+            font-weight: bold;
+            background-color: #f3f3f3;
+            padding: 15px;
+            margin: 20px auto;
+            width: 50%;
+            border-radius: 10px;
+            box-shadow: 2px 2px 10px rgba(0,0,0,0.1);
+            cursor: pointer;
+        }
+    </style>
 </head>
 <body>
-  <div class="status-container" id="status-container">
-    <h1 id="status-title">Keine Anschlussförderung ✅</h1>
-    <div id="next-session">
-      <strong>Nächste Förderung:</strong> Wird geladen...
-      <div id="countdown"></div>
-    </div>
-    <div id="schueler-liste" style="display: none;"></div>
-  </div>
+    <h1 id="mainTitle" style="font-size: 32px; font-weight: bold; color: #333; text-transform: uppercase; margin-bottom: 20px;">Keine Anschlussförderung ✅</h1>
+    <div id="alertBox" class="alert">Anschlussförderung aktiv!</div>
+    <div id="groupInfo"></div>
+    <button id="nextSession" class="next-session" style="background: linear-gradient(135deg, #007bff, #0056b3); color: white; border: none; padding: 15px; font-size: 18px; font-weight: bold; transition: 0.3s;" onmouseover="this.style.opacity=0.8" onmouseout="this.style.opacity=1" onclick="toggleSimulation()">Nächste Anschlussförderung: Wird geladen...</button>
+    <script>
+        const schedule = [
+            { teacher: "Can", group: "A", times: [
+                { day: 1, start: "09:30", end: "11:20" },
+                { day: 3, start: "11:20", end: "13:10" },
+                { day: 4, start: "09:30", end: "11:20" }
+            ], students: ["Alina (5.1)", "Daniil (6.1)", "Mohammed L. (6.1)", "Evelina (7.1)", "Beyar (7.2)", "Artur (7.2)", "Bahar (7a)"] },
+            
+            { teacher: "Tun", group: "B", times: [
+                { day: 2, start: "09:30", end: "11:20" },
+                { day: 4, start: "07:40", end: "09:30" },
+                { day: 5, start: "07:40", end: "09:30" }
+            ], students: ["Anastasia (5a)", "Krisztian (6.1)", "Selena (6a)", "Arzoo (7.1)", "Marin (7.1)", "Mohammed H. (7.1)"] },
+            
+            { teacher: "Woi", group: "C", times: [
+                { day: 1, start: "07:40", end: "09:30" },
+                { day: 3, start: "09:30", end: "11:20" },
+                { day: 5, start: "09:30", end: "11:20" }
+            ], students: ["Maja (6a)", "Arina (6a)", "Tymofii (7.2)", "Emma (7.2)", "Ilyas (7.2)", "Ili (7.2)", "Sofia (7a)"] },
+            
+            { teacher: "Beu", group: "D", times: [
+                { day: 2, start: "11:20", end: "13:10" }
+            ], students: ["Felix (5b)", "Lena (6b)", "Jonas (6c)"] }
+        ];
 
-  <script>
-    const foerderzeiten = [
-      { gruppe: "A", lehrkraft: "Can", fach: "Deutsch", day: 1, stunde: "1./2. Stunde", raum: "W204", start: "07:40", end: "09:30" },
-      { gruppe: "A", lehrkraft: "Can", fach: "Deutsch", day: 3, stunde: "3./4. Stunde", raum: "W204", start: "09:30", end: "11:20" },
-      { gruppe: "A", lehrkraft: "Can", fach: "Deutsch", day: 4, stunde: "5./6. Stunde", raum: "W204", start: "11:20", end: "13:10" },
-      { gruppe: "B", lehrkraft: "Tun", fach: "Deutsch", day: 2, stunde: "3./4. Stunde", raum: "W204", start: "09:30", end: "11:20" },
-      { gruppe: "B", lehrkraft: "Tun", fach: "Deutsch", day: 4, stunde: "1./2. Stunde", raum: "W204", start: "07:40", end: "09:30" },
-      { gruppe: "B", lehrkraft: "Tun", fach: "Deutsch", day: 5, stunde: "1./2. Stunde", raum: "W204", start: "07:40", end: "09:30" },
-      { gruppe: "C", lehrkraft: "Woi", fach: "Deutsch", day: 1, stunde: "3./4. Stunde", raum: "W204", start: "09:30", end: "11:20" },
-      { gruppe: "C", lehrkraft: "Woi", fach: "Deutsch", day: 3, stunde: "5./6. Stunde", raum: "W204", start: "11:20", end: "13:10" },
-      { gruppe: "C", lehrkraft: "Woi", fach: "Deutsch", day: 5, stunde: "3./4. Stunde", raum: "W204", start: "09:30", end: "11:20" }
-    ];
+        let nextSession = null;
+        let simulatedMode = false;
 
-    const schuelerGruppen = {
-      "A": ["Alina (5.1)", "Daniil (6.1)", "Mohammed L. (6.1)", "Evelina (7.1)", "Beyar (7.2)", "Artur (7.2)", "Bahar (7a)"],
-      "B": ["Anastasia (5a)", "Krisztian (6.1)", "Selena (6a)", "Arzoo (7.1)", "Marin (7.1)", "Mohammed H. (7.1)", "Neijla (7a)"],
-      "C": ["Maja (6a)", "Melina (6a)", "Arina (6a)", "Tymofii (7.2)", "Emma (7.2)", "Ilyas (7.2)", "Ili (7.2)", "Sofia (7a)"]
-    };
+        function findNextSession() {
+            const now = new Date();
+            nextSession = null;
 
-    function getNextSession() {
-      const now = new Date();
-      let upcomingSessions = foerderzeiten.map(session => {
-        let sessionDate = new Date();
-        let daysUntilSession = (session.day - now.getDay() + 7) % 7;
-        
-        sessionDate.setDate(now.getDate() + daysUntilSession);
-        sessionDate.setHours(parseInt(session.start.split(":")[0]), parseInt(session.start.split(":")[1]), 0);
+            schedule.forEach(group => {
+                group.times.forEach(time => {
+                    const sessionTime = new Date(now);
+                    sessionTime.setDate(now.getDate() + ((time.day - now.getDay() + 7) % 7));
+                    const [hours, minutes] = time.start.split(":").map(Number);
+                    sessionTime.setHours(hours);
+                    sessionTime.setMinutes(minutes);
+                    
+                    sessionTime.setSeconds(0);
 
-        const sessionEnd = new Date(sessionDate);
-        sessionEnd.setHours(parseInt(session.end.split(":")[0]), parseInt(session.end.split(":")[1]), 0);
+                    if (sessionTime > now && (!nextSession || sessionTime < nextSession.time) && group.group !== "D") {
+                        nextSession = { teacher: group.teacher, time: sessionTime, group: group.group, students: group.students };
+                    }
+                });
+            });
 
-        if (daysUntilSession === 0 && now > sessionEnd) {
-          sessionDate.setDate(sessionDate.getDate() + 7);
+            if (nextSession) {
+                document.getElementById("nextSession").innerHTML = `Nächste Anschlussförderung: ${nextSession.time.toLocaleString("de-DE", { weekday: 'long', hour: '2-digit', minute: '2-digit' })} (Gruppe ${nextSession.group} - ${nextSession.teacher})`;
+            } else {
+                document.getElementById("nextSession").innerHTML = "Keine weiteren Anschlussförderungen geplant.";
+            }
         }
 
-        session.sessionTime = sessionDate;
-        return session;
-      });
-
-      upcomingSessions = upcomingSessions.filter(session => session.sessionTime > now);
-      upcomingSessions.sort((a, b) => a.sessionTime - b.sessionTime);
-
-      return upcomingSessions.length > 0 ? upcomingSessions[0] : null;
-    }
-
-    function updateStatus() {
-      const nextSession = getNextSession();
-      const schuelerListeDiv = document.getElementById("schueler-liste");
-      const now = new Date();
-
-      if (nextSession) {
-        const sessionStart = new Date(nextSession.sessionTime);
-        const sessionEnd = new Date(sessionStart);
-        sessionEnd.setHours(parseInt(nextSession.end.split(":")[0]), parseInt(nextSession.end.split(":")[1]), 0);
-
-        const isActiveSession = now >= sessionStart && now <= sessionEnd;
-
-        document.getElementById("status-title").textContent = isActiveSession ? "Anschlussförderung aktiv 🔴" : "Keine Anschlussförderung ✅";
-        document.body.style.animation = isActiveSession ? "pulseRed 3s infinite alternate" : "pulseGreen 3s infinite alternate";
-
-        if (isActiveSession) {
-          let schuelerListe = schuelerGruppen[nextSession.gruppe] || [];
-          let formattedSchuelerListe = `<strong>Schüler:</strong><br>${schuelerListe.join("<br>")}<br><br>`;
-          schuelerListeDiv.innerHTML = formattedSchuelerListe;
-          schuelerListeDiv.style.display = "block";
-        } else {
-          schuelerListeDiv.innerHTML = "";
-          schuelerListeDiv.style.display = "none";
+        function toggleSimulation() {
+            simulatedMode = !simulatedMode;
+            if (simulatedMode && nextSession) {
+                document.body.style.animation = "pulseRed 3s infinite";
+                document.getElementById("alertBox").style.display = "block";
+                document.getElementById("mainTitle").style.display = "none";
+                let sortedStudents = nextSession.students.sort();
+                let studentTable = `<h2>Lehrkraft: ${nextSession.teacher}</h2>
+                <table style='width: 60%; margin: auto; border-collapse: collapse;'>
+                <tr><th style='border-bottom: 2px solid #333; padding: 10px;'>Klasse</th><th style='border-bottom: 2px solid #333; padding: 10px;'>Schüler:in</th></tr>`;
+                sortedStudents.forEach(s => {
+                    let [name, klasse] = s.split(" (");
+                    klasse = klasse.replace(")", "");
+                    studentTable += `<tr><td style='padding: 10px; border-bottom: 1px solid #ccc;'>${klasse}</td><td style='padding: 10px; border-bottom: 1px solid #ccc;'>${name}</td></tr>`;
+                });
+                studentTable += "</table>";
+                document.getElementById("groupInfo").innerHTML = studentTable;
+            } else {
+                document.body.style.animation = "pulseGreen 3s infinite";
+                document.getElementById("alertBox").style.display = "none";
+                document.getElementById("mainTitle").style.display = "block";
+                document.getElementById("groupInfo").innerHTML = "";
+            }
         }
-      }
-    }
 
-    updateStatus();
-    setInterval(updateStatus, 60000);
-  </script>
+        findNextSession();
+    </script>
 </body>
 </html>
