@@ -84,11 +84,13 @@
               students: ["Alle Sprachjongleure"] }
         ];
 
+        let nextSession = null;
+
         function checkSessionStatus() {
             const now = new Date();
             let currentSession = null;
             let warningSession = null;
-            let nextSession = null;
+            nextSession = null;
 
             schedule.forEach(group => {
                 group.times.forEach(time => {
@@ -104,7 +106,7 @@
 
                     if (now >= sessionStart && now <= sessionEnd) {
                         currentSession = group;
-                    } else if (now >= warningTime && now < sessionStart) {
+                    } else if (!currentSession && now >= warningTime && now < sessionStart) {
                         warningSession = group;
                     } else if (!nextSession || sessionStart < nextSession.time) {
                         nextSession = { teacher: group.teacher, time: sessionStart, group: group.group, students: group.students };
@@ -118,6 +120,8 @@
 
             document.getElementById("nextSessionBtn").innerText = nextSession ? `Nächste AF: ${nextSession.time.toLocaleString('de-DE', { weekday: 'long', hour: '2-digit', minute: '2-digit' })} - Gruppe ${nextSession.group} (${nextSession.teacher})` : "";
             document.getElementById("nextSessionBtn").style.display = nextSession ? "block" : "none";
+
+            document.getElementById("nextSessionBtn").onclick = () => document.getElementById("groupInfo").innerHTML = formatStudents(nextSession.students);
         }
 
         function formatStudents(students) {
