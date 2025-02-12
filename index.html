@@ -10,8 +10,7 @@
             text-align: center;
             margin: 0;
             padding: 20px;
-            transition: background-color 0.5s ease-in-out;
-            background-color: #5cb85c; /* Standard: Grün */
+            transition: background-color 1s ease-in-out;
         }
 
         h1 {
@@ -65,23 +64,26 @@
         .btn:hover { opacity: 0.9; transform: scale(1.05); }
         .btn:active { transform: scale(0.98); }
 
-        .hidden { display: none; }
+        .status-green { background-color: #5cb85c; } 
+        .status-yellow { background-color: #ffcc00; } 
+        .status-red { background-color: #ff6961; } 
+
+        .left-align { text-align: left; padding-left: 20px; }
     </style>
 </head>
-<body>
+<body id="pageBody">
     <div class="box">
         <h1 id="mainTitle">Keine Anschlussförderung ✅</h1>
     </div>
 
     <div id="clock">--:--:--</div>
     
-    <div class="box hidden" id="groupInfoBox">
+    <div class="box">
         <div id="groupInfo"></div>
-        <button class="btn" onclick="hideGroupInfo()">Schließen</button>
     </div>
 
     <div class="button-container">
-        <button id="nextSessionBtn" class="btn hidden" onclick="showGroupInfo()"></button>
+        <button id="nextSessionBtn" class="btn" style="display:none;"></button>
     </div>
 
     <script>
@@ -113,8 +115,8 @@
             schedule.forEach(group => {
                 group.times.forEach(time => {
                     let sessionStart = new Date();
-                    sessionStart.setHours(...time.start.split(":").map(Number), 0, 0);
                     sessionStart.setDate(now.getDate() + ((time.day - now.getDay() + 7) % 7));
+                    sessionStart.setHours(...time.start.split(":").map(Number), 0, 0);
 
                     let sessionEnd = new Date(sessionStart);
                     sessionEnd.setHours(...time.end.split(":").map(Number), 0, 0);
@@ -132,22 +134,16 @@
                 });
             });
 
-            if (activeSession) {
-                document.body.style.backgroundColor = "#ff6961"; // Rot
-                document.getElementById("mainTitle").innerText = "Anschlussförderung aktiv 🔴";
-            } else if (warningSession) {
-                document.body.style.backgroundColor = "#ffcc00"; // Gelb
-                document.getElementById("mainTitle").innerText = "Achtung: Bald AF ⚠️";
-            } else {
-                document.body.style.backgroundColor = "#5cb85c"; // Grün
-                document.getElementById("mainTitle").innerText = "Keine Anschlussförderung ✅";
-            }
+            document.body.className = activeSession ? "status-red" : warningSession ? "status-yellow" : "status-green";
+            document.getElementById("mainTitle").innerText = activeSession ? "Anschlussförderung aktiv 🔴" : warningSession ? "Achtung: Bald AF ⚠️" : "Keine Anschlussförderung ✅";
 
-            if (nextSession && nextSession.time > now) {
-                document.getElementById("nextSessionBtn").innerText = `Nächste AF: ${nextSession.time.toLocaleDateString('de-DE', { weekday: 'long' })} ${nextSession.time.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })} - Gruppe ${nextSession.group} (${nextSession.teacher})`;
-                document.getElementById("nextSessionBtn").classList.remove("hidden");
+            if (activeSession) {
+                document.getElementById("groupInfo").innerHTML = `<h3>Schüler:innen der aktuellen AF</h3><p class="left-align">${activeSession.students.join("<br>")}</p>`;
+            } else if (nextSession) {
+                document.getElementById("nextSessionBtn").innerText = `Nächste AF: ${nextSession.time.toLocaleString('de-DE', { weekday: 'long', hour: '2-digit', minute: '2-digit' })} - Gruppe ${nextSession.group} (${nextSession.teacher})`;
+                document.getElementById("nextSessionBtn").style.display = "block";
             } else {
-                document.getElementById("nextSessionBtn").classList.add("hidden");
+                document.getElementById("nextSessionBtn").style.display = "none";
             }
         }
 
