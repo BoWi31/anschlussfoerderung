@@ -101,6 +101,13 @@
               students: ["Alle Sprachjongleure"] }
         ];
 
+        let overviewVisible = false;
+
+        function updateClock() {
+            const now = new Date();
+            document.getElementById("clock").innerText = now.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        }
+
         function getNextSession() {
             const now = new Date();
             let nextSession = null;
@@ -123,7 +130,6 @@
         function updateDisplay() {
             const nextSession = getNextSession();
             const now = new Date();
-
             let warningTime = null;
             let activeSession = null;
 
@@ -148,7 +154,12 @@
             }
         }
 
-        setInterval(updateDisplay, 1000);
+        document.getElementById("overviewBtn").onclick = () => {
+            overviewVisible = !overviewVisible;
+            document.getElementById("groupInfo").innerHTML = overviewVisible ? "<h3>Übersicht</h3><p>Alle Gruppen & Schüler:innen</p>" : "";
+        };
+
+        setInterval(updateClock, 1000);
         updateDisplay();
     </script>
 </body>
