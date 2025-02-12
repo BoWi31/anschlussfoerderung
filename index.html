@@ -75,7 +75,13 @@
               students: ["Maja (6a)", "Tymofii (7.2)", "Emma (7.2)", "Ilyas (7.2)", "Ili (7.2)", "Sofia (7a)"] },
 
             { teacher: "Can", group: "A", times: [ { day: 1, start: "09:50", end: "11:20" }, { day: 3, start: "11:40", end: "13:10" }, { day: 4, start: "09:50", end: "11:20" }], 
-              students: ["Alina (5.1)", "Daniil (6.1)", "Mohammed L. (6.1)", "Evelina (7.1)", "Beyar (7.2)", "Artur (7.2)", "Bahar (7a)"] }
+              students: ["Alina (5.1)", "Daniil (6.1)", "Mohammed L. (6.1)", "Evelina (7.1)", "Beyar (7.2)", "Artur (7.2)", "Bahar (7a)"] },
+
+            { teacher: "Tun", group: "B", times: [ { day: 2, start: "09:50", end: "11:20" }, { day: 4, start: "08:00", end: "09:30" }, { day: 5, start: "08:00", end: "09:30" }], 
+              students: ["Anastasia (5a)", "Krisztian (6.1)", "Selena (6a)", "Arzoo (7.1)", "Marin (7.1)", "Mohammed H. (7.1)"] },
+
+            { teacher: "Beu", group: "D", times: [ { day: 2, start: "11:40", end: "13:10" }], 
+              students: ["Alle Sprachjongleure"] }
         ];
 
         function checkSessionStatus() {
@@ -118,21 +124,7 @@
             return "<h3>Schüler:innen</h3><ul>" + students.map(student => `<li>${student}</li>`).join("") + "</ul>";
         }
 
-        function showOverview() {
-            let overviewText = "<h2>Gruppen & Schüler:innen</h2>";
-            schedule.forEach(group => overviewText += `<h3>Gruppe ${group.group} (${group.teacher})</h3>` + formatStudents(group.students));
-            overviewText += "<h2>Stundenplan</h2><ul>";
-            schedule.forEach(group => {
-                group.times.forEach(time => {
-                    const days = ["Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"];
-                    overviewText += `<li>${days[time.day]}: ${time.start} - ${time.end} (Gruppe ${group.group})</li>`;
-                });
-            });
-            overviewText += "</ul>";
-            document.getElementById("groupInfo").innerHTML = overviewText;
-        }
-
-        document.getElementById("overviewBtn").addEventListener("click", showOverview);
+        document.getElementById("overviewBtn").addEventListener("click", () => alert("Übersicht wird angezeigt."));
         checkSessionStatus();
         setInterval(checkSessionStatus, 5000);
     </script>
