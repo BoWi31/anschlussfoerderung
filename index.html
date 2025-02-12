@@ -67,6 +67,8 @@
         .status-green { background-color: #5cb85c; } 
         .status-yellow { background-color: #ffcc00; } 
         .status-red { background-color: #ff6961; } 
+
+        .left-align { text-align: left; padding-left: 20px; }
     </style>
 </head>
 <body id="pageBody">
@@ -107,8 +109,8 @@
 
         function updateDisplay() {
             const now = new Date();
-            let nextSession = null;
             let activeSession = null;
+            let nextSession = null;
             let warningSession = null;
 
             schedule.forEach(group => {
@@ -136,11 +138,11 @@
             document.body.className = activeSession ? "status-red" : warningSession ? "status-yellow" : "status-green";
             document.getElementById("mainTitle").innerText = activeSession ? "Anschlussförderung aktiv 🔴" : warningSession ? "Achtung: Bald AF ⚠️" : "Keine Anschlussförderung ✅";
 
-            if (nextSession) {
+            if (activeSession) {
+                document.getElementById("groupInfo").innerHTML = `<h3>Schüler:innen der aktuellen AF</h3><p class="left-align">${activeSession.students.join("<br>")}</p>`;
+            } else if (nextSession) {
                 document.getElementById("nextSessionBtn").innerText = `Nächste AF: ${nextSession.time.toLocaleString('de-DE', { weekday: 'long', hour: '2-digit', minute: '2-digit' })} - Gruppe ${nextSession.group} (${nextSession.teacher})`;
                 document.getElementById("nextSessionBtn").style.display = "block";
-            } else {
-                document.getElementById("nextSessionBtn").style.display = "none";
             }
         }
 
