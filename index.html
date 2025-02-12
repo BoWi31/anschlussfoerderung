@@ -116,6 +116,8 @@
               students: ["Alle Sprachjongleure"] }
         ];
 
+        let overviewVisible = false;
+
         function updateClock() {
             const now = new Date();
             document.getElementById("clock").innerText = now.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
@@ -157,22 +159,19 @@
         }
 
         document.getElementById("overviewBtn").onclick = () => {
-            let overviewHtml = "<h3>Übersicht</h3>";
+            if (!overviewVisible) {
+                let overviewHtml = "<h3>Übersicht</h3>";
 
-            schedule.forEach(group => {
-                overviewHtml += `<h4>Gruppe ${group.group} (${group.teacher})</h4><ul>${group.students.map(s => `<li>${s}</li>`).join("")}</ul>`;
-            });
-
-            overviewHtml += "<h3>Stundenplan</h3><table><tr><th>Wochentag</th><th>Uhrzeit</th><th>Gruppe</th></tr>";
-
-            schedule.forEach(group => {
-                group.times.forEach(time => {
-                    overviewHtml += `<tr><td>${["Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"][time.day]}</td><td>${time.start} - ${time.end}</td><td>Gruppe ${group.group}</td></tr>`;
+                schedule.forEach(group => {
+                    overviewHtml += `<h4>Gruppe ${group.group} (${group.teacher})</h4><ul>${group.students.map(s => `<li>${s}</li>`).join("")}</ul>`;
                 });
-            });
 
-            overviewHtml += "</table>";
-            document.getElementById("groupInfo").innerHTML = overviewHtml;
+                document.getElementById("groupInfo").innerHTML = overviewHtml;
+                overviewVisible = true;
+            } else {
+                document.getElementById("groupInfo").innerHTML = "";
+                overviewVisible = false;
+            }
         };
 
         setInterval(updateClock, 1000);
