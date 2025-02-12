@@ -19,7 +19,7 @@
 
         .btn { font-size: 18px; font-weight: bold; background: linear-gradient(135deg, #007bff, #0056b3); color: white; border: none; padding: 12px; margin: 10px auto; width: 90%; max-width: 400px; border-radius: 10px; cursor: pointer; transition: opacity 0.3s; }
         .btn:hover { opacity: 0.8; }
-        
+
         .box {
             background-color: white;
             padding: 15px;
@@ -124,9 +124,8 @@
             return "<h3>Schüler:innen</h3><ul>" + students.map(student => `<li>${student}</li>`).join("") + "</ul>";
         }
 
-        document.getElementById("overviewBtn").addEventListener("click", () => alert("Übersicht wird angezeigt."));
+        setInterval(checkSessionStatus, 1000);
         checkSessionStatus();
-        setInterval(checkSessionStatus, 5000);
     </script>
 </body>
 </html>
