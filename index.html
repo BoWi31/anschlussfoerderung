@@ -85,6 +85,8 @@
         ];
 
         let nextSession = null;
+        let nextSessionVisible = false;
+        let overviewVisible = false;
 
         function checkSessionStatus() {
             const now = new Date();
@@ -116,17 +118,28 @@
 
             document.body.style.animation = currentSession ? "pulseRed 3s infinite" : warningSession ? "pulseYellow 3s infinite" : "pulseGreen 3s infinite";
             document.getElementById("mainTitle").innerText = currentSession ? "Anschlussförderung aktiv 🔴" : warningSession ? "Achtung: Gleich Anschlussförderung ⚠️" : "Keine Anschlussförderung ✅";
-            document.getElementById("groupInfo").innerHTML = currentSession ? formatStudents(currentSession.students) : warningSession ? formatStudents(warningSession.students) : "";
+
+            if (!nextSessionVisible && !overviewVisible) {
+                document.getElementById("groupInfo").innerHTML = currentSession ? formatStudents(currentSession.students) : warningSession ? formatStudents(warningSession.students) : "";
+            }
 
             document.getElementById("nextSessionBtn").innerText = nextSession ? `Nächste AF: ${nextSession.time.toLocaleString('de-DE', { weekday: 'long', hour: '2-digit', minute: '2-digit' })} - Gruppe ${nextSession.group} (${nextSession.teacher})` : "";
             document.getElementById("nextSessionBtn").style.display = nextSession ? "block" : "none";
-
-            document.getElementById("nextSessionBtn").onclick = () => document.getElementById("groupInfo").innerHTML = formatStudents(nextSession.students);
         }
 
         function formatStudents(students) {
             return "<h3>Schüler:innen</h3><ul>" + students.map(student => `<li>${student}</li>`).join("") + "</ul>";
         }
+
+        document.getElementById("nextSessionBtn").onclick = () => {
+            nextSessionVisible = !nextSessionVisible;
+            document.getElementById("groupInfo").innerHTML = nextSessionVisible ? formatStudents(nextSession.students) : "";
+        };
+
+        document.getElementById("overviewBtn").onclick = () => {
+            overviewVisible = !overviewVisible;
+            document.getElementById("groupInfo").innerHTML = overviewVisible ? "<h3>Übersicht</h3><p>Hier kommt die Übersicht</p>" : "";
+        };
 
         setInterval(checkSessionStatus, 1000);
         checkSessionStatus();
