@@ -5,72 +5,83 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Anschlussförderung - Dashboard</title>
     <style>
+        /* Allgemeine Styles */
         body {
             font-family: 'Arial', sans-serif;
             text-align: center;
             margin: 0;
             padding: 20px;
             transition: background-color 0.5s ease-in-out;
-            background-color: #5cb85c; /* Standard: Grün */
+            background-color: #4CAF50; /* Standard: Grün */
+            color: white;
         }
 
         h1 {
-            font-size: 22px;
+            font-size: 24px;
             font-weight: bold;
             text-transform: uppercase;
-            margin-bottom: 10px;
-            max-width: 90%;
-            display: inline-block;
-            word-break: break-word;
-            line-height: 1.2;
+            margin-bottom: 15px;
         }
 
         #clock {
-            font-size: 24px;
+            font-size: 26px;
             font-weight: bold;
-            background: #fff;
-            padding: 10px;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 12px;
             border-radius: 8px;
             display: inline-block;
             margin-bottom: 15px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
         }
 
+        /* Box-Design */
         .box {
-            background-color: white;
-            padding: 15px;
-            margin: 10px auto;
-            border-radius: 12px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            background-color: rgba(255, 255, 255, 0.15);
+            padding: 20px;
+            margin: 15px auto;
+            border-radius: 16px;
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
             max-width: 600px;
             text-align: center;
+            backdrop-filter: blur(8px);
         }
 
+        /* Button Design */
         .btn {
-            font-size: 16px;
+            font-size: 18px;
             font-weight: bold;
-            background: linear-gradient(135deg, #007bff, #0056b3);
+            background: linear-gradient(135deg, #2196F3, #1976D2);
             color: white;
             border: none;
-            padding: 12px;
+            padding: 14px;
             margin: 10px auto;
             width: 90%;
-            max-width: 300px;
-            border-radius: 8px;
+            max-width: 350px;
+            border-radius: 10px;
             cursor: pointer;
             transition: all 0.3s ease-in-out;
-            box-shadow: 0 3px 6px rgba(0,0,0,0.2);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
         }
 
-        .btn:hover { opacity: 0.9; transform: scale(1.05); }
-        .btn:active { transform: scale(0.98); }
+        .btn:hover { opacity: 0.9; transform: scale(1.07); }
+        .btn:active { transform: scale(0.96); }
 
-        .left-align { text-align: left; padding-left: 20px; }
+        /* Farbanpassungen */
+        .status-red { background-color: #E53935 !important; } /* Rot für aktive AF */
+        .status-yellow { background-color: #FFB300 !important; } /* Gelb für baldige AF */
+        .status-green { background-color: #4CAF50 !important; } /* Grün für keine AF */
 
         .hidden { display: none; }
+
+        /* Links bündige Liste */
+        .left-align {
+            text-align: left;
+            padding-left: 20px;
+            font-size: 18px;
+        }
     </style>
 </head>
-<body>
+<body id="pageBody">
     <div class="box">
         <h1 id="mainTitle">Keine Anschlussförderung ✅</h1>
     </div>
@@ -78,28 +89,27 @@
     <div id="clock">--:--:--</div>
     
     <div class="box hidden" id="groupInfoBox">
+        <h3 id="groupTitle"></h3>
         <div id="groupInfo"></div>
         <button class="btn" onclick="hideGroupInfo()">Schließen</button>
     </div>
 
-    <div class="button-container">
-        <button id="nextSessionBtn" class="btn hidden" onclick="showNextSessionInfo()"></button>
-    </div>
+    <button id="nextSessionBtn" class="btn hidden" onclick="showNextSessionInfo()"></button>
 
     <script>
         let nextSessionInfo = null;
 
         const schedule = [
-            { teacher: "Woi", group: "C", times: [ { day: 1, start: "08:00", end: "09:30" }, { day: 3, start: "09:50", end: "11:20" }, { day: 5, start: "09:50", end: "11:20" }], 
+            { teacher: "Woi", group: "C", times: [{ day: 1, start: "08:00", end: "09:30" }, { day: 3, start: "09:50", end: "11:20" }, { day: 5, start: "09:50", end: "11:20" }], 
               students: ["Maja (6a)", "Tymofii (7.2)", "Emma (7.2)", "Ilyas (7.2)", "Ili (7.2)", "Sofia (7a)"] },
 
-            { teacher: "Can", group: "A", times: [ { day: 1, start: "09:50", end: "11:20" }, { day: 3, start: "11:40", end: "13:10" }, { day: 4, start: "09:50", end: "11:20" }], 
+            { teacher: "Can", group: "A", times: [{ day: 1, start: "09:50", end: "11:20" }, { day: 3, start: "11:40", end: "13:10" }, { day: 4, start: "09:50", end: "11:20" }], 
               students: ["Alina (5.1)", "Daniil (6.1)", "Mohammed L. (6.1)", "Evelina (7.1)", "Beyar (7.2)", "Artur (7.2)", "Bahar (7a)"] },
 
-            { teacher: "Tun", group: "B", times: [ { day: 2, start: "09:50", end: "11:20" }, { day: 4, start: "08:00", end: "09:30" }, { day: 5, start: "08:00", end: "09:30" }], 
+            { teacher: "Tun", group: "B", times: [{ day: 2, start: "09:50", end: "11:20" }, { day: 4, start: "08:00", end: "09:30" }, { day: 5, start: "08:00", end: "09:30" }], 
               students: ["Anastasia (5a)", "Krisztian (6.1)", "Selena (6a)", "Arzoo (7.1)", "Marin (7.1)", "Mohammed H. (7.1)"] },
 
-            { teacher: "Beu", group: "D", times: [ { day: 2, start: "11:40", end: "13:10" }], 
+            { teacher: "Beu", group: "D", times: [{ day: 2, start: "11:40", end: "13:10" }], 
               students: ["Alle Sprachjongleure"] }
         ];
 
@@ -135,8 +145,8 @@
 
         function showNextSessionInfo() {
             if (nextSessionInfo) {
-                document.getElementById("groupInfo").innerHTML = `<h3 class="left-align">Gruppe ${nextSessionInfo.group} (${nextSessionInfo.teacher})</h3>
-                                                                   <p class="left-align">${nextSessionInfo.students.join("<br>")}</p>`;
+                document.getElementById("groupInfo").innerHTML = `<p class="left-align">${nextSessionInfo.students.join("<br>")}</p>`;
+                document.getElementById("groupTitle").innerText = `Gruppe ${nextSessionInfo.group} (${nextSessionInfo.teacher})`;
                 document.getElementById("groupInfoBox").classList.remove("hidden");
             }
         }
