@@ -15,13 +15,14 @@
         }
 
         h1 {
-            font-size: 24px;
+            font-size: 22px;
             font-weight: bold;
             text-transform: uppercase;
             margin-bottom: 10px;
-            word-wrap: break-word;
             max-width: 90%;
             display: inline-block;
+            word-break: break-word;
+            line-height: 1.2;
         }
 
         #clock {
@@ -155,11 +156,6 @@
                 document.getElementById("nextSessionBtn").innerText = 
                     `Nächste AF: ${nextSession.time.toLocaleString('de-DE', { weekday: 'long', hour: '2-digit', minute: '2-digit' })} - Gruppe ${nextSession.group} (${nextSession.teacher})`;
                 document.getElementById("nextSessionBtn").style.display = "block";
-
-                document.getElementById("nextSessionBtn").onclick = () => {
-                    document.getElementById("groupInfo").innerHTML = 
-                        `<h3>Schüler:innen der nächsten AF</h3><ul>${nextSession.students.map(s => `<li>${s}</li>`).join("")}</ul>`;
-                };
             } else {
                 document.getElementById("nextSessionBtn").style.display = "none";
             }
@@ -167,7 +163,7 @@
 
         document.getElementById("overviewBtn").onclick = () => {
             overviewVisible = !overviewVisible;
-            document.getElementById("groupInfo").innerHTML = overviewVisible ? "<h3>Übersicht</h3><p>Hier kommt die Übersicht</p>" : "";
+            document.getElementById("groupInfo").innerHTML = overviewVisible ? "<h3>Übersicht</h3><p>Hier kommt die komplette Übersicht mit Gruppen & Stundenplan!</p>" : "";
         };
 
         setInterval(() => {
