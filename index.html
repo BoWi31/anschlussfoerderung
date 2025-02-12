@@ -10,7 +10,8 @@
             text-align: center;
             margin: 0;
             padding: 20px;
-            transition: background-color 1s ease-in-out;
+            transition: background-color 0.5s ease-in-out;
+            background-color: #5cb85c; /* Standard: Grün */
         }
 
         h1 {
@@ -64,29 +65,30 @@
         .btn:hover { opacity: 0.9; transform: scale(1.05); }
         .btn:active { transform: scale(0.98); }
 
-        .status-green { background-color: #5cb85c; } 
-        .status-yellow { background-color: #ffcc00; } 
-        .status-red { background-color: #ff6961; } 
-
         .left-align { text-align: left; padding-left: 20px; }
+
+        .hidden { display: none; }
     </style>
 </head>
-<body id="pageBody">
+<body>
     <div class="box">
         <h1 id="mainTitle">Keine Anschlussförderung ✅</h1>
     </div>
 
     <div id="clock">--:--:--</div>
     
-    <div class="box">
+    <div class="box hidden" id="groupInfoBox">
         <div id="groupInfo"></div>
+        <button class="btn" onclick="hideGroupInfo()">Schließen</button>
     </div>
 
     <div class="button-container">
-        <button id="nextSessionBtn" class="btn" style="display:none;"></button>
+        <button id="nextSessionBtn" class="btn hidden" onclick="showNextSessionInfo()"></button>
     </div>
 
     <script>
+        let nextSessionInfo = null;
+
         const schedule = [
             { teacher: "Woi", group: "C", times: [ { day: 1, start: "08:00", end: "09:30" }, { day: 3, start: "09:50", end: "11:20" }, { day: 5, start: "09:50", end: "11:20" }], 
               students: ["Maja (6a)", "Tymofii (7.2)", "Emma (7.2)", "Ilyas (7.2)", "Ili (7.2)", "Sofia (7a)"] },
@@ -108,9 +110,7 @@
 
         function updateDisplay() {
             const now = new Date();
-            let activeSession = null;
             let nextSession = null;
-            let warningSession = null;
 
             schedule.forEach(group => {
                 group.times.forEach(time => {
@@ -118,32 +118,26 @@
                     sessionStart.setDate(now.getDate() + ((time.day - now.getDay() + 7) % 7));
                     sessionStart.setHours(...time.start.split(":").map(Number), 0, 0);
 
-                    let sessionEnd = new Date(sessionStart);
-                    sessionEnd.setHours(...time.end.split(":").map(Number), 0, 0);
-
-                    let warningTime = new Date(sessionStart);
-                    warningTime.setMinutes(warningTime.getMinutes() - 15);
-
-                    if (now >= sessionStart && now <= sessionEnd) {
-                        activeSession = group;
-                    } else if (!activeSession && now >= warningTime && now < sessionStart) {
-                        warningSession = group;
-                    } else if (!nextSession || sessionStart < nextSession.time) {
+                    if (!nextSession || sessionStart < nextSession.time) {
                         nextSession = { teacher: group.teacher, time: sessionStart, group: group.group, students: group.students };
                     }
                 });
             });
 
-            document.body.className = activeSession ? "status-red" : warningSession ? "status-yellow" : "status-green";
-            document.getElementById("mainTitle").innerText = activeSession ? "Anschlussförderung aktiv 🔴" : warningSession ? "Achtung: Bald AF ⚠️" : "Keine Anschlussförderung ✅";
-
-            if (activeSession) {
-                document.getElementById("groupInfo").innerHTML = `<h3>Schüler:innen der aktuellen AF</h3><p class="left-align">${activeSession.students.join("<br>")}</p>`;
-            } else if (nextSession) {
-                document.getElementById("nextSessionBtn").innerText = `Nächste AF: ${nextSession.time.toLocaleString('de-DE', { weekday: 'long', hour: '2-digit', minute: '2-digit' })} - Gruppe ${nextSession.group} (${nextSession.teacher})`;
-                document.getElementById("nextSessionBtn").style.display = "block";
+            nextSessionInfo = nextSession;
+            if (nextSession) {
+                document.getElementById("nextSessionBtn").innerText = `Nächste AF: ${nextSession.time.toLocaleDateString('de-DE', { weekday: 'long' })} ${nextSession.time.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })} - Gruppe ${nextSession.group} (${nextSession.teacher})`;
+                document.getElementById("nextSessionBtn").classList.remove("hidden");
             } else {
-                document.getElementById("nextSessionBtn").style.display = "none";
+                document.getElementById("nextSessionBtn").classList.add("hidden");
+            }
+        }
+
+        function showNextSessionInfo() {
+            if (nextSessionInfo) {
+                document.getElementById("groupInfo").innerHTML = `<h3 class="left-align">Gruppe ${nextSessionInfo.group} (${nextSessionInfo.teacher})</h3>
+                                                                   <p class="left-align">${nextSessionInfo.students.join("<br>")}</p>`;
+                document.getElementById("groupInfoBox").classList.remove("hidden");
             }
         }
 
