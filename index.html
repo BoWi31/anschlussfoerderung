@@ -8,14 +8,10 @@
         body {
             font-family: Arial, sans-serif;
             text-align: center;
-            transition: background-color 1s ease-in-out;
             margin: 0;
             padding: 10px;
+            transition: background-color 0.5s ease-in-out;
         }
-
-        @keyframes pulseGreen { 0% { background-color: #5cb85c; } 50% { background-color: #4cae4c; } 100% { background-color: #5cb85c; } }
-        @keyframes pulseYellow { 0% { background-color: #ffcc00; } 50% { background-color: #ffdb4d; } 100% { background-color: #ffcc00; } }
-        @keyframes pulseRed { 0% { background-color: #ff6961; } 50% { background-color: #ff8782; } 100% { background-color: #ff6961; } }
 
         .btn { font-size: 18px; font-weight: bold; background: linear-gradient(135deg, #007bff, #0056b3); color: white; border: none; padding: 12px; margin: 10px auto; width: 90%; max-width: 400px; border-radius: 10px; cursor: pointer; transition: opacity 0.3s; }
         .btn:hover { opacity: 0.8; }
@@ -57,7 +53,7 @@
         }
     </style>
 </head>
-<body>
+<body id="pageBody">
     <div class="box">
         <h1 id="mainTitle">Keine Anschlussförderung ✅</h1>
     </div>
@@ -100,9 +96,11 @@
             document.getElementById("clock").innerText = timeString;
         }
 
-        function getNextSession() {
+        function updateDisplay() {
             const now = new Date();
             let nextSession = null;
+            let activeSession = null;
+            let warningSession = null;
 
             schedule.forEach(group => {
                 group.times.forEach(time => {
@@ -110,17 +108,24 @@
                     sessionStart.setDate(now.getDate() + ((time.day - now.getDay() + 7) % 7));
                     sessionStart.setHours(...time.start.split(":").map(Number));
 
-                    if (sessionStart > now && (!nextSession || sessionStart < nextSession.time)) {
+                    let warningTime = new Date(sessionStart);
+                    warningTime.setMinutes(warningTime.getMinutes() - 15);
+
+                    let sessionEnd = new Date(sessionStart);
+                    sessionEnd.setHours(...time.end.split(":").map(Number));
+
+                    if (now >= sessionStart && now <= sessionEnd) {
+                        activeSession = group;
+                    } else if (!activeSession && now >= warningTime && now < sessionStart) {
+                        warningSession = group;
+                    } else if (!nextSession || sessionStart < nextSession.time) {
                         nextSession = { teacher: group.teacher, time: sessionStart, group: group.group, students: group.students };
                     }
                 });
             });
 
-            return nextSession;
-        }
-
-        function updateDisplay() {
-            const nextSession = getNextSession();
+            document.getElementById("pageBody").style.backgroundColor = activeSession ? "#ff6961" : warningSession ? "#ffcc00" : "#5cb85c";
+            document.getElementById("mainTitle").innerText = activeSession ? "Anschlussförderung aktiv 🔴" : warningSession ? "Achtung: Gleich Anschlussförderung ⚠️" : "Keine Anschlussförderung ✅";
 
             if (nextSession) {
                 document.getElementById("nextSessionBtn").innerText = 
@@ -135,14 +140,6 @@
                 document.getElementById("nextSessionBtn").style.display = "none";
             }
         }
-
-        document.getElementById("overviewBtn").onclick = () => {
-            let output = "<h3>Gruppen & Schüler:innen</h3>";
-            schedule.forEach(group => {
-                output += `<h4>Gruppe ${group.group} (${group.teacher})</h4><ul>${group.students.map(s => `<li>${s}</li>`).join("")}</ul>`;
-            });
-            document.getElementById("groupInfo").innerHTML = output;
-        };
 
         setInterval(() => {
             updateClock();
