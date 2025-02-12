@@ -65,6 +65,21 @@
         .btn:hover { opacity: 0.9; transform: scale(1.05); }
         .btn:active { transform: scale(0.98); }
 
+        table {
+            width: 100%;
+            max-width: 600px;
+            margin: 15px auto;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: center;
+        }
+
+        th { background-color: #007bff; color: white; }
+
         .status-green { background-color: #5cb85c; } 
         .status-yellow { background-color: #ffcc00; } 
         .status-red { background-color: #ff6961; } 
@@ -101,8 +116,6 @@
               students: ["Alle Sprachjongleure"] }
         ];
 
-        let overviewVisible = false;
-
         function updateClock() {
             const now = new Date();
             document.getElementById("clock").innerText = now.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
@@ -130,33 +143,36 @@
         function updateDisplay() {
             const nextSession = getNextSession();
             const now = new Date();
-            let warningTime = null;
-            let activeSession = null;
 
             if (nextSession) {
-                warningTime = new Date(nextSession.time);
-                warningTime.setMinutes(warningTime.getMinutes() - 15);
-
-                if (now >= nextSession.time && now <= new Date(nextSession.time.getTime() + 5400000)) {
-                    activeSession = nextSession;
-                }
-            }
-
-            document.getElementById("pageBody").className = activeSession ? "status-red" : (warningTime && now >= warningTime) ? "status-yellow" : "status-green";
-            document.getElementById("mainTitle").innerText = activeSession ? "Anschlussförderung aktiv 🔴" : (warningTime && now >= warningTime) ? "Achtung: Nächste AF bald! ⚠️" : "Keine Anschlussförderung ✅";
-
-            if (nextSession) {
-                document.getElementById("nextSessionBtn").innerText = 
-                    `Nächste AF: ${nextSession.time.toLocaleString('de-DE', { weekday: 'long', hour: '2-digit', minute: '2-digit' })} - Gruppe ${nextSession.group} (${nextSession.teacher})`;
+                document.getElementById("nextSessionBtn").innerText = `Nächste AF: ${nextSession.time.toLocaleString('de-DE', { weekday: 'long', hour: '2-digit', minute: '2-digit' })} - Gruppe ${nextSession.group} (${nextSession.teacher})`;
                 document.getElementById("nextSessionBtn").style.display = "block";
+
+                document.getElementById("nextSessionBtn").onclick = () => {
+                    document.getElementById("groupInfo").innerHTML = `<h3>Schüler:innen der nächsten AF</h3><ul>${nextSession.students.map(s => `<li>${s}</li>`).join("")}</ul>`;
+                };
             } else {
                 document.getElementById("nextSessionBtn").style.display = "none";
             }
         }
 
         document.getElementById("overviewBtn").onclick = () => {
-            overviewVisible = !overviewVisible;
-            document.getElementById("groupInfo").innerHTML = overviewVisible ? "<h3>Übersicht</h3><p>Alle Gruppen & Schüler:innen</p>" : "";
+            let overviewHtml = "<h3>Übersicht</h3>";
+
+            schedule.forEach(group => {
+                overviewHtml += `<h4>Gruppe ${group.group} (${group.teacher})</h4><ul>${group.students.map(s => `<li>${s}</li>`).join("")}</ul>`;
+            });
+
+            overviewHtml += "<h3>Stundenplan</h3><table><tr><th>Wochentag</th><th>Uhrzeit</th><th>Gruppe</th></tr>";
+
+            schedule.forEach(group => {
+                group.times.forEach(time => {
+                    overviewHtml += `<tr><td>${["Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"][time.day]}</td><td>${time.start} - ${time.end}</td><td>Gruppe ${group.group}</td></tr>`;
+                });
+            });
+
+            overviewHtml += "</table>";
+            document.getElementById("groupInfo").innerHTML = overviewHtml;
         };
 
         setInterval(updateClock, 1000);
