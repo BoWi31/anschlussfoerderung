@@ -11,7 +11,6 @@
             margin: 0;
             padding: 20px;
             transition: background-color 1s ease-in-out;
-            background-color: #5cb85c;
         }
 
         h1 {
@@ -65,21 +64,6 @@
         .btn:hover { opacity: 0.9; transform: scale(1.05); }
         .btn:active { transform: scale(0.98); }
 
-        table {
-            width: 100%;
-            max-width: 600px;
-            margin: 15px auto;
-            border-collapse: collapse;
-        }
-
-        th, td {
-            border: 1px solid #ddd;
-            padding: 10px;
-            text-align: center;
-        }
-
-        th { background-color: #007bff; color: white; }
-
         .status-green { background-color: #5cb85c; } 
         .status-yellow { background-color: #ffcc00; } 
         .status-red { background-color: #ff6961; } 
@@ -116,16 +100,16 @@
               students: ["Alle Sprachjongleure"] }
         ];
 
-        let overviewVisible = false;
-
         function updateClock() {
             const now = new Date();
             document.getElementById("clock").innerText = now.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
         }
 
-        function getNextSession() {
+        function updateDisplay() {
             const now = new Date();
             let nextSession = null;
+            let activeSession = null;
+            let warningSession = null;
 
             schedule.forEach(group => {
                 group.times.forEach(time => {
@@ -133,48 +117,35 @@
                     sessionStart.setDate(now.getDate() + ((time.day - now.getDay() + 7) % 7));
                     sessionStart.setHours(...time.start.split(":").map(Number), 0, 0);
 
-                    if (sessionStart > now && (!nextSession || sessionStart < nextSession.time)) {
+                    let sessionEnd = new Date(sessionStart);
+                    sessionEnd.setHours(...time.end.split(":").map(Number), 0, 0);
+
+                    let warningTime = new Date(sessionStart);
+                    warningTime.setMinutes(warningTime.getMinutes() - 15);
+
+                    if (now >= sessionStart && now <= sessionEnd) {
+                        activeSession = group;
+                    } else if (!activeSession && now >= warningTime && now < sessionStart) {
+                        warningSession = group;
+                    } else if (!nextSession || sessionStart < nextSession.time) {
                         nextSession = { teacher: group.teacher, time: sessionStart, group: group.group, students: group.students };
                     }
                 });
             });
 
-            return nextSession;
-        }
-
-        function updateDisplay() {
-            const nextSession = getNextSession();
-            const now = new Date();
+            document.body.className = activeSession ? "status-red" : warningSession ? "status-yellow" : "status-green";
+            document.getElementById("mainTitle").innerText = activeSession ? "Anschlussförderung aktiv 🔴" : warningSession ? "Achtung: Bald AF ⚠️" : "Keine Anschlussförderung ✅";
 
             if (nextSession) {
                 document.getElementById("nextSessionBtn").innerText = `Nächste AF: ${nextSession.time.toLocaleString('de-DE', { weekday: 'long', hour: '2-digit', minute: '2-digit' })} - Gruppe ${nextSession.group} (${nextSession.teacher})`;
                 document.getElementById("nextSessionBtn").style.display = "block";
-
-                document.getElementById("nextSessionBtn").onclick = () => {
-                    document.getElementById("groupInfo").innerHTML = `<h3>Schüler:innen der nächsten AF</h3><ul>${nextSession.students.map(s => `<li>${s}</li>`).join("")}</ul>`;
-                };
             } else {
                 document.getElementById("nextSessionBtn").style.display = "none";
             }
         }
 
-        document.getElementById("overviewBtn").onclick = () => {
-            if (!overviewVisible) {
-                let overviewHtml = "<h3>Übersicht</h3>";
-
-                schedule.forEach(group => {
-                    overviewHtml += `<h4>Gruppe ${group.group} (${group.teacher})</h4><ul>${group.students.map(s => `<li>${s}</li>`).join("")}</ul>`;
-                });
-
-                document.getElementById("groupInfo").innerHTML = overviewHtml;
-                overviewVisible = true;
-            } else {
-                document.getElementById("groupInfo").innerHTML = "";
-                overviewVisible = false;
-            }
-        };
-
         setInterval(updateClock, 1000);
+        setInterval(updateDisplay, 1000);
         updateDisplay();
     </script>
 </body>
