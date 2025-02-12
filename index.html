@@ -5,14 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Anschlussförderung - Dashboard</title>
     <style>
-        /* Allgemeines Styling */
         body {
             font-family: 'Arial', sans-serif;
             text-align: center;
             margin: 0;
             padding: 20px;
             transition: background-color 1s ease-in-out;
-            background-color: #5cb85c; /* Standardfarbe */
+            background-color: #5cb85c;
         }
 
         h1 {
@@ -22,11 +21,9 @@
             margin-bottom: 10px;
         }
 
-        /* Live-Uhr */
         #clock {
             font-size: 28px;
             font-weight: bold;
-            color: #333;
             background: #fff;
             padding: 10px;
             border-radius: 8px;
@@ -35,7 +32,6 @@
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
 
-        /* Box-Styling */
         .box {
             background-color: white;
             padding: 20px;
@@ -46,7 +42,6 @@
             text-align: center;
         }
 
-        /* Button-Styling */
         .btn {
             font-size: 18px;
             font-weight: bold;
@@ -72,7 +67,6 @@
             transform: scale(0.98);
         }
 
-        /* Übersicht & Tabellen */
         table {
             width: 100%;
             max-width: 600px;
@@ -98,10 +92,9 @@
             margin-top: 20px;
         }
 
-        /* Farbänderungen für Status */
-        .status-green { background-color: #5cb85c; } /* Keine AF */
-        .status-yellow { background-color: #ffcc00; } /* Warnung */
-        .status-red { background-color: #ff6961; } /* AF aktiv */
+        .status-green { background-color: #5cb85c; } 
+        .status-yellow { background-color: #ffcc00; } 
+        .status-red { background-color: #ff6961; } 
     </style>
 </head>
 <body id="pageBody">
@@ -126,8 +119,10 @@
               students: ["Maja (6a)", "Tymofii (7.2)", "Emma (7.2)", "Ilyas (7.2)", "Ili (7.2)", "Sofia (7a)"] },
 
             { teacher: "Can", group: "A", times: [ { day: 1, start: "09:50", end: "11:20" }, { day: 3, start: "11:40", end: "13:10" }, { day: 4, start: "09:50", end: "11:20" }], 
-              students: ["Alina (5.1)", "Daniil (6.1)", "Mohammed L. (6.1)", "Evelina (7.1)", "Beyar (7.2)", "Artur (7.2)", "Bahar (7a)"] },
+              students: ["Alina (5.1)", "Daniil (6.1)", "Mohammed L. (6.1)", "Evelina (7.1)", "Beyar (7.2)", "Artur (7.2)", "Bahar (7a)"] }
         ];
+
+        let overviewVisible = false;
 
         function updateClock() {
             const now = new Date();
@@ -137,21 +132,33 @@
         function updateDisplay() {
             const now = new Date();
             let nextSession = null;
+            let warningSession = null;
+            let activeSession = null;
 
             schedule.forEach(group => {
                 group.times.forEach(time => {
-                    let sessionStart = new Date(now);
+                    let sessionStart = new Date();
                     sessionStart.setDate(now.getDate() + ((time.day - now.getDay() + 7) % 7));
-                    sessionStart.setHours(...time.start.split(":").map(Number), 0, 0);
+                    sessionStart.setHours(...time.start.split(":").map(Number));
 
-                    if (sessionStart > now && (!nextSession || sessionStart < nextSession.time)) {
+                    let warningTime = new Date(sessionStart);
+                    warningTime.setMinutes(warningTime.getMinutes() - 15);
+
+                    let sessionEnd = new Date(sessionStart);
+                    sessionEnd.setHours(...time.end.split(":").map(Number));
+
+                    if (now >= sessionStart && now <= sessionEnd) {
+                        activeSession = group;
+                    } else if (!activeSession && now >= warningTime && now < sessionStart) {
+                        warningSession = group;
+                    } else if (!nextSession || sessionStart < nextSession.time) {
                         nextSession = { teacher: group.teacher, time: sessionStart, group: group.group, students: group.students };
                     }
                 });
             });
 
-            document.getElementById("pageBody").className = nextSession ? "status-yellow" : "status-green";
-            document.getElementById("mainTitle").innerText = nextSession ? "Achtung: Nächste AF bald! ⚠️" : "Keine Anschlussförderung ✅";
+            document.getElementById("pageBody").className = activeSession ? "status-red" : warningSession ? "status-yellow" : "status-green";
+            document.getElementById("mainTitle").innerText = activeSession ? "Anschlussförderung aktiv 🔴" : warningSession ? "Achtung: Nächste AF bald! ⚠️" : "Keine Anschlussförderung ✅";
 
             if (nextSession) {
                 document.getElementById("nextSessionBtn").innerText = 
@@ -166,6 +173,11 @@
                 document.getElementById("nextSessionBtn").style.display = "none";
             }
         }
+
+        document.getElementById("overviewBtn").onclick = () => {
+            overviewVisible = !overviewVisible;
+            document.getElementById("groupInfo").innerHTML = overviewVisible ? "<h3>Übersicht</h3><p>Hier kommt die Übersicht</p>" : "";
+        };
 
         setInterval(() => {
             updateClock();
