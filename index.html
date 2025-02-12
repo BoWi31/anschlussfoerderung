@@ -36,6 +36,12 @@
             text-transform: uppercase;
         }
 
+        #clock {
+            font-size: 22px;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+
         #groupInfo {
             max-width: 90%;
             margin: auto;
@@ -54,6 +60,10 @@
 <body>
     <div class="box">
         <h1 id="mainTitle">Keine Anschlussförderung ✅</h1>
+    </div>
+
+    <div class="box">
+        <div id="clock">--:--:--</div>
     </div>
     
     <div class="box">
@@ -84,14 +94,15 @@
               students: ["Alle Sprachjongleure"] }
         ];
 
-        let nextSessionVisible = false;
-        let overviewVisible = false;
+        function updateClock() {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            document.getElementById("clock").innerText = timeString;
+        }
 
-        function checkSessionStatus() {
+        function getNextSession() {
             const now = new Date();
             let nextSession = null;
-            let activeSession = null;
-            let warningSession = null;
 
             schedule.forEach(group => {
                 group.times.forEach(time => {
@@ -99,44 +110,46 @@
                     sessionStart.setDate(now.getDate() + ((time.day - now.getDay() + 7) % 7));
                     sessionStart.setHours(...time.start.split(":").map(Number));
 
-                    let warningTime = new Date(sessionStart);
-                    warningTime.setMinutes(warningTime.getMinutes() - 15);
-
-                    let sessionEnd = new Date(sessionStart);
-                    sessionEnd.setHours(...time.end.split(":").map(Number));
-
-                    if (now >= sessionStart && now <= sessionEnd) {
-                        activeSession = group;
-                    } else if (!activeSession && now >= warningTime && now < sessionStart) {
-                        warningSession = group;
-                    } else if (!nextSession || sessionStart < nextSession.time) {
+                    if (sessionStart > now && (!nextSession || sessionStart < nextSession.time)) {
                         nextSession = { teacher: group.teacher, time: sessionStart, group: group.group, students: group.students };
                     }
                 });
             });
 
-            document.body.style.animation = activeSession ? "pulseRed 3s infinite" : warningSession ? "pulseYellow 3s infinite" : "pulseGreen 3s infinite";
-            document.getElementById("mainTitle").innerText = activeSession ? "Anschlussförderung aktiv 🔴" : warningSession ? "Achtung: Gleich Anschlussförderung ⚠️" : "Keine Anschlussförderung ✅";
+            return nextSession;
+        }
 
-            document.getElementById("nextSessionBtn").innerText = nextSession ? `Nächste AF: ${nextSession.time.toLocaleString('de-DE', { weekday: 'long', hour: '2-digit', minute: '2-digit' })} - Gruppe ${nextSession.group} (${nextSession.teacher})` : "";
-            document.getElementById("nextSessionBtn").style.display = nextSession ? "block" : "none";
+        function updateDisplay() {
+            const nextSession = getNextSession();
+
+            if (nextSession) {
+                document.getElementById("nextSessionBtn").innerText = 
+                    `Nächste AF: ${nextSession.time.toLocaleString('de-DE', { weekday: 'long', hour: '2-digit', minute: '2-digit' })} - Gruppe ${nextSession.group} (${nextSession.teacher})`;
+                document.getElementById("nextSessionBtn").style.display = "block";
+
+                document.getElementById("nextSessionBtn").onclick = () => {
+                    document.getElementById("groupInfo").innerHTML = 
+                        `<h3>Schüler:innen der nächsten AF</h3><ul>${nextSession.students.map(s => `<li>${s}</li>`).join("")}</ul>`;
+                };
+            } else {
+                document.getElementById("nextSessionBtn").style.display = "none";
+            }
         }
 
         document.getElementById("overviewBtn").onclick = () => {
-            overviewVisible = !overviewVisible;
-            document.getElementById("groupInfo").innerHTML = overviewVisible ? formatOverview() : "";
-        };
-
-        function formatOverview() {
             let output = "<h3>Gruppen & Schüler:innen</h3>";
             schedule.forEach(group => {
                 output += `<h4>Gruppe ${group.group} (${group.teacher})</h4><ul>${group.students.map(s => `<li>${s}</li>`).join("")}</ul>`;
             });
-            return output;
-        }
+            document.getElementById("groupInfo").innerHTML = output;
+        };
 
-        setInterval(checkSessionStatus, 1000);
-        checkSessionStatus();
+        setInterval(() => {
+            updateClock();
+            updateDisplay();
+        }, 1000);
+        updateClock();
+        updateDisplay();
     </script>
 </body>
 </html>
