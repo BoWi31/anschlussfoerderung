@@ -119,21 +119,13 @@
             document.body.style.animation = currentSession ? "pulseRed 3s infinite" : warningSession ? "pulseYellow 3s infinite" : "pulseGreen 3s infinite";
             document.getElementById("mainTitle").innerText = currentSession ? "Anschlussförderung aktiv 🔴" : warningSession ? "Achtung: Gleich Anschlussförderung ⚠️" : "Keine Anschlussförderung ✅";
 
-            if (!nextSessionVisible && !overviewVisible) {
-                document.getElementById("groupInfo").innerHTML = currentSession ? formatStudents(currentSession.students) : warningSession ? formatStudents(warningSession.students) : "";
-            }
-
             document.getElementById("nextSessionBtn").innerText = nextSession ? `Nächste AF: ${nextSession.time.toLocaleString('de-DE', { weekday: 'long', hour: '2-digit', minute: '2-digit' })} - Gruppe ${nextSession.group} (${nextSession.teacher})` : "";
             document.getElementById("nextSessionBtn").style.display = nextSession ? "block" : "none";
         }
 
-        function formatStudents(students) {
-            return "<h3>Schüler:innen</h3><ul>" + students.map(student => `<li>${student}</li>`).join("") + "</ul>";
-        }
-
         document.getElementById("nextSessionBtn").onclick = () => {
             nextSessionVisible = !nextSessionVisible;
-            document.getElementById("groupInfo").innerHTML = nextSessionVisible ? formatStudents(nextSession.students) : "";
+            document.getElementById("groupInfo").innerHTML = nextSessionVisible ? `<h3>Schüler:innen der nächsten AF</h3><ul>${nextSession.students.map(s => `<li>${s}</li>`).join("")}</ul>` : "";
         };
 
         document.getElementById("overviewBtn").onclick = () => {
