@@ -84,6 +84,7 @@
 
     <div class="button-container">
         <button id="nextSessionBtn" class="btn" style="display:none;"></button>
+        <button id="overviewBtn" class="btn">Übersicht</button>
     </div>
 
     <script>
@@ -106,9 +107,11 @@
             document.getElementById("clock").innerText = now.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
         }
 
-        function getNextSession() {
+        function updateDisplay() {
             const now = new Date();
+            let activeSession = null;
             let nextSession = null;
+            let warningSession = null;
 
             schedule.forEach(group => {
                 group.times.forEach(time => {
@@ -116,27 +119,30 @@
                     sessionStart.setDate(now.getDate() + ((time.day - now.getDay() + 7) % 7));
                     sessionStart.setHours(...time.start.split(":").map(Number), 0, 0);
 
-                    if (sessionStart > now && (!nextSession || sessionStart < nextSession.time)) {
+                    let sessionEnd = new Date(sessionStart);
+                    sessionEnd.setHours(...time.end.split(":").map(Number), 0, 0);
+
+                    let warningTime = new Date(sessionStart);
+                    warningTime.setMinutes(warningTime.getMinutes() - 15);
+
+                    if (now >= sessionStart && now <= sessionEnd) {
+                        activeSession = group;
+                    } else if (!activeSession && now >= warningTime && now < sessionStart) {
+                        warningSession = group;
+                    } else if (!nextSession || sessionStart < nextSession.time) {
                         nextSession = { teacher: group.teacher, time: sessionStart, group: group.group, students: group.students };
                     }
                 });
             });
 
-            return nextSession;
-        }
+            document.body.className = activeSession ? "status-red" : warningSession ? "status-yellow" : "status-green";
+            document.getElementById("mainTitle").innerText = activeSession ? "Anschlussförderung aktiv 🔴" : warningSession ? "Achtung: Bald AF ⚠️" : "Keine Anschlussförderung ✅";
 
-        function updateDisplay() {
-            const nextSession = getNextSession();
-            const now = new Date();
-
-            if (nextSession) {
+            if (activeSession) {
+                document.getElementById("groupInfo").innerHTML = `<h3>Schüler:innen der aktuellen AF</h3><p class="left-align">${activeSession.students.join("<br>")}</p>`;
+            } else if (nextSession) {
                 document.getElementById("nextSessionBtn").innerText = `Nächste AF: ${nextSession.time.toLocaleString('de-DE', { weekday: 'long', hour: '2-digit', minute: '2-digit' })} - Gruppe ${nextSession.group} (${nextSession.teacher})`;
                 document.getElementById("nextSessionBtn").style.display = "block";
-                document.getElementById("nextSessionBtn").onclick = () => {
-                    document.getElementById("groupInfo").innerHTML = `<h3>Schüler:innen der nächsten AF</h3><p class="left-align">${nextSession.students.join("<br>")}</p>`;
-                };
-            } else {
-                document.getElementById("nextSessionBtn").style.display = "none";
             }
         }
 
