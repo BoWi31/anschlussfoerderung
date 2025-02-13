@@ -120,6 +120,8 @@
 
         function updateDisplay() {
             const now = new Date();
+            let activeSession = null;
+            let warningSession = null;
             let nextSession = null;
 
             schedule.forEach(group => {
@@ -134,20 +136,14 @@
                 });
             });
 
+            document.body.className = activeSession ? "status-red" : warningSession ? "status-yellow" : "status-green";
+
             nextSessionInfo = nextSession;
             if (nextSession) {
                 document.getElementById("nextSessionBtn").innerText = `Nächste AF: ${nextSession.time.toLocaleDateString('de-DE', { weekday: 'long' })} ${nextSession.time.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })} - Gruppe ${nextSession.group} (${nextSession.teacher})`;
                 document.getElementById("nextSessionBtn").classList.remove("hidden");
             } else {
                 document.getElementById("nextSessionBtn").classList.add("hidden");
-            }
-        }
-
-        function showNextSessionInfo() {
-            if (nextSessionInfo) {
-                document.getElementById("groupInfo").innerHTML = `<p class="left-align">${nextSessionInfo.students.join("<br>")}</p>`;
-                document.getElementById("groupTitle").innerText = `Gruppe ${nextSessionInfo.group} (${nextSessionInfo.teacher})`;
-                document.getElementById("groupInfoBox").classList.remove("hidden");
             }
         }
 
