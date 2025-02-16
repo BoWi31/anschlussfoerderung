@@ -11,19 +11,19 @@
             margin: 0;
             padding: 20px;
             transition: background-color 0.5s ease-in-out;
-            background-color: #4CAF50;
+            background: linear-gradient(180deg, #4CAF50, #388E3C);
             color: white;
         }
 
         h1 {
-            font-size: 24px;
+            font-size: 26px;
             font-weight: bold;
             text-transform: uppercase;
             margin-bottom: 15px;
         }
 
         #clock {
-            font-size: 26px;
+            font-size: 28px;
             font-weight: bold;
             background: rgba(255, 255, 255, 0.2);
             padding: 12px;
@@ -34,7 +34,7 @@
         }
 
         .box {
-            background-color: rgba(255, 255, 255, 0.15);
+            background: rgba(255, 255, 255, 0.15);
             padding: 20px;
             margin: 15px auto;
             border-radius: 16px;
@@ -42,23 +42,33 @@
             max-width: 600px;
             text-align: center;
             backdrop-filter: blur(8px);
+            transition: transform 0.3s ease-in-out;
+        }
+
+        .box:hover {
+            transform: scale(1.02);
         }
 
         .hidden { display: none; }
         .left-align { text-align: left; padding-left: 20px; font-size: 18px; }
+        .countdown { font-size: 22px; font-weight: bold; margin-top: 10px; }
     </style>
 </head>
 <body id="pageBody">
     <div class="box">
         <h1 id="mainTitle">Keine Anschlussförderung ✅</h1>
+        <p id="dayDisplay"></p>
     </div>
 
     <div id="clock">--:--:--</div>
-    
+
     <div class="box hidden" id="groupInfoBox">
         <h3 id="groupTitle"></h3>
         <div id="groupInfo"></div>
+        <p class="countdown hidden" id="countdown"></p>
     </div>
+
+    <audio id="alertSound" src="https://www.soundjay.com/button/beep-07.wav"></audio>
 
     <script>
         const schedule = [
@@ -68,7 +78,7 @@
             { teacher: "Can", group: "A", times: [{ day: 1, start: "09:50", end: "11:20" }, { day: 3, start: "08:00", end: "09:30" }, { day: 4, start: "09:50", end: "11:20" }], 
               students: ["Daniil (6.1)", "Mohammed L. (6.1)", "Evelina (7.1)", "Beyar (7.2)", "Artur (7.2)", "Bahar (7a)"] },
 
-            { teacher: "Tun", group: "B", times: [{ day: 2, start: "09:50", end: "11:20" }, { day: 4, start: "08:00", end: "09:30" }, { day: 5, start: "08:00", end: "09:30" }], 
+            { teacher: "Tun", group: "B", times: [{ day: 2, start: "09:50", end: "11:20" }], 
               students: ["Anastasia (5a)", "Krisztian (6.1)", "Selena (6a)", "Arzoo (7.1)", "Marin (7.1)", "Mohammed H. (7.1)", "Veysel (7.1)"] },
 
             { teacher: "Beu", group: "D", times: [{ day: 2, start: "11:40", end: "13:10" }], 
@@ -77,88 +87,67 @@
 
         function updateDisplay() {
             const now = new Date();
+            const dayNames = ["Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"];
+            document.getElementById("dayDisplay").innerText = `${dayNames[now.getDay()]}, ${now.toLocaleDateString("de-DE")}`;
+
+            let today = now.getDay();
+            let activeSession = null;
             let nextSession = null;
-            let activeSession = false;
-            let today = now.getDay(); // Wochentag (1 = Montag, 2 = Dienstag, ...)
 
-            let todaysSessions = [];
-            let futureSessions = [];
-
-            // 🛠 1. Alle Sitzungen sammeln, nach HEUTE oder ZUKUNFT sortieren
             schedule.forEach(group => {
                 group.times.forEach(time => {
+                    if (time.day !== today) return;
+
                     let sessionStart = new Date(now);
                     let sessionEnd = new Date(now);
-
                     sessionStart.setHours(...time.start.split(":").map(Number), 0, 0);
                     sessionEnd.setHours(...time.end.split(":").map(Number), 0, 0);
 
-                    let sessionData = { 
-                        teacher: group.teacher, 
-                        group: group.group, 
-                        time: sessionStart, 
-                        endTime: sessionEnd, 
-                        students: group.students 
-                    };
-
                     if (now >= sessionStart && now <= sessionEnd) {
-                        activeSession = true;
-                        nextSession = sessionData;
+                        activeSession = { teacher: group.teacher, group: group.group, students: group.students };
                     }
 
-                    if (time.day === today) {
-                        todaysSessions.push(sessionData);
-                    } else if (time.day > today) {
-                        futureSessions.push(sessionData);
+                    if (!activeSession && !nextSession && sessionStart > now) {
+                        nextSession = { teacher: group.teacher, group: group.group, time: sessionStart, students: group.students };
                     }
                 });
             });
-
-            // 🛠 2. Sitzungen von HEUTE zuerst sortieren
-            todaysSessions.sort((a, b) => a.time - b.time);
-            futureSessions.sort((a, b) => a.time - b.time);
-
-            // 🛠 3. Nächste Sitzung wählen (heute zuerst, sonst Zukunft)
-            nextSession = todaysSessions.find(s => s.time > now) || futureSessions[0] || null;
 
             let title = document.getElementById("mainTitle");
             let groupInfoBox = document.getElementById("groupInfoBox");
             let groupTitle = document.getElementById("groupTitle");
             let groupInfo = document.getElementById("groupInfo");
-
-            if (nextSession) {
-                let timeDiff = (nextSession.time - now) / 60000;
-
-                groupTitle.innerText = `Gruppe ${nextSession.group} (${nextSession.teacher})`;
-                groupInfo.innerHTML = `<p class="left-align">${nextSession.students.join("<br>")}</p>`;
-
-                if (timeDiff <= 15 && timeDiff > 0) {
-                    document.body.style.backgroundColor = "#FFD700"; // Gelb
-                    title.innerText = "Achtung! Gleich Anschlussförderung ⚠️";
-                    groupInfoBox.classList.remove("hidden");
-                } else {
-                    document.body.style.backgroundColor = "#4CAF50"; // Grün
-                    title.innerText = "Keine Anschlussförderung ✅";
-                    groupInfoBox.classList.add("hidden");
-                }
-            } else {
-                groupInfoBox.classList.add("hidden");
-            }
+            let countdown = document.getElementById("countdown");
 
             if (activeSession) {
-                document.body.style.backgroundColor = "#D32F2F"; // Rot
+                document.body.style.background = "linear-gradient(180deg, #D32F2F, #B71C1C)";
                 title.innerText = "Anschlussförderung aktiv ❌";
+                groupTitle.innerText = `Gruppe ${activeSession.group} (${activeSession.teacher})`;
+                groupInfo.innerHTML = `<p class="left-align">${activeSession.students.join("<br>")}</p>`;
                 groupInfoBox.classList.remove("hidden");
+            } else if (nextSession) {
+                let timeDiff = Math.round((nextSession.time - now) / 60000);
+                document.body.style.background = "linear-gradient(180deg, #FFD700, #FFA500)";
+                title.innerText = "Achtung! Gleich Anschlussförderung ⚠️";
+                groupTitle.innerText = `Gruppe ${nextSession.group} (${nextSession.teacher})`;
+                groupInfo.innerHTML = `<p class="left-align">${nextSession.students.join("<br>")}</p>`;
+                countdown.innerText = `Startet in ${timeDiff} Minuten`;
+                countdown.classList.remove("hidden");
+                groupInfoBox.classList.remove("hidden");
+                if (timeDiff === 5) document.getElementById("alertSound").play();
+            } else {
+                document.body.style.background = "linear-gradient(180deg, #4CAF50, #388E3C)";
+                title.innerText = "Keine Anschlussförderung ✅";
+                groupInfoBox.classList.add("hidden");
             }
         }
 
         function updateClock() {
-            const now = new Date();
-            document.getElementById("clock").innerText = now.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            document.getElementById("clock").innerText = new Date().toLocaleTimeString("de-DE");
         }
 
         setInterval(updateClock, 1000);
-        setInterval(updateDisplay, 1000);
+        setInterval(updateDisplay, 30000);
         updateDisplay();
     </script>
 </body>
