@@ -16,17 +16,17 @@
         }
 
         h1 {
-            font-size: 26px;
+            font-size: 24px;
             font-weight: bold;
             text-transform: uppercase;
-            margin-bottom: 15px;
+            margin-bottom: 10px;
         }
 
         #clock {
-            font-size: 28px;
+            font-size: 24px;
             font-weight: bold;
             background: rgba(255, 255, 255, 0.2);
-            padding: 12px;
+            padding: 10px;
             border-radius: 8px;
             display: inline-block;
             margin-bottom: 15px;
@@ -35,11 +35,11 @@
 
         .box {
             background: rgba(255, 255, 255, 0.15);
-            padding: 20px;
-            margin: 15px auto;
-            border-radius: 16px;
+            padding: 15px;
+            margin: 10px auto;
+            border-radius: 12px;
             box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
-            max-width: 600px;
+            max-width: 90%;
             text-align: center;
             backdrop-filter: blur(8px);
             transition: transform 0.3s ease-in-out;
@@ -50,8 +50,23 @@
         }
 
         .hidden { display: none; }
-        .left-align { text-align: left; padding-left: 20px; font-size: 18px; }
-        .countdown { font-size: 22px; font-weight: bold; margin-top: 10px; }
+        .left-align { text-align: left; padding-left: 15px; font-size: 16px; }
+        .countdown { font-size: 20px; font-weight: bold; margin-top: 10px; }
+
+        /* Anpassung für kleinere Bildschirme */
+        @media (max-width: 600px) {
+            h1 { font-size: 20px; }
+            #clock { font-size: 20px; padding: 8px; }
+            .box { padding: 12px; }
+            .left-align { font-size: 14px; padding-left: 10px; }
+            .countdown { font-size: 18px; }
+        }
+
+        #footer {
+            margin-top: 20px;
+            font-size: 14px;
+            opacity: 0.8;
+        }
     </style>
 </head>
 <body id="pageBody">
@@ -150,5 +165,7 @@
         setInterval(updateDisplay, 30000);
         updateDisplay();
     </script>
+
+    <p id="footer">(Stand: 17.02.2025)</p>
 </body>
 </html>
