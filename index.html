@@ -44,25 +44,6 @@
             backdrop-filter: blur(8px);
         }
 
-        .btn {
-            font-size: 18px;
-            font-weight: bold;
-            background: linear-gradient(135deg, #2196F3, #1976D2);
-            color: white;
-            border: none;
-            padding: 14px;
-            margin: 10px auto;
-            width: 90%;
-            max-width: 350px;
-            border-radius: 10px;
-            cursor: pointer;
-            transition: all 0.3s ease-in-out;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
-        }
-
-        .btn:hover { opacity: 0.9; transform: scale(1.07); }
-        .btn:active { transform: scale(0.96); }
-
         .hidden { display: none; }
         .left-align { text-align: left; padding-left: 20px; font-size: 18px; }
     </style>
@@ -77,14 +58,9 @@
     <div class="box hidden" id="groupInfoBox">
         <h3 id="groupTitle"></h3>
         <div id="groupInfo"></div>
-        <button class="btn" onclick="hideGroupInfo()">Schließen</button>
     </div>
 
-    <button id="nextSessionBtn" class="btn hidden" onclick="showNextSessionInfo()">Nächste AF anzeigen</button>
-
     <script>
-        let nextSessionInfo = null;
-
         const schedule = [
             { teacher: "Woi", group: "C", times: [{ day: 1, start: "08:00", end: "09:30" }, { day: 3, start: "09:50", end: "11:20" }, { day: 5, start: "09:50", end: "11:20" }], 
               students: ["Maja (6a)", "Tymofii (7.2)", "Emma (7.2)", "Ilyas (7.2)", "Ili (7.2)", "Sofia (7a)"] },
@@ -99,46 +75,86 @@
               students: ["Alle Sprachjongleure"] }
         ];
 
-        function showNextSessionInfo() {
-            if (nextSessionInfo) {
-                document.getElementById("groupInfo").innerHTML = `<p class="left-align">${nextSessionInfo.students.join("<br>")}</p>`;
-                document.getElementById("groupTitle").innerText = `Gruppe ${nextSessionInfo.group} (${nextSessionInfo.teacher})`;
-                document.getElementById("groupInfoBox").classList.remove("hidden");
-            }
-        }
+        function updateDisplay() {
+            const now = new Date();
+            let nextSession = null;
+            let activeSession = false;
+            let today = now.getDay(); // Wochentag (1 = Montag, 2 = Dienstag, ...)
 
-        function hideGroupInfo() {
-            document.getElementById("groupInfoBox").classList.add("hidden");
+            let todaysSessions = [];
+            let futureSessions = [];
+
+            // 🛠 1. Alle Sitzungen sammeln, nach HEUTE oder ZUKUNFT sortieren
+            schedule.forEach(group => {
+                group.times.forEach(time => {
+                    let sessionStart = new Date(now);
+                    let sessionEnd = new Date(now);
+
+                    sessionStart.setHours(...time.start.split(":").map(Number), 0, 0);
+                    sessionEnd.setHours(...time.end.split(":").map(Number), 0, 0);
+
+                    let sessionData = { 
+                        teacher: group.teacher, 
+                        group: group.group, 
+                        time: sessionStart, 
+                        endTime: sessionEnd, 
+                        students: group.students 
+                    };
+
+                    if (now >= sessionStart && now <= sessionEnd) {
+                        activeSession = true;
+                        nextSession = sessionData;
+                    }
+
+                    if (time.day === today) {
+                        todaysSessions.push(sessionData);
+                    } else if (time.day > today) {
+                        futureSessions.push(sessionData);
+                    }
+                });
+            });
+
+            // 🛠 2. Sitzungen von HEUTE zuerst sortieren
+            todaysSessions.sort((a, b) => a.time - b.time);
+            futureSessions.sort((a, b) => a.time - b.time);
+
+            // 🛠 3. Nächste Sitzung wählen (heute zuerst, sonst Zukunft)
+            nextSession = todaysSessions.find(s => s.time > now) || futureSessions[0] || null;
+
+            let title = document.getElementById("mainTitle");
+            let groupInfoBox = document.getElementById("groupInfoBox");
+            let groupTitle = document.getElementById("groupTitle");
+            let groupInfo = document.getElementById("groupInfo");
+
+            if (nextSession) {
+                let timeDiff = (nextSession.time - now) / 60000;
+
+                groupTitle.innerText = `Gruppe ${nextSession.group} (${nextSession.teacher})`;
+                groupInfo.innerHTML = `<p class="left-align">${nextSession.students.join("<br>")}</p>`;
+
+                if (timeDiff <= 15 && timeDiff > 0) {
+                    document.body.style.backgroundColor = "#FFD700"; // Gelb
+                    title.innerText = "Achtung! Gleich Anschlussförderung ⚠️";
+                    groupInfoBox.classList.remove("hidden");
+                } else {
+                    document.body.style.backgroundColor = "#4CAF50"; // Grün
+                    title.innerText = "Keine Anschlussförderung ✅";
+                    groupInfoBox.classList.add("hidden");
+                }
+            } else {
+                groupInfoBox.classList.add("hidden");
+            }
+
+            if (activeSession) {
+                document.body.style.backgroundColor = "#D32F2F"; // Rot
+                title.innerText = "Anschlussförderung aktiv ❌";
+                groupInfoBox.classList.remove("hidden");
+            }
         }
 
         function updateClock() {
             const now = new Date();
             document.getElementById("clock").innerText = now.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-        }
-
-        function updateDisplay() {
-            const now = new Date();
-            let nextSession = null;
-
-            schedule.forEach(group => {
-                group.times.forEach(time => {
-                    let sessionStart = new Date();
-                    sessionStart.setDate(now.getDate() + ((time.day - now.getDay() + 7) % 7));
-                    sessionStart.setHours(...time.start.split(":").map(Number), 0, 0);
-
-                    if (!nextSession || sessionStart < nextSession.time) {
-                        nextSession = { teacher: group.teacher, time: sessionStart, group: group.group, students: group.students };
-                    }
-                });
-            });
-
-            nextSessionInfo = nextSession;
-
-            if (nextSession) {
-                document.getElementById("nextSessionBtn").classList.remove("hidden");
-            } else {
-                document.getElementById("nextSessionBtn").classList.add("hidden");
-            }
         }
 
         setInterval(updateClock, 1000);
