@@ -5,14 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Anschlussförderung - Dashboard</title>
     <style>
-        /* Allgemeine Styles */
         body {
             font-family: 'Arial', sans-serif;
             text-align: center;
             margin: 0;
             padding: 20px;
             transition: background-color 0.5s ease-in-out;
-            background-color: #4CAF50; /* Standard: Grün */
+            background-color: #4CAF50;
             color: white;
         }
 
@@ -34,7 +33,6 @@
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
         }
 
-        /* Box-Design */
         .box {
             background-color: rgba(255, 255, 255, 0.15);
             padding: 20px;
@@ -46,7 +44,6 @@
             backdrop-filter: blur(8px);
         }
 
-        /* Button Design */
         .btn {
             font-size: 18px;
             font-weight: bold;
@@ -66,19 +63,8 @@
         .btn:hover { opacity: 0.9; transform: scale(1.07); }
         .btn:active { transform: scale(0.96); }
 
-        /* Farbanpassungen */
-        .status-red { background-color: #E53935 !important; } /* Rot für aktive AF */
-        .status-yellow { background-color: #FFB300 !important; } /* Gelb für baldige AF */
-        .status-green { background-color: #4CAF50 !important; } /* Grün für keine AF */
-
         .hidden { display: none; }
-
-        /* Links bündige Liste */
-        .left-align {
-            text-align: left;
-            padding-left: 20px;
-            font-size: 18px;
-        }
+        .left-align { text-align: left; padding-left: 20px; font-size: 18px; }
     </style>
 </head>
 <body id="pageBody">
@@ -94,7 +80,7 @@
         <button class="btn" onclick="hideGroupInfo()">Schließen</button>
     </div>
 
-    <button id="nextSessionBtn" class="btn hidden" onclick="showNextSessionInfo()"></button>
+    <button id="nextSessionBtn" class="btn hidden" onclick="showNextSessionInfo()">Nächste AF anzeigen</button>
 
     <script>
         let nextSessionInfo = null;
@@ -103,15 +89,27 @@
             { teacher: "Woi", group: "C", times: [{ day: 1, start: "08:00", end: "09:30" }, { day: 3, start: "09:50", end: "11:20" }, { day: 5, start: "09:50", end: "11:20" }], 
               students: ["Maja (6a)", "Tymofii (7.2)", "Emma (7.2)", "Ilyas (7.2)", "Ili (7.2)", "Sofia (7a)"] },
 
-            { teacher: "Can", group: "A", times: [{ day: 1, start: "09:50", end: "11:20" }, { day: 3, start: "11:40", end: "13:10" }, { day: 4, start: "09:50", end: "11:20" }], 
-              students: ["Alina (5.1)", "Daniil (6.1)", "Mohammed L. (6.1)", "Evelina (7.1)", "Beyar (7.2)", "Artur (7.2)", "Bahar (7a)"] },
+            { teacher: "Can", group: "A", times: [{ day: 1, start: "09:50", end: "11:20" }, { day: 3, start: "08:00", end: "09:30" }, { day: 4, start: "09:50", end: "11:20" }], 
+              students: ["Daniil (6.1)", "Mohammed L. (6.1)", "Evelina (7.1)", "Beyar (7.2)", "Artur (7.2)", "Bahar (7a)"] },
 
             { teacher: "Tun", group: "B", times: [{ day: 2, start: "09:50", end: "11:20" }, { day: 4, start: "08:00", end: "09:30" }, { day: 5, start: "08:00", end: "09:30" }], 
-              students: ["Anastasia (5a)", "Krisztian (6.1)", "Selena (6a)", "Arzoo (7.1)", "Marin (7.1)", "Mohammed H. (7.1)"] },
+              students: ["Anastasia (5a)", "Krisztian (6.1)", "Selena (6a)", "Arzoo (7.1)", "Marin (7.1)", "Mohammed H. (7.1)", "Veysel (7.1)"] },
 
             { teacher: "Beu", group: "D", times: [{ day: 2, start: "11:40", end: "13:10" }], 
               students: ["Alle Sprachjongleure"] }
         ];
+
+        function showNextSessionInfo() {
+            if (nextSessionInfo) {
+                document.getElementById("groupInfo").innerHTML = `<p class="left-align">${nextSessionInfo.students.join("<br>")}</p>`;
+                document.getElementById("groupTitle").innerText = `Gruppe ${nextSessionInfo.group} (${nextSessionInfo.teacher})`;
+                document.getElementById("groupInfoBox").classList.remove("hidden");
+            }
+        }
+
+        function hideGroupInfo() {
+            document.getElementById("groupInfoBox").classList.add("hidden");
+        }
 
         function updateClock() {
             const now = new Date();
@@ -120,8 +118,6 @@
 
         function updateDisplay() {
             const now = new Date();
-            let activeSession = null;
-            let warningSession = null;
             let nextSession = null;
 
             schedule.forEach(group => {
@@ -136,11 +132,9 @@
                 });
             });
 
-            document.body.className = activeSession ? "status-red" : warningSession ? "status-yellow" : "status-green";
-
             nextSessionInfo = nextSession;
+
             if (nextSession) {
-                document.getElementById("nextSessionBtn").innerText = `Nächste AF: ${nextSession.time.toLocaleDateString('de-DE', { weekday: 'long' })} ${nextSession.time.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })} - Gruppe ${nextSession.group} (${nextSession.teacher})`;
                 document.getElementById("nextSessionBtn").classList.remove("hidden");
             } else {
                 document.getElementById("nextSessionBtn").classList.add("hidden");
