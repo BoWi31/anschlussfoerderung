@@ -5,77 +5,25 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Anschlussförderung Wi - Dashboard</title>
   <style>
-    body{
-      font-family: Arial, sans-serif;
-      text-align:center;
-      margin:0; padding:20px;
-      transition: background-color 0.5s ease-in-out;
-      background: linear-gradient(180deg, #4CAF50, #388E3C);
-      color:#fff;
-    }
-    h1{ font-size:24px; font-weight:bold; text-transform:uppercase; margin-bottom:10px; }
-    #clock{
-      font-size:24px; font-weight:bold;
-      background: rgba(255,255,255,0.2);
-      padding:10px; border-radius:8px; display:inline-block; margin-bottom:15px;
-      box-shadow:0 4px 8px rgba(0,0,0,0.2);
-    }
-    .box{
-      background: rgba(255,255,255,0.15);
-      padding:15px; margin:10px auto; border-radius:12px;
-      box-shadow:0 6px 12px rgba(0,0,0,0.3);
-      max-width:90%; text-align:center;
-      backdrop-filter: blur(8px);
-      transition: transform 0.3s ease-in-out;
-    }
-    .box:hover{ transform: scale(1.02); }
-    .hidden{ display:none; }
-    .left-align{ text-align:left; padding-left:15px; font-size:16px; }
-    .countdown{ font-size:20px; font-weight:bold; margin-top:10px; }
-    @media (max-width:600px){
-      h1{ font-size:20px; }
-      #clock{ font-size:20px; padding:8px; }
-      .box{ padding:12px; }
-      .left-align{ font-size:14px; padding-left:10px; }
-      .countdown{ font-size:18px; }
-    }
-    #footer{ margin-top:20px; font-size:14px; opacity:0.8; }
-    /* Buttons */
-    #toggleBtn, #toggleBtnBack{
-      margin: 6px 0 14px 0;
-      padding: 10px 14px;
-      border: none;
-      border-radius: 10px;
-      font-size: 15px;
-      cursor: pointer;
-      box-shadow:0 4px 8px rgba(0,0,0,0.25);
-      background: rgba(255,255,255,0.2);
-      color: #fff;
-      transition: transform 0.15s ease, background 0.3s ease;
-    }
-    #toggleBtn:hover, #toggleBtnBack:hover{ transform: translateY(-1px); background: rgba(255,255,255,0.3); }
-    #toggleBtn:active, #toggleBtnBack:active{ transform: translateY(0); }
-    .group-header{ font-size:18px; font-weight:bold; margin: 8px 0 6px; }
-    .time-chip{
-      display:inline-block; margin: 2px 4px; padding: 6px 10px; border-radius: 999px;
-      background: rgba(255,255,255,0.18); font-size:14px;
-    }
-    .subtle{ opacity:0.9; }
-    .session-card{
-      background: rgba(255,255,255,0.12);
-      border-radius: 10px;
-      padding: 10px;
-      margin-top: 10px;
-      text-align: left;
-    }
-    .session-title{
-      font-weight: bold;
-      margin-bottom: 6px;
-    }
+    body{font-family:Arial,sans-serif;text-align:center;margin:0;padding:20px;transition:background-color .5s ease-in-out;background:linear-gradient(180deg,#4CAF50,#388E3C);color:#fff}
+    h1{font-size:24px;font-weight:bold;text-transform:uppercase;margin-bottom:10px}
+    #clock{font-size:24px;font-weight:bold;background:rgba(255,255,255,.2);padding:10px;border-radius:8px;display:inline-block;margin-bottom:15px;box-shadow:0 4px 8px rgba(0,0,0,.2)}
+    .box{background:rgba(255,255,255,.15);padding:15px;margin:10px auto;border-radius:12px;box-shadow:0 6px 12px rgba(0,0,0,.3);max-width:90%;text-align:center;backdrop-filter:blur(8px);transition:transform .3s}
+    .box:hover{transform:scale(1.02)}
+    .hidden{display:none}
+    .left-align{text-align:left;padding-left:15px;font-size:16px}
+    .countdown{font-size:20px;font-weight:bold;margin-top:10px}
+    @media (max-width:600px){h1{font-size:20px}#clock{font-size:20px;padding:8px}.box{padding:12px}.left-align{font-size:14px;padding-left:10px}.countdown{font-size:18px}}
+    #toggleBtn,#toggleBtnBack{margin:6px 0 14px 0;padding:10px 14px;border:none;border-radius:10px;font-size:15px;cursor:pointer;box-shadow:0 4px 8px rgba(0,0,0,.25);background:rgba(255,255,255,.2);color:#fff;transition:transform .15s ease,background .3s ease}
+    #toggleBtn:hover,#toggleBtnBack:hover{transform:translateY(-1px);background:rgba(255,255,255,.3)}
+    #toggleBtn:active,#toggleBtnBack:active{transform:translateY(0)}
+    .group-header{font-size:18px;font-weight:bold;margin:8px 0 6px}
+    .time-chip{display:inline-block;margin:2px 4px;padding:6px 10px;border-radius:999px;background:rgba(255,255,255,.18);font-size:14px}
+    .session-card{background:rgba(255,255,255,.12);border-radius:10px;padding:10px;margin-top:10px;text-align:left}
+    .session-title{font-weight:bold;margin-bottom:6px}
   </style>
 </head>
 <body id="pageBody">
-  <!-- STATUS-VIEW -->
   <div id="statusView">
     <div class="box">
       <h1 id="mainTitle">Anschlussförderung Wi ✅</h1>
@@ -93,7 +41,6 @@
     </div>
   </div>
 
-  <!-- OVERVIEW-VIEW (nur Gruppen + SuS + Termine) -->
   <div id="overviewView" class="hidden" aria-live="polite">
     <div class="box">
       <h2>Übersicht – Gruppen, SuS & Termine</h2>
@@ -105,10 +52,8 @@
   <audio id="alertSound" src="https://www.soundjay.com/button/beep-07.wav"></audio>
 
   <script>
-    // ==========================================================
-    // ZEITEN (1./2. = 08:00–09:30, 3./4. = 09:50–11:20, 5./6. = 11:40–13:10)
-    // Wochentage: So=0, Mo=1, Di=2, Mi=3, Do=4, Fr=5, Sa=6
-    // ==========================================================
+    // Zeiten: 1./2. = 08:00–09:30, 3./4. = 09:50–11:20, 5./6. = 11:40–13:10
+    // Tage: So=0, Mo=1, Di=2, Mi=3, Do=4, Fr=5, Sa=6
 
     // Gruppen (Wi)
     const schedule = [
@@ -118,7 +63,6 @@
           "Violetta (5.1)", "Danilo (5.1)", "Anastasia (6a)", "Vojdan (6.1)",
           "Mohammad (7.2)", "Agnessa (7.2)", "Artem (7.1)", "Krisztian (7.1)"
         ],
-        // Aus Lehrkraft-Zuweisungen abgeleitet (Tun & Can → Gruppe 1)
         times: [
           { day: 1, start: "09:50", end: "11:20" }, // Mo 3./4 (Tun)
           { day: 2, start: "09:50", end: "11:20" }, // Di 3./4 (Tun)
@@ -133,7 +77,6 @@
         students: [
           "Niiazkuly (5a)", "Neijla (7a)", "Selena (7.2)", "Maja (7.2)"
         ],
-        // Aus Lehrkraft-Zuweisungen abgeleitet (Woi → Gruppe 2)
         times: [
           { day: 1, start: "09:50", end: "11:20" }, // Mo 3./4 (Woi)
           { day: 3, start: "11:40", end: "13:10" }, // Mi 5./6 (Woi)
@@ -142,200 +85,154 @@
       }
     ];
 
-    // Lehrkräfte – slotgenau, inkl. Gruppenzuordnung
+    // Lehrkräfte – slotgenau (für Status; Übersicht zeigt sie nicht)
     const teacherAssignments = [
       { teacher: "Woi", group: "2", slots: [
-        { day: 1, start: "09:50", end: "11:20" }, // Mo 3./4
-        { day: 3, start: "11:40", end: "13:10" }, // Mi 5./6
-        { day: 4, start: "09:50", end: "11:20" }  // Do 3./4
+        { day: 1, start: "09:50", end: "11:20" },
+        { day: 3, start: "11:40", end: "13:10" },
+        { day: 4, start: "09:50", end: "11:20" }
       ]},
       { teacher: "Can", group: "1", slots: [
-        { day: 2, start: "11:40", end: "13:10" }, // Di 5./6
-        { day: 4, start: "08:00", end: "09:30" }, // Do 1./2
-        { day: 5, start: "09:50", end: "11:20" }  // Fr 3./4
+        { day: 2, start: "11:40", end: "13:10" },
+        { day: 4, start: "08:00", end: "09:30" },
+        { day: 5, start: "09:50", end: "11:20" }
       ]},
       { teacher: "Tun", group: "1", slots: [
-        { day: 1, start: "09:50", end: "11:20" }, // Mo 3./4
-        { day: 2, start: "09:50", end: "11:20" }, // Di 3./4
-        { day: 3, start: "09:50", end: "11:20" }  // Mi 3./4
+        { day: 1, start: "09:50", end: "11:20" },
+        { day: 2, start: "09:50", end: "11:20" },
+        { day: 3, start: "09:50", end: "11:20" }
       ]}
     ];
 
-    // Hilfsfunktionen
-    const dayNames = ["Sonntag","Montag","Dienstag","Mittwoch","Donnerstag","Freitag","Samstag"];
-    const pad2 = n => n.toString().padStart(2, "0");
-    const normTime = t => { const [h,m]=t.split(":").map(Number); return `${pad2(h)}:${pad2(m)}`; };
-    const slotKey = (group, d, s, e) => `${group}|${d}|${normTime(s)}|${normTime(e)}`;
+    const dayNames=["Sonntag","Montag","Dienstag","Mittwoch","Donnerstag","Freitag","Samstag"];
+    const pad2=n=>n.toString().padStart(2,"0");
+    const normTime=t=>{const [h,m]=t.split(":").map(Number);return `${pad2(h)}:${pad2(m)}`};
+    const slotKey=(group,d,s,e)=>`${group}|${d}|${normTime(s)}|${normTime(e)}`;
 
-    // Map: (group, slot) -> Lehrkraft (Unterstützt parallele Slots unterschiedlicher Gruppen)
-    const slotTeacherMap = new Map();
+    // Map: (group,slot) -> Lehrkraft
+    const slotTeacherMap=new Map();
     (function buildTeacherMap(){
-      // Erlaubte Slots (aus schedule)
-      const allowed = new Set();
-      schedule.forEach(g => g.times.forEach(t => allowed.add(slotKey(g.group, t.day, t.start, t.end))));
-      // Eintragen, nur wenn Slot in dieser Gruppe existiert
-      teacherAssignments.forEach(a => {
-        a.slots.forEach(s => {
-          const key = slotKey(a.group, s.day, s.start, s.end);
-          if (allowed.has(key) && !slotTeacherMap.has(key)){
-            slotTeacherMap.set(key, a.teacher);
-          }
+      const allowed=new Set();
+      schedule.forEach(g=>g.times.forEach(t=>allowed.add(slotKey(g.group,t.day,t.start,t.end))));
+      teacherAssignments.forEach(a=>{
+        a.slots.forEach(s=>{
+          const key=slotKey(a.group,s.day,s.start,s.end);
+          if(allowed.has(key) && !slotTeacherMap.has(key)) slotTeacherMap.set(key,a.teacher);
         });
       });
     })();
 
-    let lastFiveMinuteAlertKey = null;
-    let isOverview = false;
+    let lastFiveMinuteAlertKey=null;
+    let isOverview=false;
 
-    function updateClock(){
-      document.getElementById("clock").innerText = new Date().toLocaleTimeString("de-DE");
-    }
+    function updateClock(){ document.getElementById("clock").innerText=new Date().toLocaleTimeString("de-DE"); }
 
-    function renderSessionsList(container, sessions){
-      container.innerHTML = "";
-      sessions.forEach(sess => {
-        const card = document.createElement("div");
-        card.className = "session-card";
-        const title = document.createElement("div");
-        title.className = "session-title";
-        const teacherText = sess.teacher ? ` – Lehrkraft: ${sess.teacher}` : "";
-        title.textContent = `Gruppe ${sess.group}${teacherText}`;
-        const list = document.createElement("div");
-        list.className = "left-align";
-        list.innerHTML = sess.students.map(s => s).join("<br>");
-        card.appendChild(title);
-        card.appendChild(list);
+    function renderSessionsList(container,sessions){
+      container.innerHTML="";
+      sessions.forEach(sess=>{
+        const card=document.createElement("div");
+        card.className="session-card";
+        const title=document.createElement("div");
+        title.className="session-title";
+        title.textContent=`Gruppe ${sess.group}${sess.teacher?` – Lehrkraft: ${sess.teacher}`:""}`;
+        const list=document.createElement("div");
+        list.className="left-align";
+        list.innerHTML=sess.students.join("<br>");
+        card.appendChild(title);card.appendChild(list);
         container.appendChild(card);
       });
     }
 
     function updateDisplay(){
-      if (isOverview) return; // im Übersichtmodus Status nicht rendern
-      const now = new Date();
-      const today = now.getDay();
-      document.getElementById("dayDisplay").innerText = `${dayNames[today]}, ${now.toLocaleDateString("de-DE")}`;
+      if(isOverview) return;
+      const now=new Date(); const today=now.getDay();
+      document.getElementById("dayDisplay").innerText=`${dayNames[today]}, ${now.toLocaleDateString("de-DE")}`;
 
-      const activeSessions = [];
-      const futureSessions = []; // {group, students, teacher, time}
-
-      // Sammeln
-      schedule.forEach(group => {
-        group.times.forEach(time => {
-          if (time.day !== today) return;
-
-          const [sH,sM] = time.start.split(":").map(Number);
-          const [eH,eM] = time.end.split(":").map(Number);
-          const st = new Date(now), en = new Date(now);
-          st.setHours(sH, sM, 0, 0);
-          en.setHours(eH, eM, 0, 0);
-
-          const key = slotKey(group.group, time.day, time.start, time.end);
-          const teacher = slotTeacherMap.get(key) || null;
-
-          if (now >= st && now <= en) {
-            activeSessions.push({ group: group.group, students: group.students, teacher, start: st, end: en });
-          } else if (st > now) {
-            futureSessions.push({ group: group.group, students: group.students, teacher, time: st });
-          }
+      const activeSessions=[]; const futureSessions=[];
+      schedule.forEach(group=>{
+        group.times.forEach(time=>{
+          if(time.day!==today) return;
+          const [sH,sM]=time.start.split(":").map(Number), [eH,eM]=time.end.split(":").map(Number);
+          const st=new Date(now), en=new Date(now); st.setHours(sH,sM,0,0); en.setHours(eH,eM,0,0);
+          const key=slotKey(group.group,time.day,time.start,time.end);
+          const teacher=slotTeacherMap.get(key)||null;
+          if(now>=st && now<=en) activeSessions.push({group:group.group,students:group.students,teacher,start:st,end:en});
+          else if(st>now) futureSessions.push({group:group.group,students:group.students,teacher,time:st});
         });
       });
 
-      // Nächste(n) Session(s)
-      futureSessions.sort((a,b) => a.time - b.time);
-      const nextTime = futureSessions.length ? futureSessions[0].time.getTime() : null;
-      const nextSessions = nextTime !== null ? futureSessions.filter(s => s.time.getTime() === nextTime) : [];
+      futureSessions.sort((a,b)=>a.time-b.time);
+      const nextTime=futureSessions.length?futureSessions[0].time.getTime():null;
+      const nextSessions=nextTime!==null?futureSessions.filter(s=>s.time.getTime()===nextTime):[];
 
-      // DOM-Refs
-      const title = document.getElementById("mainTitle");
-      const box = document.getElementById("groupInfoBox");
-      const groupTitle = document.getElementById("groupTitle");
-      const sessionsContainer = document.getElementById("sessionsContainer");
-      const countdown = document.getElementById("countdown");
+      const title=document.getElementById("mainTitle");
+      const box=document.getElementById("groupInfoBox");
+      const groupTitle=document.getElementById("groupTitle");
+      const sessionsContainer=document.getElementById("sessionsContainer");
+      const countdown=document.getElementById("countdown");
 
-      if (activeSessions.length > 0){
-        document.body.style.background = "linear-gradient(180deg, #D32F2F, #B71C1C)";
-        title.innerText = activeSessions.length > 1 ? "Anschlussförderung Wi aktiv ❌ (Mehrere Gruppen)" : "Anschlussförderung Wi aktiv ❌";
-        groupTitle.innerText = activeSessions.length > 1 ? "Aktive Sitzungen" : `Aktive Sitzung`;
-        renderSessionsList(sessionsContainer, activeSessions);
-        countdown.classList.add("hidden");
-        box.classList.remove("hidden");
-      } else if (nextSessions.length > 0){
-        const diff = nextSessions[0].time - now;
-        const m = Math.floor(diff / 60000);
-        const s = Math.floor((diff % 60000) / 1000);
+      if(activeSessions.length>0){
+        document.body.style.background="linear-gradient(180deg,#D32F2F,#B71C1C)";
+        title.innerText=activeSessions.length>1?"Anschlussförderung Wi aktiv ❌ (Mehrere Gruppen)":"Anschlussförderung Wi aktiv ❌";
+        groupTitle.innerText=activeSessions.length>1?"Aktive Sitzungen":"Aktive Sitzung";
+        renderSessionsList(sessionsContainer,activeSessions);
+        countdown.classList.add("hidden"); box.classList.remove("hidden");
+      } else if(nextSessions.length>0){
+        const diff=nextSessions[0].time-now;
+        const m=Math.floor(diff/60000), s=Math.floor((diff%60000)/1000);
 
-        document.body.style.background = "linear-gradient(180deg, #FFD700, #FFA500)";
-        title.innerText = nextSessions.length > 1 ? "Achtung! Gleich Anschlussförderung ⚠️ (Mehrere Gruppen)" : "Achtung! Gleich Anschlussförderung ⚠️";
-        groupTitle.innerText = nextSessions.length > 1 ? "Nächste Sitzungen" : "Nächste Sitzung";
-        renderSessionsList(sessionsContainer, nextSessions);
+        if(m<=15){
+          // GELB nur ≤ 15 Minuten vor Start
+          document.body.style.background="linear-gradient(180deg,#FFD700,#FFA500)";
+          title.innerText=nextSessions.length>1?"Achtung! Gleich Anschlussförderung ⚠️ (Mehrere Gruppen)":"Achtung! Gleich Anschlussförderung ⚠️";
+          groupTitle.innerText=nextSessions.length>1?"Nächste Sitzungen":"Nächste Sitzung";
+          renderSessionsList(sessionsContainer,nextSessions);
+          countdown.innerText=m>0?`Startet in ${m} Minute${m===1?"":"n"}`:`Startet in ${s} Sekunde${s===1?"":"n"}`;
+          countdown.classList.remove("hidden"); box.classList.remove("hidden");
 
-        countdown.innerText = m > 0 ? `Startet in ${m} Minute${m===1?"":"n"}` : `Startet in ${s} Sekunde${s===1?"":"n"}`;
-        countdown.classList.remove("hidden");
-        box.classList.remove("hidden");
-
-        // 5-Minuten-Warnung einmalig
-        if (m === 5){
-          const key = new Date(nextSessions[0].time).toISOString().slice(0,16);
-          if (lastFiveMinuteAlertKey !== key){
-            lastFiveMinuteAlertKey = key;
-            document.getElementById("alertSound").play().catch(()=>{});
+          if(m===5){
+            const key=new Date(nextSessions[0].time).toISOString().slice(0,16);
+            if(lastFiveMinuteAlertKey!==key){ lastFiveMinuteAlertKey=key; document.getElementById("alertSound").play().catch(()=>{}); }
           }
+        } else {
+          // Noch zu weit weg -> Grün
+          document.body.style.background="linear-gradient(180deg,#4CAF50,#388E3C)";
+          title.innerText="Anschlussförderung Wi ✅";
+          box.classList.add("hidden"); countdown.classList.add("hidden");
         }
       } else {
-        document.body.style.background = "linear-gradient(180deg, #4CAF50, #388E3C)";
-        title.innerText = "Anschlussförderung Wi ✅";
-        box.classList.add("hidden");
-        countdown.classList.add("hidden");
+        document.body.style.background="linear-gradient(180deg,#4CAF50,#388E3C)";
+        title.innerText="Anschlussförderung Wi ✅";
+        box.classList.add("hidden"); countdown.classList.add("hidden");
       }
     }
 
-    // -------- Übersicht (ohne Lehrkräfte) --------
+    // Übersicht (ohne Lehrkräfte)
     function renderOverview(){
-      const c = document.getElementById("overviewContent");
-      c.innerHTML = "";
-      // sortiert nach Gruppennummer
-      const groupsSorted = [...schedule].sort((a,b) => (a.group+"").localeCompare(b.group+"", 'de', {numeric:true}));
-      groupsSorted.forEach(g => {
-        // Zeiten deduplizieren & sortieren
-        const set = new Set(g.times.map(t => `${t.day}|${t.start}|${t.end}`));
-        const times = Array.from(set).map(k => {
-          const [d,s,e] = k.split("|"); return { day: Number(d), start: s, end: e };
-        }).sort((a,b) => a.day !== b.day ? a.day - b.day : a.start.localeCompare(b.start));
-
-        const box = document.createElement("div");
-        box.className = "box";
-        box.innerHTML = `
-          <div class="group-header">Gruppe ${g.group}</div>
+      const c=document.getElementById("overviewContent"); c.innerHTML="";
+      const groupsSorted=[...schedule].sort((a,b)=>(a.group+"").localeCompare(b.group+"","de",{numeric:true}));
+      groupsSorted.forEach(g=>{
+        const set=new Set(g.times.map(t=>`${t.day}|${t.start}|${t.end}`));
+        const times=[...set].map(k=>{const [d,s,e]=k.split("|");return {day:Number(d),start:s,end:e};})
+          .sort((a,b)=>a.day!==b.day?a.day-b.day:a.start.localeCompare(b.start));
+        const box=document.createElement("div"); box.className="box";
+        box.innerHTML=`<div class="group-header">Gruppe ${g.group}</div>
           <div class="left-align"><strong>SuS:</strong><br>${g.students.join("<br>")}</div>
           <div class="left-align" style="margin-top:8px"><strong>Termine:</strong><br>${
-            times.map(t => `<span class="time-chip">${dayNames[t.day]} ${t.start}–${t.end}</span>`).join(" ")
+            times.map(t=>`<span class="time-chip">${dayNames[t.day]} ${t.start}–${t.end}</span>`).join(" ")
           }</div>`;
         c.appendChild(box);
       });
     }
 
-    function showOverview(){
-      isOverview = true;
-      document.getElementById("statusView").classList.add("hidden");
-      document.getElementById("overviewView").classList.remove("hidden");
-      renderOverview();
-    }
-    function showStatus(){
-      isOverview = false;
-      document.getElementById("overviewView").classList.add("hidden");
-      document.getElementById("statusView").classList.remove("hidden");
-      updateDisplay();
-    }
-    document.addEventListener("DOMContentLoaded", () => {
-      document.getElementById("toggleBtn").addEventListener("click", showOverview);
-      document.getElementById("toggleBtnBack").addEventListener("click", showStatus);
-    });
+    function showOverview(){isOverview=true;document.getElementById("statusView").classList.add("hidden");document.getElementById("overviewView").classList.remove("hidden");renderOverview();}
+    function showStatus(){isOverview=false;document.getElementById("overviewView").classList.add("hidden");document.getElementById("statusView").classList.remove("hidden");updateDisplay();}
+    document.addEventListener("DOMContentLoaded",()=>{document.getElementById("toggleBtn").addEventListener("click",showOverview);document.getElementById("toggleBtnBack").addEventListener("click",showStatus);});
 
-    // Start
-    function updateClock(){ document.getElementById("clock").innerText = new Date().toLocaleTimeString("de-DE"); }
+    function updateClock(){ document.getElementById("clock").innerText=new Date().toLocaleTimeString("de-DE"); }
     updateClock(); updateDisplay();
-    setInterval(updateClock, 1000);
-    setInterval(updateDisplay, 1000);
+    setInterval(updateClock,1000);
+    setInterval(updateDisplay,1000);
   </script>
 
   <p id="footer">(Stand: 22.08.2025)</p>
