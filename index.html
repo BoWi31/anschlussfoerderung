@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Anschlussförderung Wi - Dashboard</title>
   <style>
-    body{font-family:Arial,sans-serif;text-align:center;margin:0;padding:20px;transition:background-color .5s ease-in-out;background:linear-gradient(180deg,#4CAF50,#388E3C);color:#fff}
+    body{font-family:Arial,sans-serif;text-align:center;margin:0;padding:20px;transition:background-color .5s;background:linear-gradient(180deg,#4CAF50,#388E3C);color:#fff}
     h1{font-size:24px;font-weight:bold;text-transform:uppercase;margin-bottom:10px}
     #clock{font-size:24px;font-weight:bold;background:rgba(255,255,255,.2);padding:10px;border-radius:8px;display:inline-block;margin-bottom:15px;box-shadow:0 4px 8px rgba(0,0,0,.2)}
     .box{background:rgba(255,255,255,.15);padding:15px;margin:10px auto;border-radius:12px;box-shadow:0 6px 12px rgba(0,0,0,.3);max-width:90%;text-align:center;backdrop-filter:blur(8px);transition:transform .3s}
@@ -14,16 +14,19 @@
     .left-align{text-align:left;padding-left:15px;font-size:16px}
     .countdown{font-size:20px;font-weight:bold;margin-top:10px}
     @media (max-width:600px){h1{font-size:20px}#clock{font-size:20px;padding:8px}.box{padding:12px}.left-align{font-size:14px;padding-left:10px}.countdown{font-size:18px}}
-    #toggleBtn,#toggleBtnBack{margin:6px 0 14px 0;padding:10px 14px;border:none;border-radius:10px;font-size:15px;cursor:pointer;box-shadow:0 4px 8px rgba(0,0,0,.25);background:rgba(255,255,255,.2);color:#fff;transition:transform .15s ease,background .3s ease}
+    #toggleBtn,#toggleBtnBack{margin:6px 0 14px 0;padding:10px 14px;border:none;border-radius:10px;font-size:15px;cursor:pointer;box-shadow:0 4px 8px rgba(0,0,0,.25);background:rgba(255,255,255,.2);color:#fff;transition:transform .15s,background .3s}
     #toggleBtn:hover,#toggleBtnBack:hover{transform:translateY(-1px);background:rgba(255,255,255,.3)}
     #toggleBtn:active,#toggleBtnBack:active{transform:translateY(0)}
     .group-header{font-size:18px;font-weight:bold;margin:8px 0 6px}
     .time-chip{display:inline-block;margin:2px 4px;padding:6px 10px;border-radius:999px;background:rgba(255,255,255,.18);font-size:14px}
     .session-card{background:rgba(255,255,255,.12);border-radius:10px;padding:10px;margin-top:10px;text-align:left}
     .session-title{font-weight:bold;margin-bottom:6px}
+    .tag{display:inline-block;margin-left:6px;padding:2px 8px;border-radius:999px;background:rgba(255,255,255,.22);font-size:12px}
+    .muted{opacity:.85;font-style:italic}
   </style>
 </head>
 <body id="pageBody">
+  <!-- STATUS -->
   <div id="statusView">
     <div class="box">
       <h1 id="mainTitle">Anschlussförderung Wi ✅</h1>
@@ -41,6 +44,7 @@
     </div>
   </div>
 
+  <!-- ÜBERSICHT (ohne Lehrkräfte) -->
   <div id="overviewView" class="hidden" aria-live="polite">
     <div class="box">
       <h2>Übersicht – Gruppen, SuS & Termine</h2>
@@ -55,55 +59,68 @@
     // Zeiten: 1./2. = 08:00–09:30, 3./4. = 09:50–11:20, 5./6. = 11:40–13:10
     // Tage: So=0, Mo=1, Di=2, Mi=3, Do=4, Fr=5, Sa=6
 
-    // Gruppen (Wi)
+    // --------- Gruppen & Schüler (Wi) ---------
     const schedule = [
       {
-        group: "1",
+        group: "1", // Can + Tun
         students: [
           "Violetta (5.1)", "Danilo (5.1)", "Anastasia (6a)", "Vojdan (6.1)",
           "Mohammad (7.2)", "Agnessa (7.2)", "Artem (7.1)", "Krisztian (7.1)"
         ],
         times: [
-          { day: 1, start: "09:50", end: "11:20" }, // Mo 3./4 (Tun)
-          { day: 2, start: "09:50", end: "11:20" }, // Di 3./4 (Tun)
+          { day: 1, start: "09:50", end: "11:20" }, // Mo 3./4 (Can)
+          { day: 1, start: "11:40", end: "13:10" }, // Mo 5./6 (Tun)
           { day: 3, start: "09:50", end: "11:20" }, // Mi 3./4 (Tun)
-          { day: 2, start: "11:40", end: "13:10" }, // Di 5./6 (Can)
           { day: 4, start: "08:00", end: "09:30" }, // Do 1./2 (Can)
+          { day: 4, start: "11:40", end: "13:10" }, // Do 5./6 (Tun)
           { day: 5, start: "09:50", end: "11:20" }  // Fr 3./4 (Can)
         ]
       },
       {
-        group: "2",
+        group: "2", // Woi
         students: [
           "Niiazkuly (5a)", "Neijla (7a)", "Selena (7.2)", "Maja (7.2)"
         ],
         times: [
-          { day: 1, start: "09:50", end: "11:20" }, // Mo 3./4 (Woi)
+          { day: 1, start: "08:00", end: "09:30" }, // Mo 1./2 (Woi)
           { day: 3, start: "11:40", end: "13:10" }, // Mi 5./6 (Woi)
           { day: 4, start: "09:50", end: "11:20" }  // Do 3./4 (Woi)
+        ]
+      },
+      {
+        group: "Mathe", // eigener Block – alle Sprachlerner:innen
+        isMath: true,
+        note: "alle Sprachlerner:innen",
+        students: [],
+        times: [
+          { day: 2, start: "09:50", end: "11:20" } // Di 3./4 (Vri)
         ]
       }
     ];
 
-    // Lehrkräfte – slotgenau (für Status; Übersicht zeigt sie nicht)
+    // --------- Lehrkräfte (für Status-Ansicht) ---------
     const teacherAssignments = [
       { teacher: "Woi", group: "2", slots: [
-        { day: 1, start: "09:50", end: "11:20" },
-        { day: 3, start: "11:40", end: "13:10" },
-        { day: 4, start: "09:50", end: "11:20" }
+        { day: 1, start: "08:00", end: "09:30" }, // Mo 1./2
+        { day: 3, start: "11:40", end: "13:10" }, // Mi 5./6
+        { day: 4, start: "09:50", end: "11:20" }  // Do 3./4
       ]},
       { teacher: "Can", group: "1", slots: [
-        { day: 2, start: "11:40", end: "13:10" },
-        { day: 4, start: "08:00", end: "09:30" },
-        { day: 5, start: "09:50", end: "11:20" }
+        { day: 1, start: "09:50", end: "11:20" }, // Mo 3./4
+        { day: 4, start: "08:00", end: "09:30" }, // Do 1./2
+        { day: 5, start: "09:50", end: "11:20" }  // Fr 3./4
       ]},
       { teacher: "Tun", group: "1", slots: [
-        { day: 1, start: "09:50", end: "11:20" },
-        { day: 2, start: "09:50", end: "11:20" },
-        { day: 3, start: "09:50", end: "11:20" }
+        { day: 1, start: "11:40", end: "13:10" }, // Mo 5./6
+        { day: 3, start: "09:50", end: "11:20" }, // Mi 3./4
+        { day: 4, start: "11:40", end: "13:10" }  // Do 5./6
+      ]},
+      { teacher: "Vri", group: "Mathe", slots: [
+        { day: 2, start: "09:50", end: "11:20" }   // Di 3./4
       ]}
     ];
 
+    // ---- Hilfsfunktionen (unverändert) ----
     const dayNames=["Sonntag","Montag","Dienstag","Mittwoch","Donnerstag","Freitag","Samstag"];
     const pad2=n=>n.toString().padStart(2,"0");
     const normTime=t=>{const [h,m]=t.split(":").map(Number);return `${pad2(h)}:${pad2(m)}`};
@@ -114,12 +131,10 @@
     (function buildTeacherMap(){
       const allowed=new Set();
       schedule.forEach(g=>g.times.forEach(t=>allowed.add(slotKey(g.group,t.day,t.start,t.end))));
-      teacherAssignments.forEach(a=>{
-        a.slots.forEach(s=>{
-          const key=slotKey(a.group,s.day,s.start,s.end);
-          if(allowed.has(key) && !slotTeacherMap.has(key)) slotTeacherMap.set(key,a.teacher);
-        });
-      });
+      teacherAssignments.forEach(a=>a.slots.forEach(s=>{
+        const key=slotKey(a.group,s.day,s.start,s.end);
+        if(allowed.has(key) && !slotTeacherMap.has(key)) slotTeacherMap.set(key,a.teacher);
+      }));
     })();
 
     let lastFiveMinuteAlertKey=null;
@@ -134,11 +149,16 @@
         card.className="session-card";
         const title=document.createElement("div");
         title.className="session-title";
-        title.textContent=`Gruppe ${sess.group}${sess.teacher?` – Lehrkraft: ${sess.teacher}`:""}`;
+        const label = (sess.group==="Mathe") ? "Mathe-ASF (Vri)" : `Gruppe ${sess.group}`;
+        title.textContent = label + (sess.teacher?` – Lehrkraft: ${sess.teacher}`:"");
         const list=document.createElement("div");
         list.className="left-align";
-        list.innerHTML=sess.students.join("<br>");
-        card.appendChild(title);card.appendChild(list);
+        if (sess.group==="Mathe") {
+          list.innerHTML = `<div class="muted">Hinweis: alle Sprachlerner:innen</div>`;
+        } else {
+          list.innerHTML = sess.students.join("<br>");
+        }
+        card.appendChild(title); card.appendChild(list);
         container.appendChild(card);
       });
     }
@@ -156,8 +176,12 @@
           const st=new Date(now), en=new Date(now); st.setHours(sH,sM,0,0); en.setHours(eH,eM,0,0);
           const key=slotKey(group.group,time.day,time.start,time.end);
           const teacher=slotTeacherMap.get(key)||null;
-          if(now>=st && now<=en) activeSessions.push({group:group.group,students:group.students,teacher,start:st,end:en});
-          else if(st>now) futureSessions.push({group:group.group,students:group.students,teacher,time:st});
+          const students = group.isMath ? [] : group.students;
+          if(now>=st && now<=en){
+            activeSessions.push({group:group.group,students,teacher,start:st,end:en});
+          } else if(st>now){
+            futureSessions.push({group:group.group,students,teacher,time:st});
+          }
         });
       });
 
@@ -182,7 +206,6 @@
         const m=Math.floor(diff/60000), s=Math.floor((diff%60000)/1000);
 
         if(m<=15){
-          // GELB nur ≤ 15 Minuten vor Start
           document.body.style.background="linear-gradient(180deg,#FFD700,#FFA500)";
           title.innerText=nextSessions.length>1?"Achtung! Gleich Anschlussförderung ⚠️ (Mehrere Gruppen)":"Achtung! Gleich Anschlussförderung ⚠️";
           groupTitle.innerText=nextSessions.length>1?"Nächste Sitzungen":"Nächste Sitzung";
@@ -195,7 +218,6 @@
             if(lastFiveMinuteAlertKey!==key){ lastFiveMinuteAlertKey=key; document.getElementById("alertSound").play().catch(()=>{}); }
           }
         } else {
-          // Noch zu weit weg -> Grün
           document.body.style.background="linear-gradient(180deg,#4CAF50,#388E3C)";
           title.innerText="Anschlussförderung Wi ✅";
           box.classList.add("hidden"); countdown.classList.add("hidden");
@@ -216,8 +238,10 @@
         const times=[...set].map(k=>{const [d,s,e]=k.split("|");return {day:Number(d),start:s,end:e};})
           .sort((a,b)=>a.day!==b.day?a.day-b.day:a.start.localeCompare(b.start));
         const box=document.createElement("div"); box.className="box";
-        box.innerHTML=`<div class="group-header">Gruppe ${g.group}</div>
-          <div class="left-align"><strong>SuS:</strong><br>${g.students.join("<br>")}</div>
+        const header = (g.isMath) ? `Mathe-ASF (Vri) <span class="tag">Hinweis: alle Sprachlerner:innen</span>` : `Gruppe ${g.group}`;
+        const susList = g.isMath ? "alle Sprachlerner:innen" : g.students.join("<br>");
+        box.innerHTML=`<div class="group-header">${header}</div>
+          <div class="left-align"><strong>SuS:</strong><br>${susList || "—"}</div>
           <div class="left-align" style="margin-top:8px"><strong>Termine:</strong><br>${
             times.map(t=>`<span class="time-chip">${dayNames[t.day]} ${t.start}–${t.end}</span>`).join(" ")
           }</div>`;
@@ -225,16 +249,22 @@
       });
     }
 
+    // Buttons / Panels
     function showOverview(){isOverview=true;document.getElementById("statusView").classList.add("hidden");document.getElementById("overviewView").classList.remove("hidden");renderOverview();}
     function showStatus(){isOverview=false;document.getElementById("overviewView").classList.add("hidden");document.getElementById("statusView").classList.remove("hidden");updateDisplay();}
-    document.addEventListener("DOMContentLoaded",()=>{document.getElementById("toggleBtn").addEventListener("click",showOverview);document.getElementById("toggleBtnBack").addEventListener("click",showStatus);});
 
-    function updateClock(){ document.getElementById("clock").innerText=new Date().toLocaleTimeString("de-DE"); }
-    updateClock(); updateDisplay();
-    setInterval(updateClock,1000);
+    document.addEventListener("DOMContentLoaded",()=>{
+      document.getElementById("toggleBtn").addEventListener("click",showOverview);
+      document.getElementById("toggleBtnBack").addEventListener("click",showStatus);
+    });
+
+    // Start
+    function tickClock(){ document.getElementById("clock").innerText=new Date().toLocaleTimeString("de-DE"); }
+    tickClock(); updateDisplay();
+    setInterval(tickClock,1000);
     setInterval(updateDisplay,1000);
   </script>
 
-  <p id="footer">(Stand: 22.08.2025)</p>
+  <p id="footer">(Stand: 25.08.2025)</p>
 </body>
 </html>
