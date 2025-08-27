@@ -59,14 +59,11 @@
     // Zeiten: 1./2. = 08:00–09:30, 3./4. = 09:50–11:20, 5./6. = 11:40–13:10
     // Tage: So=0, Mo=1, Di=2, Mi=3, Do=4, Fr=5, Sa=6
 
-    // --------- Gruppen & Schüler (Wi) ---------
+    // Gruppen & Schüler (nur Vornamen)
     const schedule = [
       {
-        group: "1", // Can + Tun
-        students: [
-          "Violetta (5.1)", "Danilo (5.1)", "Anastasia (6a)", "Vojdan (6.1)",
-          "Mohammad (7.2)", "Agnessa (7.2)", "Artem (7.1)", "Krisztian (7.1)"
-        ],
+        group: "1",
+        students: ["Danilo","Vojdan","Artem","Krisztian","Mohammed","Agnessa"],
         times: [
           { day: 1, start: "09:50", end: "11:20" }, // Mo 3./4 (Can)
           { day: 1, start: "11:40", end: "13:10" }, // Mo 5./6 (Tun)
@@ -77,20 +74,19 @@
         ]
       },
       {
-        group: "2", // Woi
-        students: [
-          "Niiazkuly (5a)", "Neijla (7a)", "Selena (7.2)", "Maja (7.2)"
-        ],
+        group: "2",
+        students: ["Niiazkuly","Neijla","Selena","Maja","Violetta"],
         times: [
           { day: 1, start: "08:00", end: "09:30" }, // Mo 1./2 (Woi)
           { day: 3, start: "11:40", end: "13:10" }, // Mi 5./6 (Woi)
           { day: 4, start: "09:50", end: "11:20" }  // Do 3./4 (Woi)
         ]
       },
+      // Mathe-ASF (Vri) – ohne Liste, Hinweis: "Bitte Marvin mitteilen"
       {
-        group: "Mathe", // eigener Block – alle Sprachlerner:innen
+        group: "Mathe",
         isMath: true,
-        note: "alle Sprachlerner:innen",
+        note: "Bitte Marvin mitteilen",
         students: [],
         times: [
           { day: 2, start: "09:50", end: "11:20" } // Di 3./4 (Vri)
@@ -98,7 +94,7 @@
       }
     ];
 
-    // --------- Lehrkräfte (für Status-Ansicht) ---------
+    // Lehrkräfte (Status zeigt Lehrkraft, Übersicht nicht)
     const teacherAssignments = [
       { teacher: "Woi", group: "2", slots: [
         { day: 1, start: "08:00", end: "09:30" }, // Mo 1./2
@@ -120,7 +116,7 @@
       ]}
     ];
 
-    // ---- Hilfsfunktionen (unverändert) ----
+    // ---- Hilfsfunktionen ----
     const dayNames=["Sonntag","Montag","Dienstag","Mittwoch","Donnerstag","Freitag","Samstag"];
     const pad2=n=>n.toString().padStart(2,"0");
     const normTime=t=>{const [h,m]=t.split(":").map(Number);return `${pad2(h)}:${pad2(m)}`};
@@ -154,7 +150,7 @@
         const list=document.createElement("div");
         list.className="left-align";
         if (sess.group==="Mathe") {
-          list.innerHTML = `<div class="muted">Hinweis: alle Sprachlerner:innen</div>`;
+          list.innerHTML = `<div class="muted">${schedule.find(x=>x.group==="Mathe")?.note || ""}</div>`;
         } else {
           list.innerHTML = sess.students.join("<br>");
         }
@@ -238,8 +234,10 @@
         const times=[...set].map(k=>{const [d,s,e]=k.split("|");return {day:Number(d),start:s,end:e};})
           .sort((a,b)=>a.day!==b.day?a.day-b.day:a.start.localeCompare(b.start));
         const box=document.createElement("div"); box.className="box";
-        const header = (g.isMath) ? `Mathe-ASF (Vri) <span class="tag">Hinweis: alle Sprachlerner:innen</span>` : `Gruppe ${g.group}`;
-        const susList = g.isMath ? "alle Sprachlerner:innen" : g.students.join("<br>");
+        const header = (g.isMath)
+          ? `Mathe-ASF (Vri) <span class="tag">${g.note}</span>`
+          : `Gruppe ${g.group}`;
+        const susList = g.isMath ? g.note : g.students.join("<br>");
         box.innerHTML=`<div class="group-header">${header}</div>
           <div class="left-align"><strong>SuS:</strong><br>${susList || "—"}</div>
           <div class="left-align" style="margin-top:8px"><strong>Termine:</strong><br>${
@@ -249,7 +247,7 @@
       });
     }
 
-    // Buttons / Panels
+    // Buttons
     function showOverview(){isOverview=true;document.getElementById("statusView").classList.add("hidden");document.getElementById("overviewView").classList.remove("hidden");renderOverview();}
     function showStatus(){isOverview=false;document.getElementById("overviewView").classList.add("hidden");document.getElementById("statusView").classList.remove("hidden");updateDisplay();}
 
@@ -265,6 +263,6 @@
     setInterval(updateDisplay,1000);
   </script>
 
-  <p id="footer">(Stand: 25.08.2025)</p>
+  <p id="footer">(Stand: 27.08.2025)</p>
 </body>
 </html>
