@@ -29,15 +29,20 @@ export const STUDENTS_SPRACHJONGLEURE = [
 ];
 
 export const SCHEDULE: ASFSession[] = [
-  // ASF 1 (Tun/Can), Room: W204
-  { id: 'asf1-tue-1', label: 'ASF 1', teacher: 'Tun/Can', room: 'W204', day: 2, startTime: '09:50', endTime: '11:20', students: STUDENTS_ASF1 },
-  { id: 'asf1-thu-2', label: 'ASF 1', teacher: 'Tun', room: 'W204', day: 4, startTime: '11:40', endTime: '13:10', students: STUDENTS_ASF1 },
-  { id: 'asf1-tue-3', label: 'ASF 1', teacher: 'Tun/Can', room: 'W204', day: 2, startTime: '11:40', endTime: '13:10', students: STUDENTS_ASF1 },
+  // --- TUN (ASF 1 Gruppe) ---
+  { id: 'tun-mo-34', label: 'ASF 1', teacher: 'Tun', room: 'W204', day: 1, startTime: '09:50', endTime: '11:20', students: STUDENTS_ASF1 },
+  { id: 'tun-mi-34', label: 'ASF 1', teacher: 'Tun', room: 'W204', day: 3, startTime: '09:50', endTime: '11:20', students: STUDENTS_ASF1 },
+  { id: 'tun-do-56', label: 'ASF 1', teacher: 'Tun', room: 'W204', day: 4, startTime: '11:40', endTime: '13:10', students: STUDENTS_ASF1 },
 
-  // ASF 2 (Woi), Room: W204
-  { id: 'asf2-thu-1', label: 'ASF 2', teacher: 'Woi', room: 'W204', day: 4, startTime: '09:50', endTime: '11:20', students: STUDENTS_ASF2 },
-  { id: 'asf2-wed-1', label: 'ASF 2', teacher: 'Woi', room: 'W204', day: 3, startTime: '09:50', endTime: '11:20', students: STUDENTS_ASF2 },
-  { id: 'asf2-tue-1', label: 'ASF 2', teacher: 'Woi', room: 'W204', day: 2, startTime: '11:40', endTime: '13:10', students: STUDENTS_ASF2 }
+  // --- CAN (ASF 1 Gruppe) ---
+  { id: 'can-mo-12', label: 'ASF 1', teacher: 'Can', room: 'W204', day: 1, startTime: '08:00', endTime: '09:30', students: STUDENTS_ASF1 },
+  { id: 'can-di-34', label: 'ASF 1', teacher: 'Can', room: 'W204', day: 2, startTime: '09:50', endTime: '11:20', students: STUDENTS_ASF1 },
+  { id: 'can-fr-34', label: 'ASF 1', teacher: 'Can', room: 'W204', day: 5, startTime: '09:50', endTime: '11:20', students: STUDENTS_ASF1 },
+
+  // --- WOI (ASF 2 Gruppe) ---
+  { id: 'woi-mi-56', label: 'ASF 2', teacher: 'Woi', room: 'W204', day: 3, startTime: '11:40', endTime: '13:10', students: STUDENTS_ASF2 },
+  { id: 'woi-do-34', label: 'ASF 2', teacher: 'Woi', room: 'W204', day: 4, startTime: '09:50', endTime: '11:20', students: STUDENTS_ASF2 },
+  { id: 'woi-fr-12', label: 'ASF 2', teacher: 'Woi', room: 'W204', day: 5, startTime: '08:00', endTime: '09:30', students: STUDENTS_ASF2 }
 ];
 
 export const BEEP_SOUND_URL = 'https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3';
