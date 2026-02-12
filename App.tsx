@@ -1,14 +1,14 @@
 
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
-import { SCHEDULE, BEEP_SOUND_URL, STUDENTS_SPRACHJONGLEURE } from './constants';
+import { SCHEDULE, BEEP_SOUND_URL, STUDENTS_SPRACHJONGLEURE, STUDENTS_ASF1, STUDENTS_ASF2 } from './constants';
 import { ASFSession, StatusType, SessionStatus } from './types';
 
 const App: React.FC = () => {
   const [now, setNow] = useState(new Date());
   const [status, setStatus] = useState<SessionStatus>({ type: StatusType.NONE, currentSessions: [] });
   const [isUpcomingExpanded, setIsUpcomingExpanded] = useState(false);
-  const [showSprachjongleure, setShowSprachjongleure] = useState(false);
-  const [showAllSchedule, setShowAllSchedule] = useState(false);
+  const [activeTab, setActiveTab] = useState<'none' | 'sprachjongleure' | 'all' | 'courses' | 'done'>('none');
+  const [selectedDoneSession, setSelectedDoneSession] = useState<ASFSession | null>(null);
   const beepPlayedRef = useRef<string | null>(null);
 
   // Update clock every second
@@ -113,7 +113,7 @@ const App: React.FC = () => {
   }, [status.type]);
 
   // Helper to sort and group students by class with granular colors
-  const renderStudentList = (students: string[], theme: 'red' | 'indigo' | 'orange') => {
+  const renderStudentList = (students: string[], theme: 'red' | 'indigo' | 'orange' | 'teal' | 'slate') => {
     const classRegex = /\((.*?)\)/;
     
     const sortedStudents = [...students].sort((a, b) => {
@@ -132,7 +132,13 @@ const App: React.FC = () => {
       return 'bg-slate-50 border-slate-100 text-slate-800';
     };
 
-    const activeDotColor = theme === 'red' ? 'bg-red-500' : (theme === 'orange' ? 'bg-orange-500' : 'bg-indigo-500');
+    const activeDotColor = {
+      red: 'bg-red-500',
+      orange: 'bg-orange-500',
+      indigo: 'bg-indigo-500',
+      teal: 'bg-teal-500',
+      slate: 'bg-slate-400'
+    }[theme];
 
     return (
       <ul className="grid grid-cols-1 gap-1.5">
@@ -155,8 +161,59 @@ const App: React.FC = () => {
     })).filter(group => group.sessions.length > 0);
   }, []);
 
+  const completedSessionsToday = useMemo(() => {
+    const currentDay = now.getDay();
+    const currentTimeStr = now.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit', hour12: false });
+    return SCHEDULE.filter(s => s.day === currentDay && s.endTime < currentTimeStr)
+      .sort((a, b) => b.endTime.localeCompare(a.endTime));
+  }, [now]);
+
+  const toggleTab = (tab: 'sprachjongleure' | 'all' | 'courses' | 'done') => {
+    setActiveTab(activeTab === tab ? 'none' : tab);
+  };
+
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 pb-12 overflow-x-hidden selection:bg-indigo-100">
+      {/* Participant Popup (Modal) */}
+      {selectedDoneSession && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200" onClick={() => setSelectedDoneSession(null)}>
+          <div className="bg-white w-full max-w-sm rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300" onClick={e => e.stopPropagation()}>
+            <div className="p-1.5 bg-slate-200"></div>
+            <div className="p-6">
+              <div className="flex justify-between items-start mb-6">
+                <div>
+                  <h3 className="text-2xl font-black text-slate-800 tracking-tight">{selectedDoneSession.label}</h3>
+                  <p className="text-sm font-bold text-slate-500 uppercase tracking-widest mt-1">
+                    {selectedDoneSession.teacher} • Raum {selectedDoneSession.room}
+                  </p>
+                </div>
+                <button onClick={() => setSelectedDoneSession(null)} className="p-2 hover:bg-slate-100 rounded-full text-slate-400 transition-colors">
+                  <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
+              </div>
+              
+              <div className="space-y-4">
+                <div className="flex items-center gap-2 text-xs font-black text-slate-400 bg-slate-50 px-3 py-2 rounded-xl border border-slate-100 w-fit">
+                  🕒 {selectedDoneSession.startTime} – {selectedDoneSession.endTime} Uhr
+                </div>
+                
+                <div className="pt-2">
+                  <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-3">Teilnehmerliste</h4>
+                  {renderStudentList(selectedDoneSession.students, 'slate')}
+                </div>
+              </div>
+
+              <button 
+                onClick={() => setSelectedDoneSession(null)}
+                className="w-full mt-8 py-4 bg-slate-900 text-white rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-slate-800 transition-colors shadow-lg shadow-slate-200"
+              >
+                Schließen
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Header Banner */}
       <header className={`sticky top-0 z-20 bg-gradient-to-r ${getStatusStyles()} py-3 px-4 shadow-lg transition-all duration-700`}>
         <div className="max-w-4xl mx-auto flex flex-col items-center justify-center text-center">
@@ -181,49 +238,59 @@ const App: React.FC = () => {
           </div>
         </section>
 
-        {/* Action Buttons Row */}
-        <div className="grid grid-cols-2 gap-3">
-          {/* Sprachjongleure Button */}
-          <section className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-            <button 
-              onClick={() => {
-                setShowSprachjongleure(!showSprachjongleure);
-                setShowAllSchedule(false);
-              }}
-              className={`w-full flex flex-col items-center justify-center p-3 font-black uppercase tracking-widest text-[10px] transition-all ${showSprachjongleure ? 'bg-orange-50 text-orange-600' : 'bg-white text-slate-500'}`}
-            >
-              <span className="text-lg mb-1">🎨</span>
-              <span>Sprachjongleure</span>
-            </button>
-          </section>
+        {/* Action Buttons Grid */}
+        <div className="grid grid-cols-2 gap-2">
+          {/* Sprachjongleure */}
+          <button 
+            onClick={() => toggleTab('sprachjongleure')}
+            className={`flex flex-col items-center justify-center p-3 rounded-2xl shadow-sm border transition-all ${activeTab === 'sprachjongleure' ? 'bg-orange-50 border-orange-200 text-orange-600 ring-2 ring-orange-100' : 'bg-white border-slate-100 text-slate-500'}`}
+          >
+            <span className="text-xl mb-1">🎨</span>
+            <span className="text-[10px] font-black uppercase tracking-widest">Sprachjongleure</span>
+          </button>
 
-          {/* All Appointments Button */}
-          <section className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-            <button 
-              onClick={() => {
-                setShowAllSchedule(!showAllSchedule);
-                setShowSprachjongleure(false);
-              }}
-              className={`w-full flex flex-col items-center justify-center p-3 font-black uppercase tracking-widest text-[10px] transition-all ${showAllSchedule ? 'bg-indigo-50 text-indigo-600' : 'bg-white text-slate-500'}`}
-            >
-              <span className="text-lg mb-1">📅</span>
-              <span>Alle Termine</span>
-            </button>
-          </section>
+          {/* Alle Termine */}
+          <button 
+            onClick={() => toggleTab('all')}
+            className={`flex flex-col items-center justify-center p-3 rounded-2xl shadow-sm border transition-all ${activeTab === 'all' ? 'bg-indigo-50 border-indigo-200 text-indigo-600 ring-2 ring-indigo-100' : 'bg-white border-slate-100 text-slate-500'}`}
+          >
+            <span className="text-xl mb-1">📅</span>
+            <span className="text-[10px] font-black uppercase tracking-widest">Wochenplan</span>
+          </button>
+
+          {/* Kursübersicht */}
+          <button 
+            onClick={() => toggleTab('courses')}
+            className={`flex flex-col items-center justify-center p-3 rounded-2xl shadow-sm border transition-all ${activeTab === 'courses' ? 'bg-teal-50 border-teal-200 text-teal-600 ring-2 ring-teal-100' : 'bg-white border-slate-100 text-slate-500'}`}
+          >
+            <span className="text-xl mb-1">👥</span>
+            <span className="text-[10px] font-black uppercase tracking-widest">Kursübersicht</span>
+          </button>
+
+          {/* Abgeschlossen */}
+          <button 
+            onClick={() => toggleTab('done')}
+            className={`flex flex-col items-center justify-center p-3 rounded-2xl shadow-sm border transition-all ${activeTab === 'done' ? 'bg-slate-100 border-slate-300 text-slate-700 ring-2 ring-slate-200' : 'bg-white border-slate-100 text-slate-500'}`}
+          >
+            <span className="text-xl mb-1">✅</span>
+            <span className="text-[10px] font-black uppercase tracking-widest">Erledigt ({completedSessionsToday.length})</span>
+          </button>
         </div>
 
-        {/* Collapsible Content: Sprachjongleure */}
-        {showSprachjongleure && (
+        {/* --- Collapsible Contents --- */}
+
+        {/* Sprachjongleure */}
+        {activeTab === 'sprachjongleure' && (
           <div className="bg-white rounded-2xl p-4 shadow-md border border-orange-100 animate-in fade-in zoom-in-95 duration-200">
             <h4 className="text-[10px] font-black uppercase tracking-widest text-orange-400 mb-3 text-center">Gruppe: Sprachjongleure</h4>
             {renderStudentList(STUDENTS_SPRACHJONGLEURE, 'orange')}
           </div>
         )}
 
-        {/* Collapsible Content: All Appointments */}
-        {showAllSchedule && (
+        {/* Wochenplan */}
+        {activeTab === 'all' && (
           <div className="bg-white rounded-2xl p-4 shadow-md border border-indigo-100 animate-in fade-in zoom-in-95 duration-200 space-y-4">
-            <h4 className="text-[10px] font-black uppercase tracking-widest text-indigo-400 mb-1 text-center">Wochenplan (Regulär)</h4>
+            <h4 className="text-[10px] font-black uppercase tracking-widest text-indigo-400 mb-1 text-center">Gesamter Wochenplan</h4>
             {groupedSchedule.map(group => (
               <div key={group.day} className="space-y-2">
                 <div className="flex items-center gap-2">
@@ -249,6 +316,53 @@ const App: React.FC = () => {
           </div>
         )}
 
+        {/* Kursübersicht ASF 1 & 2 */}
+        {activeTab === 'courses' && (
+          <div className="bg-white rounded-2xl p-4 shadow-md border border-teal-100 animate-in fade-in zoom-in-95 duration-200 space-y-6">
+            <div>
+              <h4 className="text-[10px] font-black uppercase tracking-widest text-teal-600 mb-3 bg-teal-50 inline-block px-3 py-1 rounded-full">Gruppe: ASF 1</h4>
+              {renderStudentList(STUDENTS_ASF1, 'teal')}
+            </div>
+            <div className="pt-4 border-t border-slate-50">
+              <h4 className="text-[10px] font-black uppercase tracking-widest text-teal-600 mb-3 bg-teal-50 inline-block px-3 py-1 rounded-full">Gruppe: ASF 2</h4>
+              {renderStudentList(STUDENTS_ASF2, 'teal')}
+            </div>
+          </div>
+        )}
+
+        {/* Abgeschlossene Termine */}
+        {activeTab === 'done' && (
+          <div className="bg-white rounded-2xl p-4 shadow-md border border-slate-200 animate-in fade-in zoom-in-95 duration-200 space-y-4">
+            <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1 text-center">Heute beendet</h4>
+            {completedSessionsToday.length > 0 ? (
+              <div className="space-y-2">
+                {completedSessionsToday.map(s => (
+                  <button 
+                    key={s.id} 
+                    onClick={() => setSelectedDoneSession(s)}
+                    className="w-full flex items-center justify-between bg-slate-50 p-3 rounded-xl border border-slate-100 opacity-90 grayscale-[0.3] hover:grayscale-0 hover:bg-slate-100 hover:border-slate-200 transition-all text-left"
+                  >
+                    <div className="flex flex-col">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs">✅</span>
+                        <span className="text-sm font-black text-slate-800">{s.label}</span>
+                      </div>
+                      <span className="text-[10px] font-bold text-slate-400 ml-6">{s.teacher} • Raum {s.room}</span>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-[10px] font-black text-slate-400 line-through">{s.startTime} – {s.endTime}</span>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <p className="text-[10px] text-center font-bold text-slate-300 py-4 uppercase">Noch keine beendeten Termine heute.</p>
+            )}
+          </div>
+        )}
+
+        {/* --- End Collapsible Contents --- */}
+
         {/* ACTIVE SESSIONS SECTION */}
         {status.type === StatusType.ACTIVE && status.currentSessions.map((session) => (
           <section key={session.id} className="bg-white rounded-2xl shadow-xl border border-slate-100 overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-300">
@@ -259,10 +373,12 @@ const App: React.FC = () => {
                   Sitzung Läuft: {session.label}
                 </span>
                 <h3 className="text-3xl font-black text-slate-800 leading-tight tracking-tight">Raum {session.room}</h3>
-                <p className="text-sm text-slate-500 font-semibold">Lehrkraft: <span className="text-slate-900 font-bold underline decoration-red-200">{session.teacher}</span></p>
-                <div className="flex items-center gap-1.5 text-slate-400 font-black text-xs pt-1">
-                  <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.414L11 9.586V6z" clipRule="evenodd" /></svg>
-                  {session.startTime} – {session.endTime} Uhr
+                <div className="flex items-center justify-between">
+                   <p className="text-sm text-slate-500 font-semibold">Lehrkraft: <span className="text-slate-900 font-bold underline decoration-red-200">{session.teacher}</span></p>
+                   <div className="flex items-center gap-1.5 text-slate-400 font-black text-xs">
+                    <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.414L11 9.586V6z" clipRule="evenodd" /></svg>
+                    {session.startTime} – {session.endTime}
+                  </div>
                 </div>
               </div>
 
@@ -278,7 +394,7 @@ const App: React.FC = () => {
 
         {/* UPCOMING SESSION (DER NÄCHSTE TERMIN) */}
         {status.nextSession && (
-          <section className={`bg-white rounded-2xl shadow-md border border-slate-100 overflow-hidden transition-all duration-500 ${status.type === StatusType.ACTIVE ? 'mt-4 border-dashed' : 'animate-in fade-in slide-in-from-bottom-2 duration-300'}`}>
+          <section className={`bg-white rounded-2xl shadow-md border border-slate-100 overflow-hidden transition-all duration-500 ${status.type === StatusType.ACTIVE ? 'mt-4 border-dashed opacity-80 scale-95 origin-top' : 'animate-in fade-in slide-in-from-bottom-2 duration-300'}`}>
             <div className={`p-1 ${status.type === StatusType.ACTIVE ? 'bg-slate-300' : 'bg-amber-400'}`}></div>
             <div className="p-5">
               <div className="flex justify-between items-start gap-3">
@@ -335,16 +451,16 @@ const App: React.FC = () => {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
               </svg>
             </div>
-            <h3 className="text-lg font-black text-slate-800 uppercase tracking-tight">Alles erledigt</h3>
+            <h3 className="text-lg font-black text-slate-800 uppercase tracking-tight">Alle Termine beendet</h3>
             <p className="text-xs text-slate-400 font-bold max-w-xs mx-auto leading-relaxed">
-              Keine weiteren Anschlussförderungen für heute.
+              Für heute sind keine weiteren Anschlussförderungen geplant. Gute Arbeit!
             </p>
           </section>
         )}
 
         <footer className="text-center py-6 text-slate-300 text-[9px] font-black uppercase tracking-widest leading-relaxed">
-          ASF Dashboard v2.5<br/>
-          Aktueller Wochenplan Mo-Fr
+          ASF Dashboard v2.7<br/>
+          Smart Tracking & Interactive Done History
         </footer>
       </main>
     </div>
