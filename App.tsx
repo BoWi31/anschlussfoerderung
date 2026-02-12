@@ -8,6 +8,7 @@ const App: React.FC = () => {
   const [status, setStatus] = useState<SessionStatus>({ type: StatusType.NONE, currentSessions: [] });
   const [isUpcomingExpanded, setIsUpcomingExpanded] = useState(false);
   const [showSprachjongleure, setShowSprachjongleure] = useState(false);
+  const [showAllSchedule, setShowAllSchedule] = useState(false);
   const beepPlayedRef = useRef<string | null>(null);
 
   // Update clock every second
@@ -84,6 +85,11 @@ const App: React.FC = () => {
     }).format(date);
   };
 
+  const getDayName = (day: number) => {
+    const names = ["Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"];
+    return names[day];
+  };
+
   const getStatusStyles = () => {
     switch (status.type) {
       case StatusType.ACTIVE:
@@ -118,7 +124,6 @@ const App: React.FC = () => {
 
     const getClassColor = (name: string) => {
       const cls = name.match(classRegex)?.[1] || '';
-      // Distinguish 5.1 and 5a
       if (cls === '5.1') return 'bg-emerald-50 border-emerald-100 text-emerald-800';
       if (cls === '5a') return 'bg-teal-50 border-teal-100 text-teal-800';
       if (cls === '6.1') return 'bg-blue-50 border-blue-100 text-blue-800';
@@ -140,6 +145,15 @@ const App: React.FC = () => {
       </ul>
     );
   };
+
+  const groupedSchedule = useMemo(() => {
+    const days = [1, 2, 3, 4, 5]; // Montag bis Freitag
+    return days.map(day => ({
+      day,
+      name: getDayName(day),
+      sessions: SCHEDULE.filter(s => s.day === day).sort((a, b) => a.startTime.localeCompare(b.startTime))
+    })).filter(group => group.sessions.length > 0);
+  }, []);
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 pb-12 overflow-x-hidden selection:bg-indigo-100">
@@ -167,26 +181,73 @@ const App: React.FC = () => {
           </div>
         </section>
 
-        {/* Sprachjongleure Button Group */}
-        <section className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-          <button 
-            onClick={() => setShowSprachjongleure(!showSprachjongleure)}
-            className={`w-full flex items-center justify-between p-4 font-black uppercase tracking-widest text-xs transition-all ${showSprachjongleure ? 'bg-orange-50 text-orange-600' : 'bg-white text-slate-500'}`}
-          >
-            <span className="flex items-center gap-2">
-              <span className={`p-1.5 rounded-lg ${showSprachjongleure ? 'bg-orange-100' : 'bg-slate-100'}`}>🎨</span>
-              Sprachjongleure
-            </span>
-            <svg className={`h-4 w-4 transform transition-transform ${showSprachjongleure ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 9l-7 7-7-7" />
-            </svg>
-          </button>
-          {showSprachjongleure && (
-            <div className="p-4 border-t border-orange-50 bg-orange-50/20 animate-in fade-in zoom-in-95 duration-200">
-               {renderStudentList(STUDENTS_SPRACHJONGLEURE, 'orange')}
-            </div>
-          )}
-        </section>
+        {/* Action Buttons Row */}
+        <div className="grid grid-cols-2 gap-3">
+          {/* Sprachjongleure Button */}
+          <section className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+            <button 
+              onClick={() => {
+                setShowSprachjongleure(!showSprachjongleure);
+                setShowAllSchedule(false);
+              }}
+              className={`w-full flex flex-col items-center justify-center p-3 font-black uppercase tracking-widest text-[10px] transition-all ${showSprachjongleure ? 'bg-orange-50 text-orange-600' : 'bg-white text-slate-500'}`}
+            >
+              <span className="text-lg mb-1">🎨</span>
+              <span>Sprachjongleure</span>
+            </button>
+          </section>
+
+          {/* All Appointments Button */}
+          <section className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+            <button 
+              onClick={() => {
+                setShowAllSchedule(!showAllSchedule);
+                setShowSprachjongleure(false);
+              }}
+              className={`w-full flex flex-col items-center justify-center p-3 font-black uppercase tracking-widest text-[10px] transition-all ${showAllSchedule ? 'bg-indigo-50 text-indigo-600' : 'bg-white text-slate-500'}`}
+            >
+              <span className="text-lg mb-1">📅</span>
+              <span>Alle Termine</span>
+            </button>
+          </section>
+        </div>
+
+        {/* Collapsible Content: Sprachjongleure */}
+        {showSprachjongleure && (
+          <div className="bg-white rounded-2xl p-4 shadow-md border border-orange-100 animate-in fade-in zoom-in-95 duration-200">
+            <h4 className="text-[10px] font-black uppercase tracking-widest text-orange-400 mb-3 text-center">Gruppe: Sprachjongleure</h4>
+            {renderStudentList(STUDENTS_SPRACHJONGLEURE, 'orange')}
+          </div>
+        )}
+
+        {/* Collapsible Content: All Appointments */}
+        {showAllSchedule && (
+          <div className="bg-white rounded-2xl p-4 shadow-md border border-indigo-100 animate-in fade-in zoom-in-95 duration-200 space-y-4">
+            <h4 className="text-[10px] font-black uppercase tracking-widest text-indigo-400 mb-1 text-center">Wochenplan (Regulär)</h4>
+            {groupedSchedule.map(group => (
+              <div key={group.day} className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <div className="h-[1px] flex-1 bg-slate-100"></div>
+                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-tighter">{group.name}</span>
+                  <div className="h-[1px] flex-1 bg-slate-100"></div>
+                </div>
+                <div className="space-y-1.5">
+                  {group.sessions.map(s => (
+                    <div key={s.id} className="flex items-center justify-between bg-slate-50 p-2.5 rounded-lg border border-slate-100">
+                      <div className="flex flex-col">
+                        <span className="text-[11px] font-black text-slate-800">{s.label} • {s.teacher}</span>
+                        <span className="text-[10px] font-bold text-slate-400">Raum {s.room}</span>
+                      </div>
+                      <div className="text-right">
+                        <span className="text-[11px] font-black text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full">{s.startTime} – {s.endTime}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
 
         {/* ACTIVE SESSIONS SECTION */}
         {status.type === StatusType.ACTIVE && status.currentSessions.map((session) => (
@@ -207,7 +268,7 @@ const App: React.FC = () => {
 
               <div className="bg-slate-50 rounded-xl p-4 border border-slate-100">
                 <h4 className="font-bold text-slate-400 mb-3 text-[10px] flex items-center gap-2 uppercase tracking-widest">
-                  Anwesende Schüler ({session.students.length})
+                  Teilnehmende Schüler ({session.students.length})
                 </h4>
                 {renderStudentList(session.students, 'red')}
               </div>
@@ -282,8 +343,8 @@ const App: React.FC = () => {
         )}
 
         <footer className="text-center py-6 text-slate-300 text-[9px] font-black uppercase tracking-widest leading-relaxed">
-          ASF Dashboard v2.3<br/>
-          Inkl. Sprachjongleure & Farb-Coding
+          ASF Dashboard v2.5<br/>
+          Aktueller Wochenplan Mo-Fr
         </footer>
       </main>
     </div>
