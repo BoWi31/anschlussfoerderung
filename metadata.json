@@ -1,0 +1,5 @@
+{
+  "name": "ASF Dashboard",
+  "description": "Ein Dashboard zur Verwaltung der Anschlussförderung (ASF) mit Live-Status, Countdown und Terminverwaltung.",
+  "requestFramePermissions": []
+}
