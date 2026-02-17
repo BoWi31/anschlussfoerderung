@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
-import { SCHEDULE, BEEP_SOUND_URL, STUDENTS_SPRACHJONGLEURE, STUDENTS_ASF1, STUDENTS_ASF2 } from './constants';
+import { SCHEDULE, BEEP_SOUND_URL, STUDENTS_SPRACHJONGLEURE, STUDENTS_ASF1, STUDENTS_ASF2, STUDENTS_MATHE_ASF } from './constants';
 import { ASFSession, StatusType, SessionStatus } from './types';
 
 interface AbsoluteNextSession extends ASFSession {
@@ -117,7 +117,7 @@ const App: React.FC = () => {
     }
   }, [status.type]);
 
-  const renderStudentList = (students: string[], theme: 'red' | 'indigo' | 'orange' | 'teal' | 'slate') => {
+  const renderStudentList = (students: string[], theme: 'red' | 'indigo' | 'orange' | 'teal' | 'slate' | 'amber') => {
     const classRegex = /\((.*?)\)/;
     const sortedStudents = [...students].sort((a, b) => {
       const classA = a.match(classRegex)?.[1] || '';
@@ -135,10 +135,17 @@ const App: React.FC = () => {
       return 'bg-slate-50 border-slate-100 text-slate-800';
     };
 
-    const activeDotColor = { red: 'bg-red-500', orange: 'bg-orange-500', indigo: 'bg-indigo-500', teal: 'bg-teal-500', slate: 'bg-slate-400' }[theme];
+    const activeDotColor = { 
+      red: 'bg-red-500', 
+      orange: 'bg-orange-500', 
+      indigo: 'bg-indigo-500', 
+      teal: 'bg-teal-500', 
+      slate: 'bg-slate-400',
+      amber: 'bg-amber-500'
+    }[theme];
 
     return (
-      <ul className={`grid grid-cols-1 ${students.length > 5 ? 'sm:grid-cols-2' : ''} gap-1.5`}>
+      <ul className={`grid grid-cols-1 ${students.length > 5 ? 'xl:grid-cols-2' : ''} gap-1.5`}>
         {sortedStudents.map((student, idx) => (
           <li key={idx} className={`flex items-center gap-2.5 px-3 py-2 rounded-lg border shadow-sm text-sm font-bold ${getClassColor(student)} transition-transform active:scale-95`}>
             <span className={`w-2 h-2 rounded-full ${theme === 'red' ? 'animate-pulse' : ''} ${activeDotColor}`}></span>
@@ -230,7 +237,7 @@ const App: React.FC = () => {
 
       <main className="max-w-4xl mx-auto w-full mt-4 px-4 sm:px-6 lg:px-8 space-y-6 flex-grow">
         
-        {/* Time & Date Display - Adapts to Row on Tablet/Desktop */}
+        {/* Time & Date Display */}
         <section className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="text-center md:text-left flex-1 border-b md:border-b-0 md:border-r border-slate-50 pb-4 md:pb-0 md:pr-8">
             <h2 className="text-slate-400 font-bold uppercase tracking-widest text-[10px] md:text-xs mb-1">Wochentag & Datum</h2>
@@ -244,7 +251,7 @@ const App: React.FC = () => {
           </div>
         </section>
 
-        {/* Action Buttons Grid - Flexible Columns */}
+        {/* Action Buttons Grid */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           <button onClick={() => toggleTab('sprachjongleure')} className={`flex flex-col items-center justify-center p-4 rounded-2xl shadow-sm border transition-all ${activeTab === 'sprachjongleure' ? 'bg-orange-50 border-orange-200 text-orange-600 ring-4 ring-orange-50' : 'bg-white border-slate-100 text-slate-500 hover:bg-slate-50 active:scale-95'}`}>
             <span className="text-2xl mb-1">🎨</span>
@@ -312,7 +319,7 @@ const App: React.FC = () => {
 
         {activeTab === 'courses' && (
           <div className="bg-white rounded-2xl p-6 shadow-md border border-teal-100 animate-in fade-in zoom-in-95 duration-200 space-y-8">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               <div>
                 <h4 className="text-[10px] md:text-xs font-black uppercase tracking-widest text-teal-600 mb-4 bg-teal-50 inline-block px-3 py-1 rounded-full">Gruppe: ASF 1</h4>
                 {renderStudentList(STUDENTS_ASF1, 'teal')}
@@ -320,6 +327,10 @@ const App: React.FC = () => {
               <div className="pt-8 md:pt-0 border-t md:border-t-0 md:border-l border-slate-100 md:pl-8">
                 <h4 className="text-[10px] md:text-xs font-black uppercase tracking-widest text-teal-600 mb-4 bg-teal-50 inline-block px-3 py-1 rounded-full">Gruppe: ASF 2</h4>
                 {renderStudentList(STUDENTS_ASF2, 'teal')}
+              </div>
+              <div className="pt-8 lg:pt-0 border-t lg:border-t-0 lg:border-l border-slate-100 lg:pl-8">
+                <h4 className="text-[10px] md:text-xs font-black uppercase tracking-widest text-amber-600 mb-4 bg-amber-50 inline-block px-3 py-1 rounded-full">Gruppe: Mathe-ASF</h4>
+                {renderStudentList(STUDENTS_MATHE_ASF, 'amber')}
               </div>
             </div>
           </div>
@@ -403,7 +414,7 @@ const App: React.FC = () => {
           </section>
         )}
 
-        {/* ABSOLUTE NEXT (FUTURE) SECTION - Overhauled Countdown Aesthetic */}
+        {/* ABSOLUTE NEXT (FUTURE) SECTION */}
         {status.type === StatusType.NONE && absoluteNext && (
           <section className="bg-white rounded-3xl shadow-xl border border-indigo-100 overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500">
             <div className="p-1.5 bg-gradient-to-r from-indigo-500 via-indigo-600 to-teal-500"></div>
@@ -462,8 +473,8 @@ const App: React.FC = () => {
         )}
 
         <footer className="text-center py-12 text-slate-300 text-[10px] font-black uppercase tracking-[0.2em] leading-relaxed">
-          ASF Dashboard v3.2<br/>
-          Advanced Countdown Experience & Visual Refinement
+          ASF Dashboard v3.3<br/>
+          Full Group Integration & Adaptive Desktop Grids
         </footer>
       </main>
     </div>
