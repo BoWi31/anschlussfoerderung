@@ -1,36 +1,996 @@
-
 <!DOCTYPE html>
 <html lang="de">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ASF Dashboard</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+    <title>Anschlussförderung – Dashboard</title>
+
     <style>
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f8fafc;
+        :root {
+            --glass: rgba(255,255,255,0.15);
+            --glass-strong: rgba(255,255,255,0.22);
+            --shadow: 0 6px 18px rgba(0,0,0,0.22);
         }
-        .mono {
-            font-family: 'JetBrains Mono', monospace;
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 10px;
+            min-height: 100vh;
+            background: linear-gradient(180deg, #4CAF50, #388E3C);
+            color: white;
+            transition: background 0.35s ease;
+        }
+
+        .app {
+            width: 100%;
+            max-width: 760px;
+            margin: 0 auto;
+        }
+
+        .box {
+            background: var(--glass);
+            padding: 15px;
+            margin: 9px 0;
+            border-radius: 16px;
+            box-shadow: var(--shadow);
+            backdrop-filter: blur(8px);
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        h1 {
+            font-size: 22px;
+            line-height: 1.2;
+            margin: 0 0 8px;
+            text-transform: uppercase;
+        }
+
+        h2 {
+            font-size: 19px;
+            margin: 0 0 12px;
+        }
+
+        .center {
+            text-align: center;
+        }
+
+        .meta {
+            font-size: 14px;
+            opacity: 0.9;
+            line-height: 1.4;
+        }
+
+        #clock {
+            display: block;
+            width: fit-content;
+            margin: 9px auto;
+            padding: 9px 15px;
+            border-radius: 12px;
+            background: rgba(255,255,255,0.2);
+            font-size: 23px;
+            font-weight: bold;
+        }
+
+        .active-students-top {
+            margin-top: 14px;
+            padding: 13px;
+            border-radius: 13px;
+            background: rgba(255,255,255,0.18);
+            text-align: left;
+        }
+
+        .active-students-title {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        .student-chip-wrap {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 7px;
+        }
+
+        .student-chip {
+            background: rgba(255,255,255,0.17);
+            padding: 7px 9px;
+            border-radius: 9px;
+            font-size: 14px;
+        }
+
+        .student-chip strong {
+            display: block;
+        }
+
+        .student-chip span {
+            font-size: 12px;
+            opacity: 0.85;
+        }
+
+        .button-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-top: 14px;
+        }
+
+        .button {
+            width: 100%;
+            min-height: 46px;
+            border: none;
+            border-radius: 12px;
+            padding: 10px 12px;
+            background: var(--glass-strong);
+            color: white;
+            font-weight: bold;
+            font-size: 15px;
+            cursor: pointer;
+        }
+
+        .button:active {
+            transform: scale(0.98);
+        }
+
+        .today-list {
+            display: flex;
+            flex-direction: column;
+            gap: 9px;
+        }
+
+        .course-card {
+            width: 100%;
+            color: white;
+            background: rgba(255,255,255,0.13);
+            border-radius: 13px;
+            padding: 12px 13px;
+            text-align: left;
+            cursor: pointer;
+        }
+
+        .course-card:active {
+            transform: scale(0.99);
+        }
+
+        .status-done {
+            border-left: 5px solid #d7ffd9;
+        }
+
+        .status-active {
+            border-left: 5px solid #ffb3b3;
+        }
+
+        .status-upcoming {
+            border-left: 5px solid #fff0a8;
+        }
+
+        .course-topline {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .course-name {
+            font-weight: bold;
+            font-size: 16px;
+        }
+
+        .course-status {
+            font-size: 13px;
+            opacity: 0.9;
+            white-space: nowrap;
+        }
+
+        .course-meta {
+            font-size: 14px;
+            line-height: 1.45;
+            margin-top: 5px;
+        }
+
+        .course-students {
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid rgba(255,255,255,0.22);
+        }
+
+        .student-line {
+            padding: 4px 0;
+        }
+
+        .session-header {
+            text-align: center;
+        }
+
+        .session-level {
+            font-size: 21px;
+            font-weight: bold;
+        }
+
+        .session-teacher {
+            font-size: 16px;
+            margin-top: 4px;
+        }
+
+        .session-time {
+            margin-top: 4px;
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .countdown {
+            margin-top: 12px;
+            padding: 10px;
+            border-radius: 10px;
+            background: rgba(255,255,255,0.13);
+            font-size: 18px;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .group-card {
+            background: rgba(255,255,255,0.12);
+            border-radius: 14px;
+            padding: 14px;
+            margin: 12px 0;
+            text-align: left;
+        }
+
+        .group-head {
+            font-size: 17px;
+            font-weight: bold;
+        }
+
+        .termine {
+            font-size: 14px;
+            opacity: 0.9;
+            margin: 5px 0 10px;
+        }
+
+        .class-block {
+            margin-top: 10px;
+        }
+
+        .class-title {
+            font-weight: bold;
+            margin-bottom: 4px;
+        }
+
+        #footer {
+            text-align: center;
+            margin: 20px 0 8px;
+            font-size: 13px;
+            opacity: 0.7;
+        }
+
+        @media (max-width: 520px) {
+            body {
+                padding: 7px;
+            }
+
+            .box {
+                padding: 13px;
+                border-radius: 14px;
+            }
+
+            h1 {
+                font-size: 19px;
+            }
+
+            #clock {
+                font-size: 21px;
+            }
+
+            .button-row {
+                grid-template-columns: 1fr;
+            }
+
+            .button {
+                min-height: 49px;
+                font-size: 16px;
+            }
+
+            .student-chip {
+                width: 100%;
+            }
+
+            .course-topline {
+                align-items: flex-start;
+            }
+
+            .course-status {
+                font-size: 12px;
+            }
         }
     </style>
-<script type="importmap">
-{
-  "imports": {
-    "react-dom/": "https://esm.sh/react-dom@^19.2.4/",
-    "react/": "https://esm.sh/react@^19.2.4/",
-    "react": "https://esm.sh/react@^19.2.4"
-  }
-}
-</script>
-<link rel="stylesheet" href="/index.css">
 </head>
+
 <body>
-    <div id="root"></div>
-<script type="module" src="/index.tsx"></script>
+
+<div class="app">
+
+    <div class="box center">
+        <h1 id="mainTitle">Keine Anschlussförderung ✅</h1>
+
+        <div id="dayDisplay"></div>
+        <div id="nextSessionDisplay" class="meta"></div>
+
+        <div id="topActiveStudents" class="active-students-top hidden">
+            <div class="active-students-title">
+                Gerade in der Anschlussförderung:
+            </div>
+
+            <div id="topActiveStudentList" class="student-chip-wrap"></div>
+        </div>
+
+        <div class="button-row">
+            <button class="button" onclick="toggleAlphabetisierung()">
+                Alphabetisierung
+            </button>
+
+            <button class="button" onclick="toggleAllLists()">
+                Alle Listen
+            </button>
+        </div>
+    </div>
+
+    <div id="clock">--:--:--</div>
+
+    <div id="currentInfoBox" class="box hidden">
+        <div class="session-header">
+            <div id="currentLevel" class="session-level"></div>
+            <div id="currentTeacher" class="session-teacher"></div>
+            <div id="currentTime" class="session-time"></div>
+        </div>
+
+        <div id="countdown" class="countdown hidden"></div>
+    </div>
+
+    <div class="box">
+        <h2>Heute</h2>
+        <div id="todayOverview" class="today-list"></div>
+    </div>
+
+    <div id="alphabetisierungBox" class="box hidden">
+        <h2>Alphabetisierung – Aslan</h2>
+        <div id="alphabetisierungStudents"></div>
+    </div>
+
+    <div id="allListsBox" class="box hidden">
+        <h2>Übersicht aller Listen</h2>
+        <div id="allLists"></div>
+    </div>
+
+    <div id="footer">
+        Anschlussförderung – WI
+    </div>
+
+</div>
+
+<script>
+
+const alphabetisierung = {
+    teacher: "Aslan",
+    level: "Alphabetisierung",
+    students: [
+        "Milosz Sobczak (7.1)",
+        "Emir Berk Ates (6.2)",
+        "Mahmound Abdulebda (5.1)"
+    ]
+};
+
+const schedule = [
+    {
+        teacher: "Cango",
+        level: "Anfangsniveau",
+        times: [
+            { day: 2, start: "09:50", end: "11:20", label: "Di 3./4." },
+            { day: 3, start: "08:00", end: "09:30", label: "Mi 1./2." },
+            { day: 4, start: "09:50", end: "11:20", label: "Do 3./4." }
+        ],
+        students: [
+            "Artur Musienko (6.2)",
+            "Samir Musienko (6.2)",
+            "Hristina Asenova (6.2)",
+            "Yevhen Pushkash (6.1)",
+            "Imran Gaurgashvilli (7.1)"
+        ]
+    },
+
+    {
+        teacher: "Woitun",
+        level: "A2 Niveau 1",
+        times: [
+            { day: 1, start: "08:00", end: "09:30", label: "Mo 1./2." },
+            { day: 2, start: "08:00", end: "09:30", label: "Di 1./2." },
+            { day: 3, start: "09:50", end: "11:20", label: "Mi 3./4." }
+        ],
+        students: [
+            "Darius Serban (5.1)",
+            "David Matazko (5A)",
+            "Dinara Durdyieva (5A)",
+            "Ramesh Chukulenko (5.1)",
+            "Imad Youes (5A)"
+        ]
+    },
+
+    {
+        teacher: "Tunc",
+        level: "A2 Niveau 2",
+        times: [
+            { day: 1, start: "09:50", end: "11:20", label: "Mo 3./4." },
+            { day: 2, start: "11:40", end: "13:10", label: "Di 5./6." },
+            { day: 4, start: "08:00", end: "09:30", label: "Do 1./2." }
+        ],
+        students: [
+            "Alexandra Ivanika (7.1)",
+            "Niiazkuly Durdyiev (6A)",
+            "Alina Musienko (7.1)",
+            "Danilo Demianko (6.1)",
+            "Mathias (6.1)"
+        ]
+    }
+];
+
+const dayNames = [
+    "Sonntag",
+    "Montag",
+    "Dienstag",
+    "Mittwoch",
+    "Donnerstag",
+    "Freitag",
+    "Samstag"
+];
+
+/*
+Speichert, welche Kurskarten geöffnet sind.
+Dadurch bleiben sie auch bei den sekündlichen Updates offen.
+*/
+const expandedCourses = new Set();
+
+function setTime(date, timeString) {
+    const [hours, minutes] = timeString.split(":").map(Number);
+
+    const result = new Date(date);
+    result.setHours(hours, minutes, 0, 0);
+
+    return result;
+}
+
+function formatTime(date) {
+    return date.toLocaleTimeString("de-DE", {
+        hour: "2-digit",
+        minute: "2-digit"
+    });
+}
+
+function formatDate(date) {
+    return date.toLocaleDateString("de-DE");
+}
+
+function parseStudent(student) {
+    const match = student.match(/^(.*?)\s*\((.*?)\)$/);
+
+    if (!match) {
+        return {
+            name: student,
+            schoolClass: ""
+        };
+    }
+
+    return {
+        name: match[1].trim(),
+        schoolClass: match[2].trim()
+    };
+}
+
+function renderTopStudentChips(students) {
+    return students.map(student => {
+        const parsed = parseStudent(student);
+
+        return `
+            <div class="student-chip">
+                <strong>${parsed.name}</strong>
+                ${
+                    parsed.schoolClass
+                    ? `<span>Klasse ${parsed.schoolClass}</span>`
+                    : ""
+                }
+            </div>
+        `;
+    }).join("");
+}
+
+function renderStudentsByClass(students) {
+    const classes = {};
+
+    for (const student of students) {
+        const parsed = parseStudent(student);
+
+        if (!classes[parsed.schoolClass]) {
+            classes[parsed.schoolClass] = [];
+        }
+
+        classes[parsed.schoolClass].push(parsed.name);
+    }
+
+    const keys = Object.keys(classes).sort((a,b) =>
+        a.localeCompare(b, "de", { numeric: true })
+    );
+
+    let html = "";
+
+    for (const schoolClass of keys) {
+        html += `<div class="class-block">`;
+
+        if (schoolClass) {
+            html += `<div class="class-title">Klasse ${schoolClass}</div>`;
+        }
+
+        for (const name of classes[schoolClass]) {
+            html += `<div class="student-line">${name}</div>`;
+        }
+
+        html += `</div>`;
+    }
+
+    return html;
+}
+
+function buildSessions(now) {
+    const sessions = [];
+
+    for (let offset = 0; offset < 7; offset++) {
+        const date = new Date(now);
+
+        date.setDate(now.getDate() + offset);
+        date.setHours(0,0,0,0);
+
+        for (const group of schedule) {
+            for (const time of group.times) {
+
+                if (time.day !== date.getDay()) continue;
+
+                sessions.push({
+                    teacher: group.teacher,
+                    level: group.level,
+                    students: group.students,
+                    start: setTime(date, time.start),
+                    end: setTime(date, time.end)
+                });
+            }
+        }
+    }
+
+    return sessions.sort((a,b) => a.start - b.start);
+}
+
+function findActiveAndNext(now) {
+    const sessions = buildSessions(now);
+
+    const active = sessions.find(session =>
+        now >= session.start &&
+        now < session.end
+    ) || null;
+
+    const next = sessions.find(session =>
+        session.start > now
+    ) || null;
+
+    return { active, next };
+}
+
+function getTodaySessions(now) {
+    const sessions = [];
+
+    for (const group of schedule) {
+        for (const time of group.times) {
+
+            if (time.day !== now.getDay()) continue;
+
+            sessions.push({
+                teacher: group.teacher,
+                level: group.level,
+                students: group.students,
+                start: setTime(now, time.start),
+                end: setTime(now, time.end)
+            });
+        }
+    }
+
+    return sessions.sort((a,b) => a.start - b.start);
+}
+
+function getCourseKey(session) {
+    return `${session.teacher}-${session.level}-${formatTime(session.start)}`;
+}
+
+function renderTodayOverview(now) {
+    const container = document.getElementById("todayOverview");
+    const sessions = getTodaySessions(now);
+
+    if (sessions.length === 0) {
+        container.innerHTML = `
+            <div class="course-card">
+                Heute keine Anschlussförderung.
+            </div>
+        `;
+        return;
+    }
+
+    let html = "";
+
+    sessions.forEach((session) => {
+
+        const courseKey = getCourseKey(session);
+
+        let icon = "⏳";
+        let statusText = "Steht noch an";
+        let cssClass = "status-upcoming";
+
+        if (now >= session.end) {
+            icon = "✅";
+            statusText = "Abgeschlossen";
+            cssClass = "status-done";
+        }
+        else if (
+            now >= session.start &&
+            now < session.end
+        ) {
+            icon = "🔴";
+            statusText = "Läuft gerade";
+            cssClass = "status-active";
+        }
+
+        const isExpanded =
+            expandedCourses.has(courseKey);
+
+        let studentHeading;
+
+        if (now >= session.end) {
+            studentHeading =
+                "Diese SuS hatten Anschlussförderung:";
+        }
+        else if (
+            now >= session.start &&
+            now < session.end
+        ) {
+            studentHeading =
+                "Diese SuS sind gerade in der Anschlussförderung:";
+        }
+        else {
+            studentHeading =
+                "Diese SuS werden Anschlussförderung haben:";
+        }
+
+        html += `
+            <div
+                class="course-card ${cssClass}"
+                onclick="toggleCourseStudents('${courseKey.replace(/'/g, "\\'")}')"
+            >
+
+                <div class="course-topline">
+
+                    <div class="course-name">
+                        ${icon} ${session.level}
+                    </div>
+
+                    <div class="course-status">
+                        ${statusText}
+                        ${isExpanded ? "▲" : "▼"}
+                    </div>
+
+                </div>
+
+                <div class="course-meta">
+                    ${session.teacher}<br>
+                    ${formatTime(session.start)}–${formatTime(session.end)} Uhr
+                </div>
+
+                <div class="course-students ${isExpanded ? "" : "hidden"}">
+
+                    <strong>
+                        ${studentHeading}
+                    </strong>
+
+                    ${renderStudentsByClass(session.students)}
+
+                </div>
+
+            </div>
+        `;
+    });
+
+    container.innerHTML = html;
+}
+
+function toggleCourseStudents(courseKey) {
+    if (expandedCourses.has(courseKey)) {
+        expandedCourses.delete(courseKey);
+    }
+    else {
+        expandedCourses.add(courseKey);
+    }
+
+    renderTodayOverview(new Date());
+}
+
+function countdownText(milliseconds) {
+    const totalSeconds = Math.max(
+        0,
+        Math.floor(milliseconds / 1000)
+    );
+
+    const hours =
+        Math.floor(totalSeconds / 3600);
+
+    const minutes =
+        Math.floor(
+            (totalSeconds % 3600) / 60
+        );
+
+    const seconds =
+        totalSeconds % 60;
+
+    if (hours > 0) {
+        return `${hours} Std. ${minutes} Min. ${seconds} Sek.`;
+    }
+
+    return `${minutes} Min. ${seconds} Sek.`;
+}
+
+function renderAllLists() {
+    const container =
+        document.getElementById("allLists");
+
+    let html = `
+        <div class="group-card">
+            <div class="group-head">
+                Alphabetisierung – Aslan
+            </div>
+
+            <div class="termine">
+                Keine festen Termine hinterlegt
+            </div>
+
+            ${renderStudentsByClass(
+                alphabetisierung.students
+            )}
+        </div>
+    `;
+
+    for (const group of schedule) {
+        const termine =
+            group.times
+                .map(time => time.label)
+                .join(" · ");
+
+        html += `
+            <div class="group-card">
+                <div class="group-head">
+                    ${group.level} – ${group.teacher}
+                </div>
+
+                <div class="termine">
+                    ${termine}
+                </div>
+
+                ${renderStudentsByClass(
+                    group.students
+                )}
+            </div>
+        `;
+    }
+
+    container.innerHTML = html;
+}
+
+function toggleAlphabetisierung() {
+    const box =
+        document.getElementById(
+            "alphabetisierungBox"
+        );
+
+    if (box.classList.contains("hidden")) {
+        document.getElementById(
+            "alphabetisierungStudents"
+        ).innerHTML =
+            renderStudentsByClass(
+                alphabetisierung.students
+            );
+
+        box.classList.remove("hidden");
+    } else {
+        box.classList.add("hidden");
+    }
+}
+
+function toggleAllLists() {
+    const box =
+        document.getElementById(
+            "allListsBox"
+        );
+
+    if (box.classList.contains("hidden")) {
+        renderAllLists();
+        box.classList.remove("hidden");
+    } else {
+        box.classList.add("hidden");
+    }
+}
+
+function updateDisplay() {
+    const now = new Date();
+
+    document.getElementById(
+        "dayDisplay"
+    ).innerText =
+        `${dayNames[now.getDay()]}, ${formatDate(now)}`;
+
+    renderTodayOverview(now);
+
+    const { active, next } =
+        findActiveAndNext(now);
+
+    const title =
+        document.getElementById(
+            "mainTitle"
+        );
+
+    const nextDisplay =
+        document.getElementById(
+            "nextSessionDisplay"
+        );
+
+    const infoBox =
+        document.getElementById(
+            "currentInfoBox"
+        );
+
+    const currentLevel =
+        document.getElementById(
+            "currentLevel"
+        );
+
+    const currentTeacher =
+        document.getElementById(
+            "currentTeacher"
+        );
+
+    const currentTime =
+        document.getElementById(
+            "currentTime"
+        );
+
+    const countdown =
+        document.getElementById(
+            "countdown"
+        );
+
+    const topActiveStudents =
+        document.getElementById(
+            "topActiveStudents"
+        );
+
+    const topActiveStudentList =
+        document.getElementById(
+            "topActiveStudentList"
+        );
+
+    if (active) {
+        document.body.style.background =
+            "linear-gradient(180deg,#D32F2F,#B71C1C)";
+
+        title.innerText =
+            "Anschlussförderung aktiv ❌";
+
+        topActiveStudentList.innerHTML =
+            renderTopStudentChips(
+                active.students
+            );
+
+        topActiveStudents.classList.remove(
+            "hidden"
+        );
+
+        currentLevel.innerText =
+            active.level;
+
+        currentTeacher.innerText =
+            active.teacher;
+
+        currentTime.innerText =
+            `${formatTime(active.start)}–${formatTime(active.end)} Uhr`;
+
+        countdown.classList.add("hidden");
+        infoBox.classList.remove("hidden");
+
+        if (next) {
+            nextDisplay.innerHTML =
+                `Danach: <strong>${dayNames[next.start.getDay()]}, ${formatTime(next.start)} Uhr – ${next.level} (${next.teacher})</strong>`;
+        }
+
+        return;
+    }
+
+    topActiveStudents.classList.add(
+        "hidden"
+    );
+
+    if (next) {
+        const sameDay =
+            now.toDateString()
+            ===
+            next.start.toDateString();
+
+        if (sameDay) {
+            document.body.style.background =
+                "linear-gradient(180deg,#FFD54F,#F9A825)";
+
+            title.innerText =
+                "Anschlussförderung steht heute noch an ⚠️";
+
+            currentLevel.innerText =
+                next.level;
+
+            currentTeacher.innerText =
+                next.teacher;
+
+            currentTime.innerText =
+                `${formatTime(next.start)}–${formatTime(next.end)} Uhr`;
+
+            countdown.innerText =
+                `Startet in ${countdownText(next.start - now)}`;
+
+            countdown.classList.remove("hidden");
+            infoBox.classList.remove("hidden");
+
+            nextDisplay.innerHTML =
+                `Nächster Termin: <strong>${formatTime(next.start)} Uhr – ${next.level} (${next.teacher})</strong>`;
+
+            return;
+        }
+    }
+
+    document.body.style.background =
+        "linear-gradient(180deg,#4CAF50,#388E3C)";
+
+    title.innerText =
+        "Keine Anschlussförderung ✅";
+
+    infoBox.classList.add("hidden");
+
+    if (next) {
+        nextDisplay.innerHTML =
+            `Nächste Anschlussförderung: <strong>${dayNames[next.start.getDay()]}, ${formatDate(next.start)}, ${formatTime(next.start)} Uhr – ${next.level} (${next.teacher})</strong>`;
+    }
+    else {
+        nextDisplay.innerHTML = "";
+    }
+}
+
+function updateClock() {
+    document.getElementById(
+        "clock"
+    ).innerText =
+        new Date().toLocaleTimeString(
+            "de-DE"
+        );
+}
+
+updateClock();
+updateDisplay();
+
+setInterval(updateClock, 1000);
+setInterval(updateDisplay, 1000);
+
+</script>
+
 </body>
 </html>
